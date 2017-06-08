@@ -28,12 +28,12 @@
   <parent>
     <groupId>org.apache.sis</groupId>
     <artifactId>core</artifactId>
-    <version>0.8-SNAPSHOT</version>
+    <version>0.8-android-SNAPSHOT</version>
   </parent>
 
   <groupId>org.apache.sis.core</groupId>
   <artifactId>sis-referencing-by-identifiers</artifactId>
-  <packaging>bundle</packaging>
+  <packaging>jar</packaging>
   <name>Apache SIS referencing by geographic identifiers</name>
   <description>
   <!-- Left alignment because this description will be copied in META-INF/MANIFEST.MF
@@ -79,14 +79,17 @@ Implementations of Spatial Reference Systems using Geographic Identifiers
   <build>
     <plugins>
 
-      <!-- Package as OSGi bundle -->
       <plugin>
-        <groupId>org.apache.felix</groupId>
-        <artifactId>maven-bundle-plugin</artifactId>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <version>3.6.1</version>
         <configuration>
-          <instructions>
-            <Bundle-SymbolicName>org.apache.sis.referencing.gazetteer</Bundle-SymbolicName>
-          </instructions>
+          <source>1.7</source>
+          <target>1.7</target>
+          <encoding>${project.build.sourceEncoding}</encoding>
+          <useIncrementalCompilation>false</useIncrementalCompilation> <!-- https://jira.codehaus.org/browse/MCOMPILER-209 -->
+          <compilerArgs>
+            <arg>-Xlint:all</arg>
+          </compilerArgs>
         </configuration>
       </plugin>
     </plugins>

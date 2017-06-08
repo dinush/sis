@@ -38,7 +38,7 @@
        ============================================================== -->
   <groupId>org.apache.sis</groupId>
   <artifactId>parent</artifactId>
-  <version>0.8-SNAPSHOT</version>
+  <version>0.8-android-SNAPSHOT</version>
   <packaging>pom</packaging>
 
   <name>Apache SIS</name>
@@ -420,7 +420,7 @@ Apache SIS is a free software, Java language library for developing geospatial a
         <groupId>javax</groupId>
         <artifactId>javaee-api</artifactId>
         <version>7.0</version>
-        <scope>provided</scope>
+        <scope>compile</scope>
       </dependency>
       <dependency>
         <groupId>org.apache.commons</groupId>
@@ -443,12 +443,6 @@ Apache SIS is a free software, Java language library for developing geospatial a
       </dependency>
 
       <!-- Optional dependencies -->
-      <dependency>
-        <groupId>org.osgi</groupId>
-        <artifactId>org.osgi.core</artifactId>
-        <version>6.0.0</version>
-        <scope>provided</scope>
-      </dependency>
       <dependency>
         <groupId>edu.ucar</groupId>
         <artifactId>cdm</artifactId>
@@ -666,20 +660,6 @@ Apache SIS is a free software, Java language library for developing geospatial a
             </configuration>
           </execution>
         </executions>
-      </plugin>
-
-      <!-- Package as OSGi bundle -->
-      <plugin>
-        <groupId>org.apache.felix</groupId>
-        <artifactId>maven-bundle-plugin</artifactId>
-        <version>3.3.0</version>
-        <extensions>true</extensions>
-        <configuration>
-          <excludeDependencies>true</excludeDependencies>
-          <instructions>
-            <Bundle-DocURL>${project.url}</Bundle-DocURL>
-          </instructions>
-        </configuration>
       </plugin>
 
       <!-- Checkstype configuration

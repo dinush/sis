@@ -28,12 +28,12 @@
   <parent>
     <groupId>org.apache.sis</groupId>
     <artifactId>core</artifactId>
-    <version>0.8-SNAPSHOT</version>
+    <version>0.8-android-SNAPSHOT</version>
   </parent>
 
   <groupId>org.apache.sis.core</groupId>
   <artifactId>sis-referencing</artifactId>
-  <packaging>bundle</packaging>
+  <packaging>jar</packaging>
   <name>Apache SIS referencing</name>
   <description>
   <!-- Left alignment because this description will be copied in META-INF/MANIFEST.MF
@@ -90,19 +90,17 @@ Implementations of Coordinate Reference Systems (CRS),
   <build>
     <plugins>
 
-      <!-- Package as OSGi bundle -->
       <plugin>
-        <groupId>org.apache.felix</groupId>
-        <artifactId>maven-bundle-plugin</artifactId>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <version>3.6.1</version>
         <configuration>
-          <instructions>
-            <Bundle-SymbolicName>org.apache.sis.referencing</Bundle-SymbolicName>
-            <Export-Package>org.apache.sis.internal.referencing, *</Export-Package>
-            <Require-Capability>osgi.extender;
-            filter:="(osgi.extender=osgi.serviceloader.registrar)"</Require-Capability>
-            <Provide-Capability>osgi.serviceloader;
-            osgi.serviceloader=org.apache.sis.internal.jaxb.TypeRegistration; osgi.serviceloader=org.apache.sis.internal.jaxb.AdapterReplacement,org.opengis.referencing.operation.MathTransformFactory,org.opengis.referencing.operation.OperationMethod,org.opengis.temporal.TemporalFactory</Provide-Capability>
-          </instructions>
+          <source>1.7</source>
+          <target>1.7</target>
+          <encoding>${project.build.sourceEncoding}</encoding>
+          <useIncrementalCompilation>false</useIncrementalCompilation> <!-- https://jira.codehaus.org/browse/MCOMPILER-209 -->
+          <compilerArgs>
+            <arg>-Xlint:all</arg>
+          </compilerArgs>
         </configuration>
       </plugin>
     </plugins>
