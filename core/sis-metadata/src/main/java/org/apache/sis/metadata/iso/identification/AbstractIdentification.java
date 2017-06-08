@@ -43,6 +43,7 @@ import org.opengis.metadata.identification.ServiceIdentification;
 import org.opengis.metadata.maintenance.MaintenanceInformation;
 import org.opengis.metadata.spatial.SpatialRepresentationType;
 import org.opengis.util.InternationalString;
+import org.apache.sis.internal.metadata.Dependencies;
 import org.apache.sis.internal.metadata.LegacyPropertyAdapter;
 import org.apache.sis.metadata.iso.ISOMetadata;
 import org.apache.sis.util.iso.Types;
@@ -624,6 +625,8 @@ public class AbstractIdentification extends ISOMetadata implements Identificatio
      * Provides a description of the format of the resource(s).
      *
      * @return description of the format.
+     *
+     * @see org.apache.sis.metadata.iso.distribution.DefaultDistribution#getDistributionFormats()
      */
     @Override
     @XmlElement(name = "resourceFormat")
@@ -635,6 +638,8 @@ public class AbstractIdentification extends ISOMetadata implements Identificatio
      * Sets a description of the format of the resource(s).
      *
      * @param  newValues  the new resource format.
+     *
+     * @see org.apache.sis.metadata.iso.distribution.DefaultDistribution#setDistributionFormats(Collection)
      */
     public void setResourceFormats(final Collection<? extends Format> newValues) {
         resourceFormats = writeCollection(newValues, resourceFormats, Format.class);
@@ -746,6 +751,7 @@ public class AbstractIdentification extends ISOMetadata implements Identificatio
     @Override
     @Deprecated
     @XmlElement(name = "aggregationInfo")
+    @Dependencies("getAssociatedResources")
     public Collection<AggregateInformation> getAggregationInfo() {
         return new LegacyPropertyAdapter<AggregateInformation,DefaultAssociatedResource>(getAssociatedResources()) {
             @Override protected DefaultAssociatedResource wrap(final AggregateInformation value) {

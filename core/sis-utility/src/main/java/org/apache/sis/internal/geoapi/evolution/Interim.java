@@ -14,23 +14,36 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sis.metadata.sql;
+package org.apache.sis.internal.geoapi.evolution;
+
+import java.lang.reflect.Method;
+import org.apache.sis.util.Static;
 
 
 /**
- * Interface for metadata that are implemented by a proxy class.
- * Instances of this interface are created by calls to {@code Proxy.newProxyInstance(…)}
- * in {@link MetadataSource#lookup(Class, String)}.
+ * Temporary methods used until a new major GeoAPI release provides the missing functionalities.
  *
  * @author  Martin Desruisseaux (Geomatys)
  * @version 0.8
  * @since   0.8
  * @module
  */
-interface MetadataProxy {
+public final class Interim extends Static {
     /**
-     * Returns the identifier (primary key) of this metadata if it is using the given source,
-     * or {@code null} otherwise.
+     * Do not allow instantiation of this class.
      */
-    String identifier(MetadataSource source);
+    private Interim() {
+    }
+
+    /**
+     * Returns the return type of the given method, or the interim type if the method is annotated
+     * with {@link InterimType}.
+     *
+     * @param  method  the method from which to get the return type.
+     * @return the return type or the interim type.
+     */
+    public static Class<?> getReturnType(final Method method) {
+        final InterimType an = method.getAnnotation(InterimType.class);
+        return (an != null) ? an.value() : method.getReturnType();
+    }
 }

@@ -64,6 +64,7 @@ import org.apache.sis.metadata.iso.identification.AbstractIdentification;
 import org.apache.sis.metadata.iso.identification.DefaultDataIdentification;
 import org.apache.sis.internal.metadata.LegacyPropertyAdapter;
 import org.apache.sis.internal.metadata.OtherLocales;
+import org.apache.sis.internal.metadata.Dependencies;
 import org.apache.sis.internal.util.CollectionsExt;
 import org.apache.sis.internal.jaxb.code.PT_Locale;
 import org.apache.sis.internal.jaxb.Context;
@@ -234,7 +235,7 @@ public class DefaultMetadata extends ISOMetadata implements Metadata {
     private Collection<PortrayalCatalogueReference> portrayalCatalogueInfo;
 
     /**
-     * Provides restrictions on the access and use of data.
+     * Provides restrictions on the access and use of metadata.
      */
     private Collection<Constraints> metadataConstraints;
 
@@ -413,6 +414,7 @@ public class DefaultMetadata extends ISOMetadata implements Metadata {
     @Override
     @Deprecated
     @XmlElement(name = "fileIdentifier")
+    @Dependencies("getMetadataIdentifier")
     public String getFileIdentifier() {
         final Identifier identifier = getMetadataIdentifier();
         return (identifier != null) ? identifier.getCode() : null;
@@ -485,6 +487,7 @@ public class DefaultMetadata extends ISOMetadata implements Metadata {
     @Override
     @Deprecated
     @XmlElement(name = "language")
+    @Dependencies("getLanguages")
     public Locale getLanguage() {
         return CollectionsExt.first(getLanguages());
         /*
@@ -523,6 +526,7 @@ public class DefaultMetadata extends ISOMetadata implements Metadata {
     @Deprecated
     @XmlElement(name = "locale")
     @XmlJavaTypeAdapter(PT_Locale.class)
+    @Dependencies("getLanguages")
     public Collection<Locale> getLocales() {
         return OtherLocales.filter(getLanguages());
     }
@@ -591,6 +595,7 @@ public class DefaultMetadata extends ISOMetadata implements Metadata {
     @Override
     @Deprecated
     @XmlElement(name = "characterSet")
+    @Dependencies("getCharacterSets")
     public CharacterSet getCharacterSet() {
         final Charset cs = LegacyPropertyAdapter.getSingleton(getCharacterSets(),
                 Charset.class, null, DefaultMetadata.class, "getCharacterSet");
@@ -655,6 +660,7 @@ public class DefaultMetadata extends ISOMetadata implements Metadata {
     @Override
     @Deprecated
     @XmlElement(name = "parentIdentifier")
+    @Dependencies("getParentMetadata")
     public String getParentIdentifier() {
         final Citation parentMetadata = getParentMetadata();
         if (parentMetadata != null) {
@@ -676,7 +682,8 @@ public class DefaultMetadata extends ISOMetadata implements Metadata {
     @Deprecated
     public void setParentIdentifier(final String newValue) {
         checkWritePermission();
-        DefaultCitation parent = DefaultCitation.castOrCopy(parentMetadata); // See "Note about deprecated methods implementation"
+        // See "Note about deprecated methods implementation"
+        DefaultCitation parent = DefaultCitation.castOrCopy(parentMetadata);
         if (parent == null) {
             parent = new DefaultCitation();
         }
@@ -728,6 +735,7 @@ public class DefaultMetadata extends ISOMetadata implements Metadata {
     @Override
     @Deprecated
     @XmlElement(name = "hierarchyLevel")
+    @Dependencies("getMetadataScopes")
     public final Collection<ScopeCode> getHierarchyLevels() {
         return new MetadataScopeAdapter<ScopeCode>(getMetadataScopes()) {
             /** Stores a legacy value into the new kind of value. */
@@ -773,6 +781,7 @@ public class DefaultMetadata extends ISOMetadata implements Metadata {
     @Override
     @Deprecated
     @XmlElement(name = "hierarchyLevelName")
+    @Dependencies("getMetadataScopes")
     public final Collection<String> getHierarchyLevelNames() {
         return new MetadataScopeAdapter<String>(getMetadataScopes()) {
             /** Stores a legacy value into the new kind of value. */
@@ -870,6 +879,7 @@ public class DefaultMetadata extends ISOMetadata implements Metadata {
     @Override
     @Deprecated
     @XmlElement(name = "dateStamp", required = true)
+    @Dependencies("getDateInfo")
     public Date getDateStamp() {
         final Collection<CitationDate> dates = getDateInfo();
         if (dates != null) {
@@ -1051,6 +1061,7 @@ public class DefaultMetadata extends ISOMetadata implements Metadata {
     @Override
     @Deprecated
     @XmlElement(name = "metadataStandardName")
+    @Dependencies("getMetadataStandards")
     public String getMetadataStandardName() {
         return getMetadataStandard(false);
     }
@@ -1079,6 +1090,7 @@ public class DefaultMetadata extends ISOMetadata implements Metadata {
     @Override
     @Deprecated
     @XmlElement(name = "metadataStandardVersion")
+    @Dependencies("getMetadataStandards")
     public String getMetadataStandardVersion() {
         return getMetadataStandard(true);
     }
@@ -1130,6 +1142,7 @@ public class DefaultMetadata extends ISOMetadata implements Metadata {
     @Override
     @Deprecated
     @XmlElement(name = "dataSetURI")
+    @Dependencies("getIdentificationInfo")
     public String getDataSetUri() {
         String linkage = null;
         final Collection<Identification> info = getIdentificationInfo();
@@ -1369,9 +1382,11 @@ public class DefaultMetadata extends ISOMetadata implements Metadata {
     }
 
     /**
-     * Returns restrictions on the access and use of data.
+     * Returns restrictions on the access and use of metadata.
      *
-     * @return restrictions on the access and use of data.
+     * @return restrictions on the access and use of metadata.
+     *
+     * @see org.apache.sis.metadata.iso.identification.AbstractIdentification#getResourceConstraints()
      */
     @Override
     @XmlElement(name = "metadataConstraints")
@@ -1380,9 +1395,11 @@ public class DefaultMetadata extends ISOMetadata implements Metadata {
     }
 
     /**
-     * Sets restrictions on the access and use of data.
+     * Sets restrictions on the access and use of metadata.
      *
      * @param  newValues  the new metadata constraints.
+     *
+     * @see org.apache.sis.metadata.iso.identification.AbstractIdentification#setResourceConstraints(Collection)
      */
     public void setMetadataConstraints(final Collection<? extends Constraints> newValues) {
         metadataConstraints = writeCollection(newValues, metadataConstraints, Constraints.class);
@@ -1432,6 +1449,8 @@ public class DefaultMetadata extends ISOMetadata implements Metadata {
      * Returns information about the frequency of metadata updates, and the scope of those updates.
      *
      * @return the frequency of metadata updates and their scope, or {@code null}.
+     *
+     * @see org.apache.sis.metadata.iso.identification.AbstractIdentification#getResourceMaintenances()
      */
     @Override
     @XmlElement(name = "metadataMaintenance")
@@ -1443,6 +1462,8 @@ public class DefaultMetadata extends ISOMetadata implements Metadata {
      * Sets information about the frequency of metadata updates, and the scope of those updates.
      *
      * @param  newValue  the new metadata maintenance.
+     *
+     * @see org.apache.sis.metadata.iso.identification.AbstractIdentification#setResourceMaintenances(Collection)
      */
     public void setMetadataMaintenance(final MaintenanceInformation newValue) {
         checkWritePermission();
