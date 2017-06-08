@@ -16,13 +16,8 @@
  */
 package org.apache.sis.xml;
 
+import java.io.*;
 import java.net.URL;
-import java.io.File;
-import java.io.Reader;
-import java.io.InputStream;
-import java.io.FileInputStream;
-import java.io.BufferedInputStream;
-import java.io.IOException;
 import javax.xml.bind.Unmarshaller;
 import javax.xml.bind.JAXBElement;
 import javax.xml.bind.JAXBException;
@@ -164,7 +159,9 @@ final class PooledUnmarshaller extends Pooled implements Unmarshaller {
         } else {
             final Context context = begin();
             try {
-                return unmarshaller.unmarshal(input);
+                return unmarshaller.unmarshal(InputFactory.createXMLStreamReader(input));
+            } catch (XMLStreamException e) {
+                throw new JAXBException(e);
             } finally {
                 context.finish();
             }
@@ -186,7 +183,10 @@ final class PooledUnmarshaller extends Pooled implements Unmarshaller {
         } else {
             final Context context = begin();
             try {
-                return unmarshaller.unmarshal(input);
+                InputStream s = input.openStream();
+                return unmarshaller.unmarshal(InputFactory.createXMLStreamReader(s));
+            } catch (XMLStreamException | IOException e) {
+                throw new JAXBException(e);
             } finally {
                 context.finish();
             }
@@ -208,7 +208,10 @@ final class PooledUnmarshaller extends Pooled implements Unmarshaller {
         } else {
             final Context context = begin();
             try {
-                return unmarshaller.unmarshal(input);
+                InputStream s = new BufferedInputStream(new FileInputStream(input));
+                return unmarshaller.unmarshal(InputFactory.createXMLStreamReader(s));
+            } catch (IOException | XMLStreamException e) {
+                throw new JAXBException(e);
             } finally {
                 context.finish();
             }
@@ -228,7 +231,9 @@ final class PooledUnmarshaller extends Pooled implements Unmarshaller {
         } else {
             final Context context = begin();
             try {
-                return unmarshaller.unmarshal(input);
+                return unmarshaller.unmarshal(InputFactory.createXMLStreamReader(input));
+            } catch (XMLStreamException e) {
+                throw new JAXBException(e);
             } finally {
                 context.finish();
             }
@@ -248,7 +253,9 @@ final class PooledUnmarshaller extends Pooled implements Unmarshaller {
         } else {
             final Context context = begin();
             try {
-                return unmarshaller.unmarshal(input);
+                return unmarshaller.unmarshal(InputFactory.createXMLStreamReader(input));
+            } catch (XMLStreamException e) {
+                throw new JAXBException(e);
             } finally {
                 context.finish();
             }
@@ -268,7 +275,9 @@ final class PooledUnmarshaller extends Pooled implements Unmarshaller {
         } else {
             final Context context = begin();
             try {
-                return unmarshaller.unmarshal(input);
+                return unmarshaller.unmarshal(InputFactory.createXMLStreamReader(input));
+            } catch (XMLStreamException e) {
+                throw new JAXBException(e);
             } finally {
                 context.finish();
             }
@@ -288,7 +297,9 @@ final class PooledUnmarshaller extends Pooled implements Unmarshaller {
         } else {
             final Context context = begin();
             try {
-                return unmarshaller.unmarshal(input, declaredType);
+                return unmarshaller.unmarshal(InputFactory.createXMLStreamReader(input), declaredType);
+            } catch (XMLStreamException e) {
+                throw new JAXBException(e);
             } finally {
                 context.finish();
             }
@@ -308,7 +319,9 @@ final class PooledUnmarshaller extends Pooled implements Unmarshaller {
         } else {
             final Context context = begin();
             try {
-                return unmarshaller.unmarshal(input);
+                return unmarshaller.unmarshal(InputFactory.createXMLStreamReader(input));
+            } catch (XMLStreamException e) {
+                throw new JAXBException(e);
             } finally {
                 context.finish();
             }
@@ -328,7 +341,9 @@ final class PooledUnmarshaller extends Pooled implements Unmarshaller {
         } else {
             final Context context = begin();
             try {
-                return unmarshaller.unmarshal(input, declaredType);
+                return unmarshaller.unmarshal(InputFactory.createXMLStreamReader(input), declaredType);
+            } catch (XMLStreamException e) {
+                throw new JAXBException(e);
             } finally {
                 context.finish();
             }
