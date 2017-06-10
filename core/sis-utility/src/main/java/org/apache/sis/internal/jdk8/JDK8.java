@@ -16,6 +16,7 @@
  */
 package org.apache.sis.internal.jdk8;
 
+import java.io.*;
 import java.util.Map;
 import java.util.Date;
 import java.util.Calendar;
@@ -26,16 +27,11 @@ import java.util.Locale;
 import java.util.TimeZone;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicReference;
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import javax.xml.bind.DatatypeConverter;
 
 // Branch-dependent imports
 import java.util.Objects;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.math.BigInteger;
 
 
@@ -500,8 +496,8 @@ public final class JDK8 {
      *
      * @since 0.7
      */
-    public static BufferedReader newBufferedReader(final Path path) throws IOException {
-        return Files.newBufferedReader(path, StandardCharsets.UTF_8);
+    public static BufferedReader newBufferedReader(final File path) throws IOException {
+        return new BufferedReader(new InputStreamReader(new FileInputStream(path), StandardCharsets.UTF_8));
     }
 
     /**
@@ -513,7 +509,7 @@ public final class JDK8 {
      *
      * @since 0.7
      */
-    public static BufferedWriter newBufferedWriter(final Path path) throws IOException {
-        return Files.newBufferedWriter(path, StandardCharsets.UTF_8);
+    public static BufferedWriter newBufferedWriter(final File path) throws IOException {
+        return new BufferedWriter(new OutputStreamWriter(new FileOutputStream(path), StandardCharsets.UTF_8));
     }
 }

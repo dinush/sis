@@ -22,7 +22,6 @@ import java.util.IllformedLocaleException;
 import java.nio.charset.UnsupportedCharsetException;
 import java.net.URISyntaxException;
 import java.net.MalformedURLException;
-import java.nio.file.InvalidPathException;
 import javax.measure.format.ParserException;
 import org.apache.sis.math.FunctionProperty;
 import org.apache.sis.util.Locales;
@@ -272,15 +271,6 @@ abstract class StringConverter<T> extends SystemConverter<String, T> {
 
         @Override java.io.File doConvert(String source) {
             return new java.io.File(source);
-        }
-    }
-
-    public static final class Path extends StringConverter<java.nio.file.Path> {
-        private static final long serialVersionUID = -1737315635965906042L;
-        public Path() {super(java.nio.file.Path.class);}                            // Instantiated by ServiceLoader.
-
-        @Override java.nio.file.Path doConvert(String source) throws InvalidPathException {
-            return java.nio.file.Paths.get(source);
         }
     }
 

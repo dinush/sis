@@ -16,19 +16,13 @@
  */
 package org.apache.sis.internal.system;
 
-import java.io.IOException;
+import java.io.File;
 import java.util.logging.Level;
 import java.util.logging.LogRecord;
 import java.security.AccessController;
 import java.security.PrivilegedAction;
 import org.apache.sis.util.logging.Logging;
 import org.apache.sis.util.resources.Messages;
-
-// Branch-dependent imports
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.InvalidPathException;
 
 
 /**
@@ -76,14 +70,14 @@ public enum DataDirectory {
      *
      * @see #getRootDirectory()
      */
-    private static Path rootDirectory;
+    private static File rootDirectory;
 
     /**
      * The directory, or {@code null} if none or not yet determined.
      *
      * @see #getDirectory()
      */
-    private Path directory;
+    private File directory;
 
     /**
      * Logs a message to the {@code "org.apache.sis.system"} logger only if different than the last warning.
@@ -113,7 +107,7 @@ public enum DataDirectory {
      *
      * @return the root SIS data directory, or {@code null} if none.
      */
-    public static synchronized Path getRootDirectory() {
+    public static synchronized File getRootDirectory() {
         if (rootDirectory == null) try {
             final String dir = AccessController.doPrivileged(new PrivilegedAction<String>() {
                 @Override public String run() {
@@ -122,18 +116,16 @@ public enum DataDirectory {
             });
             if (dir == null || dir.isEmpty()) {
                 warning("getRootDirectory", null, Messages.Keys.DataDirectoryNotSpecified_1, ENV);
-            } else try {
-                final Path path = Paths.get(dir);
-                if (!Files.isDirectory(path)) {
+            } else {
+                final File path = new File(dir);
+                if (!path.isDirectory()) {
                     warning("getRootDirectory", null, Messages.Keys.DataDirectoryDoesNotExist_2, ENV, path);
-                } else if (!Files.isReadable(path)) {
+                } else if (!path.canRead()) {
                     warning("getRootDirectory", null, Messages.Keys.DataDirectoryNotReadable_2, ENV, path);
                 } else {
                     log(Level.CONFIG, "getRootDirectory", null, Messages.Keys.DataDirectory_2, ENV, path);
                     rootDirectory = path;
                 }
-            } catch (InvalidPathException e) {
-                warning("getRootDirectory", e, Messages.Keys.DataDirectoryDoesNotExist_2, ENV, dir);
             }
         } catch (SecurityException e) {
             warning("getRootDirectory", e, Messages.Keys.DataDirectoryNotAuthorized_1, ENV);
@@ -148,9 +140,9 @@ public enum DataDirectory {
      *
      * @return the sub-directory, or {@code null} if unspecified.
      */
-    public synchronized Path getDirectory() {
+    public synchronized File getDirectory() {
         if (directory == null) {
-            final Path root = getRootDirectory();
+            final File root = getRootDirectory();
             if (root != null) {
                 final StringBuilder buffer = new StringBuilder(name());
                 for (int i=1; i<buffer.length(); i++) {
@@ -159,15 +151,14 @@ public enum DataDirectory {
                     else buffer.setCharAt(i, Character.toLowerCase(c));
                 }
                 final String name = buffer.toString();
-                final Path dir = root.resolve(name).normalize();
+                final File dir = new File(root.getAbsolutePath() + "/" + name);
                 try {
-                    if (Files.isDirectory(dir)) {
+                    if (dir.isDirectory()) {
                         directory = dir;
-                    } else if (Files.isWritable(root)) try {
-                        directory = Files.createDirectory(dir);
-                    } catch (IOException e) {
-                        warning("getDirectory", e, Messages.Keys.DataDirectoryNotWritable_2, ENV, root);
-                    } else {
+                    } else if (root.canWrite() && dir.mkdir()) {
+                        directory = dir;
+                    }
+                    else {
                         warning("getDirectory", null, Messages.Keys.DataDirectoryNotWritable_2, ENV, root);
                     }
                 } catch (SecurityException e) {
@@ -186,11 +177,11 @@ public enum DataDirectory {
      * @param  file The path to resolve, or {@code null}.
      * @return the path to use, or {@code null} if the given path was null.
      */
-    public Path resolve(Path file) {
+    public File resolve(File file) {
         if (file != null && !file.isAbsolute()) {
-            final Path dir = getDirectory();
+            final File dir = getDirectory();
             if (dir != null) {
-                return dir.resolve(file);
+                return new File(dir.getAbsolutePath() + "/" + file.getName());
             }
         }
         return file;

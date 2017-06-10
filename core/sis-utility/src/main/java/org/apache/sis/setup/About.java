@@ -37,7 +37,6 @@ import java.io.IOException;
 import java.text.Format;
 import java.text.DateFormat;
 import java.text.FieldPosition;
-import java.nio.file.Path;
 import java.nio.charset.Charset;
 import java.security.AccessController;
 import java.security.PrivilegedAction;
@@ -393,7 +392,7 @@ fill:   for (int i=0; ; i++) {
                         if (value == null) {
                             value = Messages.getResources(locale).getString(Messages.Keys.DataDirectoryNotSpecified_1, DataDirectory.ENV);
                         } else {
-                            final Path path = DataDirectory.getRootDirectory();
+                            final File path = DataDirectory.getRootDirectory();
                             if (path != null) {
                                 value = path.toString();
                             } else {
