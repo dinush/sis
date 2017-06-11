@@ -19,8 +19,7 @@ package org.apache.sis.test;
 import org.apache.sis.internal.system.DataDirectory;
 
 // Branch-specific imports
-import java.nio.file.Path;
-import java.nio.file.Files;
+import java.io.File;
 
 
 /**
@@ -51,12 +50,12 @@ public final strictfp class Assume extends org.junit.Assume {
      * @param  file  the file that needs to exist.
      * @return the path to the given file.
      */
-    public static Path assumeDataExists(final DataDirectory type, final String file) {
+    public static File assumeDataExists(final DataDirectory type, final String file) {
         assumeNotNull(System.getenv(DataDirectory.ENV));
-        Path path = type.getDirectory();
+        File path = type.getDirectory();
         assumeNotNull(path);
-        path = path.resolve(file);
-        assumeTrue(Files.isReadable(path));
+        path = new File(path.getAbsolutePath() + File.pathSeparator + file);
+        assumeTrue(path.canRead());
         return path;
     }
 }

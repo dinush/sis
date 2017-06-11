@@ -113,20 +113,6 @@ Miscellaneous utilities.
        =========================================================== -->
   <build>
     <plugins>
-
-      <plugin>
-        <artifactId>maven-compiler-plugin</artifactId>
-        <version>3.6.1</version>
-        <configuration>
-          <source>1.7</source>
-          <target>1.7</target>
-          <encoding>${project.build.sourceEncoding}</encoding>
-          <useIncrementalCompilation>false</useIncrementalCompilation> <!-- https://jira.codehaus.org/browse/MCOMPILER-209 -->
-          <compilerArgs>
-            <arg>-Xlint:all</arg>
-          </compilerArgs>
-        </configuration>
-      </plugin>
     </plugins>
   </build>
 

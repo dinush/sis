@@ -163,7 +163,7 @@ public class OptionKey<T> implements Serializable {
      *   <tr><td>{@link StandardOpenOption#CREATE}</td> <td>Creates a new storage object (file or database) if it does not exist.</td></tr>
      * </table>
      */
-    public static final OptionKey<OpenOption[]> OPEN_OPTIONS = new OptionKey<>("OPEN_OPTIONS", OpenOption[].class);
+//    public static final OptionKey<OpenOption[]> OPEN_OPTIONS = new OptionKey<>("OPEN_OPTIONS", OpenOption[].class);
 
     /**
      * The byte buffer to use for input/output operations. Some {@link org.apache.sis.storage.DataStore}

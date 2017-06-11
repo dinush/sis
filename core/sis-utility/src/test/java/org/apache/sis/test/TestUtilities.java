@@ -16,37 +16,27 @@
  */
 package org.apache.sis.test;
 
-import java.util.Date;
-import java.util.Locale;
-import java.util.TimeZone;
-import java.util.Iterator;
-import java.util.Random;
-import java.util.concurrent.Callable;
-import java.io.PrintWriter;
-import java.io.IOException;
-import java.nio.file.Path;
-import java.nio.file.Files;
-import java.nio.file.StandardOpenOption;
-import java.nio.ByteBuffer;
-import java.nio.channels.Channels;
-import java.nio.channels.ReadableByteChannel;
-import java.nio.channels.SeekableByteChannel;
-import java.lang.reflect.UndeclaredThrowableException;
-import java.text.Format;
-import java.text.DateFormat;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
+import org.apache.sis.internal.util.X364;
+import org.apache.sis.util.ArgumentChecks;
+import org.apache.sis.util.CharSequences;
 import org.apache.sis.util.Debug;
 import org.apache.sis.util.Static;
-import org.apache.sis.util.CharSequences;
-import org.apache.sis.util.ArgumentChecks;
-import org.apache.sis.util.collection.TreeTable;
 import org.apache.sis.util.collection.TableColumn;
+import org.apache.sis.util.collection.TreeTable;
 import org.apache.sis.util.collection.TreeTableFormat;
-import org.apache.sis.internal.util.X364;
 
-import static org.junit.Assert.*;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.lang.reflect.UndeclaredThrowableException;
+import java.text.DateFormat;
+import java.text.Format;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.*;
+import java.util.concurrent.Callable;
+
 import static org.apache.sis.internal.util.StandardDateFormat.UTC;
+import static org.junit.Assert.*;
 
 
 /**
@@ -457,20 +447,20 @@ public final strictfp class TestUtilities extends Static {
      *
      * @since 0.8
      */
-    public static SeekableByteChannel createTemporaryFile(final Class<?> caller, final String resource) throws IOException {
-        final SeekableByteChannel channel;
-        try (ReadableByteChannel in = Channels.newChannel(caller.getResourceAsStream(resource))) {
-            final int s = resource.lastIndexOf('.');
-            final Path file = Files.createTempFile("SIS", (s >= 0) ? resource.substring(s) : null);
-            channel = Files.newByteChannel(file, StandardOpenOption.DELETE_ON_CLOSE,
-                                StandardOpenOption.READ, StandardOpenOption.WRITE);
-            final ByteBuffer buffer = ByteBuffer.allocate(4000);
-            while (in.read(buffer) >= 0) {
-                buffer.flip();
-                channel.write(buffer);
-                buffer.clear();
-            }
-        }
-        return channel.position(0);
-    }
+//    public static SeekableByteChannel createTemporaryFile(final Class<?> caller, final String resource) throws IOException {
+//        final SeekableByteChannel channel;
+//        try (ReadableByteChannel in = Channels.newChannel(caller.getResourceAsStream(resource))) {
+//            final int s = resource.lastIndexOf('.');
+//            final Path file = Files.createTempFile("SIS", (s >= 0) ? resource.substring(s) : null);
+//            channel = Files.newByteChannel(file, StandardOpenOption.DELETE_ON_CLOSE,
+//                                StandardOpenOption.READ, StandardOpenOption.WRITE);
+//            final ByteBuffer buffer = ByteBuffer.allocate(4000);
+//            while (in.read(buffer) >= 0) {
+//                buffer.flip();
+//                channel.write(buffer);
+//                buffer.clear();
+//            }
+//        }
+//        return channel.position(0);
+//    }
 }
