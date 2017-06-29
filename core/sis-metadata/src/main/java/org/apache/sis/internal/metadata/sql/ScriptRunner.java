@@ -27,10 +27,8 @@ import java.io.BufferedReader;
 import java.io.LineNumberReader;
 import java.io.InputStreamReader;
 import java.io.StringReader;
-import java.sql.Statement;
-import java.sql.Connection;
-import java.sql.SQLException;
-import java.sql.DatabaseMetaData;
+import android.database.SQLException;
+import android.database.sqlite.SQLiteDatabase;
 import org.apache.sis.util.Debug;
 import org.apache.sis.util.ArgumentChecks;
 import org.apache.sis.util.CharSequences;
@@ -100,11 +98,6 @@ public class ScriptRunner implements AutoCloseable {
     private static final String ESCAPE = "$BODY$";
 
     /**
-     * The presumed dialect spoken by the database.
-     */
-    private final Dialect dialect;
-
-    /**
      * A mapping of words to replace. The replacements are performed only for occurrences outside identifiers or texts.
      * See {@link #addReplacement(String, String)} for more explanation.
      *
@@ -122,7 +115,7 @@ public class ScriptRunner implements AutoCloseable {
 
     /**
      * The quote character for identifiers actually used in the database,
-     * as determined by {@link DatabaseMetaData#getIdentifierQuoteString()}.
+     * as supported by SQLite.
      */
     protected final String identifierQuote;
 
@@ -222,11 +215,6 @@ public class ScriptRunner implements AutoCloseable {
     private final int maxRowsPerInsert;
 
     /**
-     * The statement created from a connection to the database.
-     */
-    private final Statement statement;
-
-    /**
      * If non-null, the SQL statements to skip (typically because not supported by the database).
      * The matcher is built as an alternation of many regular expressions separated by the pipe symbol.
      * The list of statements to skip depends on which {@code is*Supported} fields are set to {@code true}:
@@ -246,6 +234,11 @@ public class ScriptRunner implements AutoCloseable {
      * Both fields may be null if there is no statement to skip.
      */
     private StringBuilder regexOfStmtToSkip;
+
+    /**
+     * The Database
+     */
+    private SQLiteDatabase database;
 
     /**
      * Name of the SQL script under execution, or {@code null} if unknown.
@@ -280,61 +273,28 @@ public class ScriptRunner implements AutoCloseable {
      *       {@code INSERT INTO} statement. Note that this causes {@link StackOverflowError} in some JDBC driver.</li>
      * </ul>
      *
-     * @param  connection        the connection to the database.
+     * @param  database        the connection to the database.
      * @param  maxRowsPerInsert  maximum number of rows per {@code "INSERT INTO"} statement.
-     * @throws SQLException if an error occurred while creating a SQL statement.
      */
-    protected ScriptRunner(final Connection connection, int maxRowsPerInsert) throws SQLException {
-        ArgumentChecks.ensureNonNull("connection", connection);
+    protected ScriptRunner(final SQLiteDatabase database, int maxRowsPerInsert) {
+        ArgumentChecks.ensureNonNull("connection", database);
         ArgumentChecks.ensurePositive("maxRowsPerInsert", maxRowsPerInsert);
-        final DatabaseMetaData metadata = connection.getMetaData();
-        this.dialect            = Dialect.guess(metadata);
-        this.identifierQuote    = metadata.getIdentifierQuoteString();
-        this.isSchemaSupported  = metadata.supportsSchemasInTableDefinitions() &&
-                                  metadata.supportsSchemasInDataManipulation();
-        this.isCatalogSupported = metadata.supportsCatalogsInTableDefinitions() &&
-                                  metadata.supportsCatalogsInDataManipulation();
-        switch (dialect) {
-            default: {
-                isEnumTypeSupported      = false;
-                isGrantOnSchemaSupported = false;
-                isGrantOnTableSupported  = false;
-                isCreateLanguageRequired = false;
-                isCommentSupported       = false;
-                break;
-            }
-            case POSTGRESQL: {
-                final int version = metadata.getDatabaseMajorVersion();
-                isEnumTypeSupported      = (version == 8) ? metadata.getDatabaseMinorVersion() >= 4 : version >= 8;
-                isGrantOnSchemaSupported = true;
-                isGrantOnTableSupported  = true;
-                isCreateLanguageRequired = (version < 9);
-                isCommentSupported       = true;
-                break;
-            }
-            case HSQL: {
-                isEnumTypeSupported      = false;
-                isGrantOnSchemaSupported = false;
-                isGrantOnTableSupported  = false;
-                isCreateLanguageRequired = false;
-                isCommentSupported       = false;
-                if (maxRowsPerInsert != 0) {
-                    maxRowsPerInsert = 1;
-                }
-                /*
-                 * HSQLDB does not seem to support the {@code UNIQUE} keyword in {@code CREATE TABLE} statements.
-                 * In addition, we must declare explicitly that we want the tables to be cached on disk. Finally,
-                 * HSQL expects "CHR" to be spelled "CHAR".
-                 */
-                addReplacement("UNIQUE", "");
-                addReplacement("CHR", "CHAR");
-                addReplacement("CREATE", MORE_WORDS);
-                addReplacement("CREATE TABLE", "CREATE CACHED TABLE");
-                break;
-            }
-        }
+        this.database = database;
+        this.identifierQuote    = "\"";
+        this.isSchemaSupported  = false;
+        this.isCatalogSupported = false;
+
+        isEnumTypeSupported      = false;
+        isGrantOnSchemaSupported = false;
+        isGrantOnTableSupported  = false;
+        isCreateLanguageRequired = false;
+        isCommentSupported       = true;
+        /**
+         *  SQLite expects "CHR" to be spelled "CHAR".
+         */
+        addReplacement("CHR", "CHAR");
+
         this.maxRowsPerInsert = maxRowsPerInsert;
-        statement = connection.createStatement();
         /*
          * Now build the list of statements to skip, depending of which features are supported by the database.
          * WARNING: do not use capturing group here, because some subclasses (e.g. EPSGInstaller) will use their
@@ -363,10 +323,9 @@ public class ScriptRunner implements AutoCloseable {
      * Returns the connection to the database.
      *
      * @return the connection.
-     * @throws SQLException if the connection can not be obtained.
      */
-    protected final Connection getConnection() throws SQLException {
-        return statement.getConnection();
+    protected final SQLiteDatabase getConnection() {
+        return database;
     }
 
     /**
@@ -705,7 +664,13 @@ parseLine:  while (pos < length) {
          * of geometry columns in a PostGIS database, which use "SELECT AddGeometryColumn(…)".
          */
         if (subSQL.startsWith("SELECT ")) {
-            statement.executeQuery(subSQL).close();
+            database.beginTransaction();
+            try {
+                database.rawQuery(subSQL, null);
+                database.setTransactionSuccessful();
+            } finally {
+                database.endTransaction();
+            }
         } else {
             if (maxRowsPerInsert != Integer.MAX_VALUE && subSQL.startsWith("INSERT INTO")) {
                 if (maxRowsPerInsert == 0) {
@@ -728,7 +693,13 @@ parseLine:  while (pos < length) {
                                 if (subSQL.charAt(end - 1) == ',') {
                                     end--;
                                 }
-                                count += statement.executeUpdate(currentSQL = sql.append(subSQL, begin, end).toString());
+                                database.beginTransaction();
+                                try {
+                                    count += database.compileStatement(currentSQL = sql.append(subSQL, begin, end).toString()).executeUpdateDelete();
+                                    database.setTransactionSuccessful();
+                                } finally {
+                                    database.endTransaction();
+                                }
                                 sql.setLength(startOfValues);       // Prepare for next INSERT INTO statement.
                                 nrows = maxRowsPerInsert;
                                 begin = endOfLine + 1;
@@ -741,22 +712,17 @@ parseLine:  while (pos < length) {
                 }
             }
             if (subSQL != null) {
-                count += statement.executeUpdate(subSQL);
+                database.beginTransaction();
+                try {
+                    count += database.compileStatement(subSQL).executeUpdateDelete();
+                    database.setTransactionSuccessful();
+                } finally {
+                    database.endTransaction();
+                }
             }
         }
         currentSQL = null;      // Clear on success only.
         return count;
-    }
-
-    /**
-     * Closes the statement used by this runner. Note that this method does not close the connection
-     * given to the constructor; this connection still needs to be closed explicitly by the caller.
-     *
-     * @throws SQLException if an error occurred while closing the statement.
-     */
-    @Override
-    public void close() throws SQLException {
-        statement.close();
     }
 
     /**
@@ -794,5 +760,10 @@ parseLine:  while (pos < length) {
     @Override
     public String toString() {
         return status(null);
+    }
+
+    @Override
+    public void close() throws SQLException {
+        // Nothing to do
     }
 }
