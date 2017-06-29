@@ -16,7 +16,12 @@
  */
 package org.apache.sis.xml;
 
-import java.io.*;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.Reader;
+import java.io.BufferedInputStream;
+import java.io.FileInputStream;
 import java.net.URL;
 import javax.xml.bind.Unmarshaller;
 import javax.xml.bind.JAXBElement;
@@ -184,7 +189,9 @@ final class PooledUnmarshaller extends Pooled implements Unmarshaller {
             final Context context = begin();
             try {
                 InputStream s = input.openStream();
-                return unmarshaller.unmarshal(InputFactory.createXMLStreamReader(s));
+                Object object = unmarshaller.unmarshal(InputFactory.createXMLStreamReader(s));
+                s.close();
+                return object;
             } catch (XMLStreamException | IOException e) {
                 throw new JAXBException(e);
             } finally {
