@@ -18,14 +18,13 @@ package org.apache.sis.referencing.factory.sql;
 
 import java.util.Locale;
 import java.io.IOException;
-import java.sql.Connection;
-import java.sql.DatabaseMetaData;
-import java.sql.SQLException;
-import java.util.StringTokenizer;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.LogRecord;
 import java.io.BufferedReader;
+
+import android.database.SQLException;
+import android.database.sqlite.SQLiteDatabase;
 import org.apache.sis.util.StringBuilders;
 import org.apache.sis.internal.metadata.sql.ScriptRunner;
 import org.apache.sis.internal.metadata.sql.SQLUtilities;
@@ -79,24 +78,11 @@ final class EPSGInstaller extends ScriptRunner {
      * Creates a new runner which will execute the statements using the given connection.
      * The encoding is {@code "ISO-8859-1"}, which is the encoding used for the files provided by EPSG.
      *
-     * @param  connection  the connection to the database.
+     * @param  database  the connection to the database.
      * @throws SQLException if an error occurred while executing a SQL statement.
      */
-    public EPSGInstaller(final Connection connection) throws SQLException {
-        super(connection, 100);
-        boolean isReplaceSupported = false;
-        final DatabaseMetaData metadata = connection.getMetaData();
-        final String functions = metadata.getStringFunctions();
-        for (final StringTokenizer tk = new StringTokenizer(functions, ","); tk.hasMoreTokens();) {
-            final String token = tk.nextToken().trim();
-            if (token.equalsIgnoreCase("REPLACE")) {
-                isReplaceSupported = true;
-                break;
-            }
-        }
-        if (!isReplaceSupported) {
-            addStatementToSkip(REPLACE_STATEMENT);
-        }
+    public EPSGInstaller(final SQLiteDatabase database) throws SQLException {
+        super(database, 100);
         /*
          * The SQL scripts provided by EPSG contains some lines with only a "COMMIT" statement.
          * This statement is not understood by all databases, and interferes with our calls to
@@ -240,7 +226,7 @@ final class EPSGInstaller extends ScriptRunner {
     public void run(InstallationResources scriptProvider, final Locale locale) throws SQLException, IOException {
         long time = System.nanoTime();
         InstallationScriptProvider.log(Messages.getResources(locale).getLogRecord(Level.INFO,
-                Messages.Keys.CreatingSchema_2, EPSG, SQLUtilities.getSimplifiedURL(getConnection().getMetaData())));
+                Messages.Keys.CreatingSchema_2, EPSG, "SQLite"));
         if (scriptProvider == null) {
             scriptProvider = lookupProvider(locale);
         }
