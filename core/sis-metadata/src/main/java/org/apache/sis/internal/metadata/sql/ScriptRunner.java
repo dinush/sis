@@ -658,6 +658,7 @@ parseLine:  while (pos < length) {
      * @throws IOException if an I/O operation was required and failed.
      */
     protected int execute(final StringBuilder sql) throws SQLException, IOException {
+        ArgumentChecks.ensureNonNull("connection", database);
         if (!isSupported(sql)) {
             return 0;
         }
