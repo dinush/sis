@@ -273,11 +273,10 @@ public class ScriptRunner implements AutoCloseable {
      *       {@code INSERT INTO} statement. Note that this causes {@link StackOverflowError} in some JDBC driver.</li>
      * </ul>
      *
-     * @param  database        the connection to the database.
+     * @param  database        the connection to the database. Maybe null. {@link #setConnection(SQLiteDatabase)}
      * @param  maxRowsPerInsert  maximum number of rows per {@code "INSERT INTO"} statement.
      */
     protected ScriptRunner(final SQLiteDatabase database, int maxRowsPerInsert) {
-        ArgumentChecks.ensureNonNull("connection", database);
         ArgumentChecks.ensurePositive("maxRowsPerInsert", maxRowsPerInsert);
         this.database = database;
         this.identifierQuote    = "\"";
@@ -327,6 +326,11 @@ public class ScriptRunner implements AutoCloseable {
     protected final SQLiteDatabase getConnection() {
         return database;
     }
+
+    /**
+     * Sets the connection to the database.
+     */
+    protected final void setConnection(SQLiteDatabase database) { this.database = database; }
 
     /**
      * Adds a statement to skip. By default {@code ScriptRunner} ignores the following statements:

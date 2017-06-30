@@ -25,6 +25,7 @@ import java.io.BufferedReader;
 
 import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
+import org.apache.sis.internal.metadata.sql.Installer;
 import org.apache.sis.util.StringBuilders;
 import org.apache.sis.internal.metadata.sql.ScriptRunner;
 import org.apache.sis.internal.metadata.sql.SQLUtilities;
@@ -53,7 +54,7 @@ import org.apache.sis.internal.jdk8.BiFunction;
  * @since   0.7
  * @module
  */
-final class EPSGInstaller extends ScriptRunner {
+final class EPSGInstaller extends ScriptRunner implements Installer {
     /**
      * The pattern for an {@code "UPDATE … SET … REPLACE"} instruction.
      * Example:
@@ -76,6 +77,13 @@ final class EPSGInstaller extends ScriptRunner {
     private final boolean replacePilcrow;
 
     /**
+     * Zero argument constructor for ServiceLoader
+     */
+    public EPSGInstaller() {
+        this(null);
+    }
+
+    /**
      * Creates a new runner which will execute the statements using the given connection.
      * The encoding is {@code "ISO-8859-1"}, which is the encoding used for the files provided by EPSG.
      *
@@ -91,6 +99,10 @@ final class EPSGInstaller extends ScriptRunner {
          */
         addStatementToSkip("COMMIT");
         replacePilcrow = false;         // Never supported for now.
+    }
+
+    public void setDatabase(final SQLiteDatabase database) {
+        super.setConnection(database);
     }
 
     /**
