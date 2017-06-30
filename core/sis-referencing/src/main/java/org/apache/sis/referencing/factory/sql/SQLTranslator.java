@@ -16,23 +16,18 @@
  */
 package org.apache.sis.referencing.factory.sql;
 
-import java.util.Map;
-import java.util.HashMap;
-import java.util.Locale;
-import java.sql.DatabaseMetaData;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Types;
-
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
-import org.apache.sis.util.CharSequences;
-import org.apache.sis.util.ArgumentChecks;
-import org.apache.sis.util.resources.Errors;
-import org.apache.sis.internal.util.Constants;
-
-// Branch-dependent imports
 import org.apache.sis.internal.jdk8.JDK8;
+import org.apache.sis.util.ArgumentChecks;
+import org.apache.sis.util.CharSequences;
+import org.apache.sis.util.resources.Errors;
+
+import java.sql.DatabaseMetaData;
+import java.sql.SQLException;
+import java.util.HashMap;
+import java.util.Locale;
+import java.util.Map;
 
 
 /**
