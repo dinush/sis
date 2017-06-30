@@ -295,9 +295,9 @@ public class SQLTranslator {
             accessToAnsi.put("ORDER", "coord_axis_order");
         }
         /*
-         * SQLite uses boolean types
+         * SQLite does not have a boolean type
          */
-        useBoolean = true;
+        useBoolean = false;
     };
 
     /**
