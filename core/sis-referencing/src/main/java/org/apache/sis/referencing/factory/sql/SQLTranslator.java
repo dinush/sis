@@ -23,6 +23,9 @@ import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
+
+import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
 import org.apache.sis.util.CharSequences;
 import org.apache.sis.util.ArgumentChecks;
 import org.apache.sis.util.resources.Errors;
@@ -226,18 +229,18 @@ public class SQLTranslator {
      * An empty string ({@code ""}) means to search for tables without catalog or schema.
      * A {@code null} value means that the catalog or schema should not be used to narrow the search.</p>
      *
-     * @param  md       information about the database.
+     * @param  database       information about the database.
      * @param  catalog  the catalog where to look for EPSG schema, or {@code null} if any.
      * @param  schema   the schema where to look for EPSG tables, or {@code null} if any.
      * @throws SQLException if an error occurred while querying the database metadata.
      */
-    public SQLTranslator(final DatabaseMetaData md, final String catalog, final String schema) throws SQLException {
-        ArgumentChecks.ensureNonNull("md", md);
-        quote = md.getIdentifierQuoteString().trim();
+    public SQLTranslator(final SQLiteDatabase database, final String catalog, final String schema) throws SQLException {
+        ArgumentChecks.ensureNonNull("md", database);
+        quote = "\"";
         accessToAnsi = new HashMap<>(4);
         this.catalog = catalog;
         this.schema  = schema;
-        setup(md);
+        setup(database);
     }
 
     /**
@@ -253,23 +256,23 @@ public class SQLTranslator {
      *       the MS-Access database or the names used in the SQL scripts. Both of them are distributed by EPSG.</li>
      * </ol>
      */
-    final void setup(final DatabaseMetaData md) throws SQLException {
-        final boolean toUpperCase = md.storesUpperCaseIdentifiers();
+    final void setup(final SQLiteDatabase database) throws SQLException {
+        final boolean toUpperCase = true;   // SQLite is case-insensitive
         for (int i = SENTINEL.length; --i >= 0;) {
             String table = SENTINEL[i];
             if (toUpperCase && i != MIXED_CASE) {
                 table = table.toUpperCase(Locale.US);
             }
-            try (ResultSet result = md.getTables(catalog, schema, table, null)) {
-                if (result.next()) {
+            try (Cursor cursor = database.query("sqlite_master", null, "name=? AND type=?", new String[]{table, "table"}, null, null, null)){
+                if (cursor.moveToNext()) {
                     isTableFound    = true;
                     isPrefixed      = table.startsWith(TABLE_PREFIX);
                     quoteTableNames = (i == MIXED_CASE);
-                    do {
-                        catalog = result.getString("TABLE_CAT");
-                        schema  = result.getString("TABLE_SCHEM");
-                    } while (!Constants.EPSG.equalsIgnoreCase(schema) && result.next());
-                    if (schema == null) schema = "";
+                    schema          = "";
+                    /**
+                     * SQLite does not support the following
+                     */
+                    catalog         = null;
                     break;
                 }
             }
@@ -286,8 +289,8 @@ public class SQLTranslator {
              * This column has been renamed "coord_axis_order" in DLL scripts.
              * We need to check which name our current database uses.
              */
-            try (ResultSet result = md.getColumns(catalog, schema, "Coordinate Axis", "ORDER")) {
-                translateColumns = !result.next();
+            try (Cursor cursor = database.query("Coordinate Axis", new String[]{"ORDER"}, null, null, null, null, null)) {
+                translateColumns = cursor.getColumnCount() > 0;
             }
         } else {
             accessToAnsi.put("Coordinate_Operation", "coordoperation");
@@ -297,22 +300,9 @@ public class SQLTranslator {
             accessToAnsi.put("ORDER", "coord_axis_order");
         }
         /*
-         * Detect if the database uses boolean types where applicable.
-         * We arbitrarily use the Datum table as a representative value.
+         * SQLite uses boolean types
          */
-        String deprecated = "DEPRECATED";
-        if (md.storesLowerCaseIdentifiers()) {
-            deprecated = deprecated.toLowerCase(Locale.US);
-        }
-        try (ResultSet result = md.getColumns(catalog, schema, null, deprecated)) {
-            while (result.next()) {
-                if (CharSequences.endsWith(result.getString("TABLE_NAME"), "Datum", true)) {
-                    final int type = result.getInt("DATA_TYPE");
-                    useBoolean = (type == Types.BOOLEAN) || (type == Types.BIT);
-                    break;
-                }
-            }
-        }
+        useBoolean = true;
     };
 
     /**
