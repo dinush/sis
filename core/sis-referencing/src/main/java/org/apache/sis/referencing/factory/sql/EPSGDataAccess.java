@@ -247,13 +247,12 @@ public class EPSGDataAccess extends GeodeticAuthorityFactory implements CRSAutho
      * to be open. This is why we use weak references rather than hard ones, in order to know when no
      * {@link AuthorityCodes} are still in use.</p>
      *
-     * <p>The {@link CloseableReference#dispose()} method takes care of closing the statements used by the map.
      * The {@link AuthorityCodes} reference in this map is then cleared by the garbage collector.
      * The {@link #canClose()} method checks if there is any remaining live reference in this map,
      * and returns {@code false} if some are found (thus blocking the call to {@link #close()}
      * by the {@link org.apache.sis.referencing.factory.ConcurrentAuthorityFactory} timer).</p>
      */
-    private final Map<Class<?>, CloseableReference<AuthorityCodes>> authorityCodes = new HashMap<>();
+    private final Map<Class<?>, AuthorityCodes> authorityCodes = new HashMap<>();
 
     /**
      * Cache for axis names. This service is not provided by {@code ConcurrentAuthorityFactory}
@@ -527,12 +526,9 @@ addURIs:    for (int i=0; ; i++) {
      * Returns a map of EPSG authority codes as keys and object names as values.
      */
     private synchronized Map<String,String> getCodeMap(final Class<?> type) throws SQLException {
-        CloseableReference<AuthorityCodes> reference = authorityCodes.get(type);
+        AuthorityCodes reference = authorityCodes.get(type);
         if (reference != null) {
-            AuthorityCodes existing = reference.get();
-            if (existing != null) {
-                return existing;
-            }
+            return reference;
         }
         Map<String,String> result = Collections.emptyMap();
         for (final TableInfo table : TableInfo.EPSG) {
@@ -557,19 +553,13 @@ addURIs:    for (int i=0; ; i++) {
                 AuthorityCodes codes = new AuthorityCodes(connection, table, type, this);
                 reference = authorityCodes.get(codes.type);
                 if (reference != null) {
-                    AuthorityCodes existing = reference.get();
-                    if (existing != null) {
-                        codes = existing;
-                    } else {
-                        reference = null;   // The weak reference is no longer valid.
-                    }
+                    codes = reference;
                 }
                 if (reference == null) {
-                    reference = codes.createReference();
-                    authorityCodes.put(codes.type, reference);
+                    authorityCodes.put(codes.type, codes);
                 }
                 if (type != codes.type) {
-                    authorityCodes.put(type, reference);
+                    authorityCodes.put(type, codes);
                 }
                 /*
                  * We now have the codes for a single type. Append with the codes of previous types, if any.
@@ -3456,9 +3446,9 @@ next:               while (r.moveToNext()) {
         boolean can = true;
         if (!authorityCodes.isEmpty()) {
             System.gc();                // For cleaning as much weak references as we can before we check them.
-            final Iterator<CloseableReference<AuthorityCodes>> it = authorityCodes.values().iterator();
+            final Iterator<AuthorityCodes> it = authorityCodes.values().iterator();
             while (it.hasNext()) {
-                final AuthorityCodes codes = it.next().get();
+                final AuthorityCodes codes = it.next();
                 if (codes == null) {
                     it.remove();
                 } else {

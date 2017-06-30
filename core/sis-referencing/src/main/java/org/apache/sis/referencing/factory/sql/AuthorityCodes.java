@@ -19,11 +19,10 @@ package org.apache.sis.referencing.factory.sql;
 import java.util.LinkedHashMap;
 import java.io.Serializable;
 import java.io.ObjectStreamException;
-import java.sql.ResultSet;
-import java.sql.Connection;
-import java.sql.SQLException;
-import java.sql.PreparedStatement;
-import java.sql.Statement;
+
+import android.database.Cursor;
+import android.database.SQLException;
+import android.database.sqlite.SQLiteDatabase;
 import org.opengis.referencing.operation.Projection;
 import org.apache.sis.util.collection.BackingStoreException;
 import org.apache.sis.internal.util.AbstractMap;
@@ -64,7 +63,7 @@ final class AuthorityCodes extends AbstractMap<String,String> implements Seriali
     private static final int MAX_CODE = 69999999;
 
     /**
-     * Index in the {@link #sql} and {@link #statements} arrays.
+     * Index in the {@link #sql} array.
      */
     private static final int ALL = 0, ONE = 1;
 
@@ -99,14 +98,6 @@ final class AuthorityCodes extends AbstractMap<String,String> implements Seriali
     private final transient String[] sql = new String[2];
 
     /**
-     * The JDBC statements for the SQL commands in the {@link #sql} array, created when first needed.
-     * All usages of those statements shall be synchronized on the {@linkplain #factory}.
-     * This array will also be stored in {@link CloseableReference} for closing the statements
-     * when the garbage collector detected that {@code AuthorityCodes} is no longer in use.
-     */
-    private final transient Statement[] statements = new Statement[2];
-
-    /**
      * The result of {@code statements[ALL]}, created only if requested.
      * The codes will be queried at most once and cached in the {@link #codes} list.
      *
@@ -114,7 +105,7 @@ final class AuthorityCodes extends AbstractMap<String,String> implements Seriali
      * {@code statements[ALL]} will be closed. This is because JDBC specification said that closing
      * a statement also close its result set.</p>
      */
-    private transient ResultSet results;
+    private transient Cursor results;
 
     /**
      * A cache of integer codes. Created only if the user wants to iterate over all codes or asked for the map size.
@@ -129,7 +120,7 @@ final class AuthorityCodes extends AbstractMap<String,String> implements Seriali
      * @param  type        the type to query.
      * @param  factory     the factory originator.
      */
-    AuthorityCodes(final Connection connection, final TableInfo table, final Class<?> type, final EPSGDataAccess factory)
+    AuthorityCodes(final SQLiteDatabase connection, final TableInfo table, final Class<?> type, final EPSGDataAccess factory)
             throws SQLException
     {
         this.factory = factory;
@@ -171,15 +162,6 @@ final class AuthorityCodes extends AbstractMap<String,String> implements Seriali
     }
 
     /**
-     * Creates a weak reference to this map. That reference will also be in charge of closing the JDBC statements
-     * when the garbage collector determined that this {@code AuthorityCodes} instance is no longer in use.
-     * See class Javadoc for more information.
-     */
-    final CloseableReference<AuthorityCodes> createReference() {
-        return new CloseableReference<>(this, factory, statements);
-    }
-
-    /**
      * Returns {@code true} if the specified code should be included in this map.
      */
     private boolean filter(final int code) throws SQLException {
@@ -199,22 +181,19 @@ final class AuthorityCodes extends AbstractMap<String,String> implements Seriali
         synchronized (factory) {
             if (codes == null) {
                 codes = new IntegerList(100, MAX_CODE);
-                results = (statements[ALL] = factory.connection.createStatement()).executeQuery(sql[ALL]);
-                sql[ALL] = null;                // Not needed anymore.
+                results = factory.connection.rawQuery(sql[ALL], null);
             }
             int more = index - codes.size();    // Positive as long as we need more data.
             if (more < 0) {
                 code = codes.getInt(index);     // Get a previously cached value.
             } else {
-                final ResultSet r = results;
+                final Cursor r = results;
                 if (r == null) {
                     code = -1;                  // Already reached iteration end in a previous call.
                 } else do {
-                    if (!r.next()) {
+                    if (!r.moveToNext()) {
                         results = null;
                         r.close();
-                        statements[ALL].close();
-                        statements[ALL] = null;
                         return -1;
                     }
                     code = r.getInt(1);
@@ -276,14 +255,8 @@ final class AuthorityCodes extends AbstractMap<String,String> implements Seriali
             try {
                 synchronized (factory) {
                     if (filter(n)) {
-                        PreparedStatement statement = (PreparedStatement) statements[ONE];
-                        if (statement == null) {
-                            statements[ONE] = statement = factory.connection.prepareStatement(sql[ONE]);
-                            sql[ONE] = null;    // Not needed anymore.
-                        }
-                        statement.setInt(1, n);
-                        try (ResultSet results = statement.executeQuery()) {
-                            while (results.next()) {
+                        try (Cursor results = factory.connection.rawQuery(sql[ONE], new String[]{String.valueOf(n)})) {
+                            while (results.moveToNext()) {
                                 String name = results.getString(1);
                                 if (name != null) {
                                     return name;
