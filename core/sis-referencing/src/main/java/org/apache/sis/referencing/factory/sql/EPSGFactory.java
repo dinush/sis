@@ -21,11 +21,11 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
-import java.sql.Connection;
-import java.sql.DatabaseMetaData;
-import java.sql.SQLException;
-import javax.sql.DataSource;
 import java.io.IOException;
+
+import android.content.Context;
+import android.database.SQLException;
+import android.database.sqlite.SQLiteDatabase;
 import org.opengis.util.NameFactory;
 import org.opengis.util.FactoryException;
 import org.opengis.referencing.crs.CRSFactory;
@@ -53,25 +53,20 @@ import org.apache.sis.util.Localized;
 
 /**
  * A geodetic object factory backed by the EPSG database. This class creates JDBC connections to the EPSG database
- * when first needed using the {@link DataSource} specified at construction time. The geodetic objects are cached
+ * when first needed using the {@link SQLiteDatabase} specified at construction time. The geodetic objects are cached
  * for reuse and the idle connections are closed after a timeout.
  *
- * <p>If no data source has been specified to the constructor, then {@code EPSGFactory} searches for a
- * default data source in JNDI, or in the directory given by the {@code SIS_DATA} environment variable,
- * or in the directory given by the {@code "derby​.system​.home"} property, in that order.
+ * <p>If no data source has been specified to the constructor, then {@code EPSGFactory} request
+ * database from {@link Initializer}.
  * See the {@linkplain org.apache.sis.referencing.factory.sql package documentation} for more information.</p>
  *
  * <div class="section">EPSG dataset installation</div>
- * This class tries to automatically detect the schema that contains the EPSG tables
- * (see {@link SQLTranslator} for examples of tables to look for). If the tables are not found,
- * then the {@link #install(Connection)} method will be invoked for creating the EPSG schema.
- * The {@code install(…)} method can perform its work only if the definition files are reachable
- * on the classpath, or if the directory containing the files have been specified.
+ * Dataset will taken care by the {@link org.apache.sis.internal.metadata.sql.DatabaseOpenHelper#onCreate(SQLiteDatabase)}
  *
  * <div class="section">Data Access Object (DAO)</div>
  * If there is no cached object for a given code, then {@code EPSGFactory} creates an {@link EPSGDataAccess} instance
  * for performing the actual creation work. Developers who need to customize the geodetic object creation can override
- * the {@link #newDataAccess(Connection, SQLTranslator)} method in order to return their own {@link EPSGDataAccess}
+ * the {@link #newDataAccess(SQLiteDatabase, SQLTranslator)} method in order to return their own {@link EPSGDataAccess}
  * subclass.
  *
  * @author  Martin Desruisseaux (Geomatys)
@@ -95,9 +90,9 @@ public class EPSGFactory extends ConcurrentAuthorityFactory<EPSGDataAccess> impl
     private static final Set<String> CODESPACES = Collections.singleton(Constants.EPSG);
 
     /**
-     * The factory to use for creating {@link Connection}s to the EPSG database.
+     * The factory to use for creating {@link SQLiteDatabase}s to the EPSG database.
      */
-    protected final DataSource dataSource;
+    protected final SQLiteDatabase dataSource;
 
     /**
      * The factory to use for creating {@link org.opengis.util.GenericName} instances.
@@ -175,6 +170,11 @@ public class EPSGFactory extends ConcurrentAuthorityFactory<EPSGDataAccess> impl
     private final Locale locale;
 
     /**
+     * Android app {@link Context}
+     */
+    private final Context context;
+
+    /**
      * Creates a factory using the given configuration. The properties recognized by this constructor
      * are listed in the table below. Any property not listed below will be ignored by this constructor.
      * All properties are optional and can {@code null} or omitted, in which case default values are used.
@@ -188,8 +188,8 @@ public class EPSGFactory extends ConcurrentAuthorityFactory<EPSGDataAccess> impl
      *   <th>Description</th>
      *  </tr><tr>
      *   <td>{@code dataSource}</td>
-     *   <td>{@link DataSource}</td>
-     *   <td>The factory to use for creating {@link Connection}s to the EPSG database.</td>
+     *   <td>{@link SQLiteDatabase}</td>
+     *   <td>The factory to use for creating connections to the EPSG database.</td>
      *  </tr><tr>
      *   <td>{@code nameFactory}</td>
      *   <td>{@link NameFactory}</td>
@@ -254,17 +254,18 @@ public class EPSGFactory extends ConcurrentAuthorityFactory<EPSGDataAccess> impl
         if (properties == null) {
             properties = Collections.emptyMap();
         }
-        DataSource ds  = (DataSource)                 properties.get("dataSource");
+        SQLiteDatabase ds  = (SQLiteDatabase)         properties.get("dataSource");
         Locale locale  = (Locale)                     properties.get("locale");
         schema         = (String)                     properties.get("schema");
         catalog        = (String)                     properties.get("catalog");
         scriptProvider = (InstallationScriptProvider) properties.get("scriptProvider");
+        context        = (Context)                    properties.get("context");
         if (locale == null) {
             locale = Locale.getDefault(Locale.Category.DISPLAY);
         }
         this.locale = locale;
         if (ds == null) try {
-            ds = Initializer.getDataSource();
+            ds = Initializer.getDataSource(context);
             if (ds == null) {
                 throw new UnavailableFactoryException(Initializer.unspecified(locale));
             }
@@ -323,31 +324,20 @@ public class EPSGFactory extends ConcurrentAuthorityFactory<EPSGDataAccess> impl
 
     /**
      * Creates the EPSG schema in the database and populates the tables with geodetic definitions.
-     * This method is invoked automatically when {@link #newDataAccess()} detects that the EPSG dataset is not installed.
-     * Users can also invoke this method explicitely if they wish to force the dataset installation.
+     * Users can invoke this method explicitely if they wish to force the dataset installation.
      *
      * <p>This method uses the following properties from the map specified at
      * {@linkplain #EPSGFactory(Map) construction time}:</p>
      *
      * <ul class="verbose">
-     *   <li><b>{@code catalog}:</b><br>
-     *     a {@link String} giving the name of the database catalog where to create the EPSG schema.
-     *     If non-null, that catalog shall exist prior this method call (this method does not create any catalog).
-     *     If no catalog is specified or if the catalog is an empty string,
-     *     then the EPSG schema will be created without catalog.
-     *     If the database does not {@linkplain DatabaseMetaData#supportsCatalogsInTableDefinitions() support
-     *     catalogs in table definitions} or in {@linkplain DatabaseMetaData#supportsCatalogsInDataManipulation()
-     *     data manipulation}, then this property is ignored.</li>
-     *
      *   <li><b>{@code schema}:</b><br>
      *     a {@link String} giving the name of the database schema where to create the EPSG tables.
      *     That schema shall <strong>not</strong> exist prior this method call;
      *     the schema will be created by this {@code install(…)} method.
      *     If the schema is an empty string, then the tables will be created without schema.
      *     If no schema is specified, then the default schema is {@code "EPSG"}.
-     *     If the database does not {@linkplain DatabaseMetaData#supportsSchemasInTableDefinitions() support
-     *     schemas in table definitions} or in {@linkplain DatabaseMetaData#supportsSchemasInDataManipulation()
-     *     data manipulation}, then this property is ignored.</li>
+     *     If the database does not support schemas in table definitions or in
+     *     data manipulation, then this property is ignored.</li>
      *
      *   <li><b>{@code scriptProvider}:</b><br>
      *     an {@link InstallationScriptProvider} giving the SQL scripts to execute for creating the EPSG database.
@@ -371,15 +361,11 @@ public class EPSGFactory extends ConcurrentAuthorityFactory<EPSGDataAccess> impl
      *
      * @see InstallationScriptProvider
      */
-    public synchronized void install(final Connection connection) throws IOException, SQLException {
+    public synchronized void install(final SQLiteDatabase connection) throws IOException, SQLException {
         ArgumentChecks.ensureNonNull("connection", connection);
         try (EPSGInstaller installer = new EPSGInstaller(connection)) {
-            final boolean ac = connection.getAutoCommit();
-            if (ac) {
-                connection.setAutoCommit(false);
-            }
+            connection.beginTransaction();
             try {
-                boolean success = false;
                 try {
                     if (!"".equals(schema)) {                                           // Schema may be null.
                         installer.setSchema(schema != null ? schema : Constants.EPSG);
@@ -388,16 +374,9 @@ public class EPSGFactory extends ConcurrentAuthorityFactory<EPSGDataAccess> impl
                         }
                     }
                     installer.run(scriptProvider, locale);
-                    success = true;
+                    connection.setTransactionSuccessful();
                 } finally {
-                    if (ac) {
-                        if (success) {
-                            connection.commit();
-                        } else {
-                            connection.rollback();
-                        }
-                        connection.setAutoCommit(true);
-                    }
+                    connection.endTransaction();
                 }
             } catch (IOException | SQLException e) {
                 installer.logFailure(locale, e);
@@ -414,9 +393,9 @@ public class EPSGFactory extends ConcurrentAuthorityFactory<EPSGDataAccess> impl
      * <p>The default implementation performs the following steps:</p>
      * <ol>
      *   <li>Gets a new connection from the {@link #dataSource}.</li>
-     *   <li>If this method is invoked for the first time, verifies if the EPSG tables exists.
-     *       If the tables are not found, invokes {@link #install(Connection)}.</li>
-     *   <li>Delegates to {@link #newDataAccess(Connection, SQLTranslator)}, which provides an easier
+     *   <li>This method does not verify if the EPSG tables exists in this branch. Because we use
+     *   {@link android.database.sqlite.SQLiteOpenHelper} class's onCreate method to populate the database.</li>
+     *   <li>Delegates to {@link #newDataAccess(SQLiteDatabase, SQLTranslator)}, which provides an easier
      *       overriding point for subclasses wanting to return a custom {@link EPSGDataAccess} instance.</li>
      * </ol>
      *
@@ -427,20 +406,18 @@ public class EPSGFactory extends ConcurrentAuthorityFactory<EPSGDataAccess> impl
     @Override
     protected EPSGDataAccess newDataAccess() throws FactoryException {
         UnavailableFactoryException exception;
-        Connection connection = null;
+        SQLiteDatabase connection = null;
         try {
-            connection = dataSource.getConnection();
-            Logging.log(EPSGFactory.class, "newDataAccess", Initializer.connected(connection.getMetaData()));
+            Logging.log(EPSGFactory.class, "newDataAccess", Initializer.connected(dataSource.getPath()));
             SQLTranslator tr = translator;
             if (tr == null) {
                 synchronized (this) {
                     tr = translator;
                     if (tr == null) {
-                        tr = new SQLTranslator(connection.getMetaData(), catalog, schema);
+                        tr = new SQLTranslator(dataSource, catalog, schema);
                         try {
                             if (!tr.isTableFound()) {
-                                install(connection);
-                                tr.setup(connection.getMetaData());         // Set only on success.
+                                throw new Exception("Database not initialized properly");
                             }
                         } finally {
                             translator = tr;        // Set only after installation in order to block other threads.
@@ -451,15 +428,9 @@ public class EPSGFactory extends ConcurrentAuthorityFactory<EPSGDataAccess> impl
             if (tr.isTableFound()) {
                 return newDataAccess(connection, tr);
             } else {
-                connection.close();
                 exception = new UnavailableFactoryException(SQLTranslator.tableNotFound(locale));
             }
         } catch (Exception e) {                     // Really want to catch all exceptions here.
-            if (connection != null) try {
-                connection.close();
-            } catch (SQLException e2) {
-                e.addSuppressed(e2);
-            }
             /*
              * Derby sometime wraps SQLException into another SQLException.  For making the stack strace a
              * little bit simpler, keep only the root cause provided that the exception type is compatible.
@@ -489,9 +460,9 @@ public class EPSGFactory extends ConcurrentAuthorityFactory<EPSGDataAccess> impl
      * @return Data Access Object (DAO) to use in {@code createFoo(String)} methods.
      * @throws SQLException if a problem with the database has been detected.
      *
-     * @see EPSGDataAccess#EPSGDataAccess(EPSGFactory, Connection, SQLTranslator)
+     * @see EPSGDataAccess#EPSGDataAccess(EPSGFactory, SQLiteDatabase, SQLTranslator)
      */
-    protected EPSGDataAccess newDataAccess(Connection connection, SQLTranslator translator) throws SQLException {
+    protected EPSGDataAccess newDataAccess(SQLiteDatabase connection, SQLTranslator translator) throws SQLException {
         return new EPSGDataAccess(this, connection, translator);
     }
 
