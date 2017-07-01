@@ -16,9 +16,6 @@
  */
 package org.apache.sis.internal.metadata.sql;
 
-import java.sql.SQLException;
-import java.sql.SQLDataException;
-import java.sql.DatabaseMetaData;
 import org.apache.sis.util.Static;
 import org.apache.sis.util.Characters;
 import org.apache.sis.util.CharSequences;
@@ -49,15 +46,17 @@ public final class SQLUtilities extends Static {
      * Returns a simplified form of the URL (truncated before the first {@code ?} or {@code ;} character),
      * for logging or informative purpose only.
      *
-     * @param  metadata  the metadata of the database.
+     * NOTE: In this branch, this method does not do anything yet. Maybe future.
+     *
+     * @param  path  the path to the database.
      * @return a simplified version of database URL.
-     * @throws SQLException if an error occurred while fetching the URL.
      */
-    public static String getSimplifiedURL(final DatabaseMetaData metadata) throws SQLException {
-        String url = metadata.getURL();
-        int s1 = url.indexOf('?'); if (s1 < 0) s1 = url.length();
-        int s2 = url.indexOf(';'); if (s2 < 0) s2 = url.length();
-        return url.substring(0, Math.min(s1, s2));
+    public static String getSimplifiedURL(final String path) {
+        return path;
+//        String url = metadata.getURL();
+//        int s1 = url.indexOf('?'); if (s1 < 0) s1 = url.length();
+//        int s2 = url.indexOf(';'); if (s2 < 0) s2 = url.length();
+//        return url.substring(0, Math.min(s1, s2));
     }
 
     /**
@@ -66,11 +65,11 @@ public final class SQLUtilities extends Static {
      *
      * @param  text  the characters to convert to a boolean value, or {@code null}.
      * @return the given characters as a boolean value, or {@code null} if the given text was null or empty.
-     * @throws SQLDataException if the given text is non-null and non-empty but not recognized.
+     * @throws Exception if the given text is non-null and non-empty but not recognized.
      *
      * @since 0.8
      */
-    public static Boolean toBoolean(final String text) throws SQLException {
+    public static Boolean toBoolean(final String text) throws Exception {
         if (text == null) {
             return null;
         }
@@ -89,7 +88,7 @@ public final class SQLUtilities extends Static {
                 break;
             }
         }
-        throw new SQLDataException(Errors.format(Errors.Keys.CanNotConvertValue_2, text, Boolean.class));
+        throw new Exception(Errors.format(Errors.Keys.CanNotConvertValue_2, text, Boolean.class));
     }
 
     /**
