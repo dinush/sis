@@ -5,15 +5,34 @@ package org.apache.sis.internal.metadata.sql;
  * this class is to maintain a central place for the properties.
  */
 public class SQLiteDialect {
+
     /**
-     * The characters used for quoting identifiers.
+     * The quote character expected to be found in the SQL script.
+     * This character shall not be a whitespace or a Unicode identifier part.
      */
-    public static final String quote = "\"";
+    public static final char QUOTE = '\'';
+
+    /**
+     * The quote character for identifiers expected to be found in the SQL script.
+     * This character shall not be a whitespace or a Unicode identifier part.
+     */
+    public static final char IDENTIFIER_QUOTE = '"';
+
+    /**
+     * The character at the end of statements.
+     * This character shall not be a whitespace or a Unicode identifier part.
+     */
+    public static final char END_OF_STATEMENT = ';';
 
     /**
      * The string that can be used to escape wildcard characters.
      */
-    public static final String escape = "!";
+    public static final String ESCAPE_WILDCARD = "!";
+
+    /**
+     * The sequence for SQL comments.
+     */
+    public static final String COMMENT = "--";
 
     /**
      * Whether this dialect support table inheritance.
@@ -21,7 +40,43 @@ public class SQLiteDialect {
     public static final boolean isTableInheritanceSupported = false;
 
     /**
-     * {@code true} if child tables inherit the index of their parent tables.
+     * Child tables does not inherit the index of their parent tables.
      */
-    public final boolean isIndexInheritanceSupported = false;
+    public static final boolean isIndexInheritanceSupported = false;
+
+    /**
+     * Database does not support enums.
+     */
+    public static final boolean isEnumTypeSupported = false;
+
+    /**
+     * Database does not support catalogs.
+     */
+    public static final boolean isCatalogSupported = false;
+
+    /**
+     * Database does not support schemas.
+     */
+    public static final boolean isSchemaSupported = false;
+
+    /**
+     * Database does not support {@code "GRANT USAGE ON SCHEMA"} statements.
+     */
+    public static final boolean isGrantOnSchemaSupported = false;
+
+    /**
+     * Database does not support {@code "GRANT SELECT ON TABLE"} statements.
+     */
+    public static final boolean isGrantOnTableSupported = false;
+
+    /**
+     * Database does not support the {@code COMMENT} statement.
+     */
+    public static final boolean isCommentSupported = false;
+
+    /**
+     * Database does not support create language.
+     */
+    public static final boolean isCreateLanguageRequired = false;
+
 }
