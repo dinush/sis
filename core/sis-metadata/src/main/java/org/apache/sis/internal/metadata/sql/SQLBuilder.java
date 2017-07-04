@@ -16,10 +16,10 @@
  */
 package org.apache.sis.internal.metadata.sql;
 
-import java.sql.DatabaseMetaData;
-import java.sql.SQLException;
 import java.util.StringTokenizer;
 
+import static org.apache.sis.internal.metadata.sql.SQLiteDialect.escape;
+import static org.apache.sis.internal.metadata.sql.SQLiteDialect.quote;
 
 /**
  * Utility methods for building SQL statements.
@@ -31,23 +31,6 @@ import java.util.StringTokenizer;
  * @module
  */
 public class SQLBuilder {
-    /**
-     * The database dialect. This is used for a few database-dependent syntax.
-     */
-    public final Dialect dialect;
-
-    /**
-     * The characters used for quoting identifiers, or an empty string if none.
-     * This is the value returned by {@link DatabaseMetaData#getIdentifierQuoteString()}.
-     */
-    private final String quote;
-
-    /**
-     * The string that can be used to escape wildcard characters.
-     * This is the value returned by {@link DatabaseMetaData#getSearchStringEscape()}.
-     */
-    private final String escape;
-
     /**
      * The buffer where the SQL query is to be created.
      */
@@ -64,14 +47,9 @@ public class SQLBuilder {
     /**
      * Creates a new {@code SQLBuilder} initialized from the given database metadata.
      *
-     * @param  metadata     the database metadata.
      * @param  quoteSchema  whether the schema name should be written between quotes.
-     * @throws SQLException if an error occurred while fetching the database metadata.
      */
-    public SQLBuilder(final DatabaseMetaData metadata, final boolean quoteSchema) throws SQLException {
-        dialect = Dialect.guess(metadata);
-        quote   = metadata.getIdentifierQuoteString();
-        escape  = metadata.getSearchStringEscape();
+    public SQLBuilder(final boolean quoteSchema) {
         this.quoteSchema = quoteSchema;
     }
 
@@ -81,9 +59,6 @@ public class SQLBuilder {
      * @param other  the builder from which to copy metadata.
      */
     public SQLBuilder(final SQLBuilder other) {
-        dialect     = other.dialect;
-        escape      = other.escape;
-        quote       = other.quote;
         quoteSchema = other.quoteSchema;
     }
 
@@ -289,10 +264,6 @@ public class SQLBuilder {
     public final String createForeignKey(final String schema, final String table, final String column,
             final String target, final String primaryKey, boolean cascade)
     {
-        if (dialect == Dialect.DERBY) {
-            // Derby does not support "ON UPDATE CASCADE". It must be RESTRICT.
-            cascade = false;
-        }
         buffer.setLength(0);
         final String name = buffer.append(table).append('_').append(column).append("_fkey").toString();
         return clear().append("ALTER TABLE ").appendIdentifier(schema, table).append(" ADD CONSTRAINT ")

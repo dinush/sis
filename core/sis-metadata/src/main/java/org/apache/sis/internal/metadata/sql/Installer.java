@@ -8,7 +8,7 @@ import java.io.IOException;
 import java.util.Locale;
 
 /**
- * Database installer service. Created to map to EPSGInstaller class
+ * Database installer service. This is a map to EPSGInstaller class methods
  * in sis-referencing module.
  *
  * @author Sisinda Dinusha
