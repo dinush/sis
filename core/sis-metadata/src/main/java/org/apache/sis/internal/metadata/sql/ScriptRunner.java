@@ -38,11 +38,13 @@ import org.apache.sis.util.resources.Errors;
 import org.apache.sis.internal.jdk8.JDK8;
 import org.apache.sis.internal.jdk8.BiFunction;
 
+import static org.apache.sis.internal.metadata.sql.SQLiteDialect.QUOTE;
+
 
 /**
- * Run SQL scripts. The script is expected to use a standardized syntax, where the {@value #QUOTE} character
- * is used for quoting text, the {@value #IDENTIFIER_QUOTE} character is used for quoting identifier and the
- * {@value #END_OF_STATEMENT} character is used at the end for every SQL statement. Those characters will be
+ * Run SQL scripts. The script is expected to use a standardized syntax, where the {@value SQLiteDialect#QUOTE} character
+ * is used for quoting text, the {@value SQLiteDialect#IDENTIFIER_QUOTE} character is used for quoting identifier and the
+ * {@value SQLiteDialect#END_OF_STATEMENT} character is used at the end for every SQL statement. Those characters will be
  * replaced on-the-fly by the characters actually used by the database engine.
  *
  * <p><strong>This class is not intended for executing arbitrary SQL scripts.</strong>
@@ -56,37 +58,6 @@ import org.apache.sis.internal.jdk8.BiFunction;
  * @module
  */
 public class ScriptRunner implements AutoCloseable {
-    /**
-     * The database user having read (not write) permissions.
-     *
-     * @see #isGrantOnSchemaSupported
-     * @see #isGrantOnTableSupported
-     */
-    protected static final String PUBLIC = "PUBLIC";
-
-    /**
-     * The sequence for SQL comments. Leading lines starting by those characters will be ignored.
-     */
-    private static final String COMMENT = "--";
-
-    /**
-     * The quote character expected to be found in the SQL script.
-     * This character shall not be a whitespace or a Unicode identifier part.
-     */
-    private static final char QUOTE = '\'';
-
-    /**
-     * The quote character for identifiers expected to be found in the SQL script.
-     * This character shall not be a whitespace or a Unicode identifier part.
-     */
-    private static final char IDENTIFIER_QUOTE = '"';
-
-    /**
-     * The character at the end of statements.
-     * This character shall not be a whitespace or a Unicode identifier part.
-     */
-    private static final char END_OF_STATEMENT = ';';
-
     /**
      * The characters for escaping a portion of the SQL script. This is used by PostgreSQL
      * for the definition of triggers. Those characters should appear at the beginning of
@@ -114,99 +85,6 @@ public class ScriptRunner implements AutoCloseable {
     protected static final String MORE_WORDS = "…";
 
     /**
-     * The quote character for identifiers actually used in the database,
-     * as supported by SQLite.
-     */
-    protected final String identifierQuote;
-
-    /**
-     * {@code true} if the database supports enums.
-     * Example:
-     *
-     * {@preformat sql
-     *     CREATE TYPE metadata."CI_DateTypeCode" AS ENUM ('creation', 'publication');
-     *     CREATE CAST (VARCHAR AS metadata."CI_DateTypeCode") WITH INOUT AS ASSIGNMENT;
-     * }
-     *
-     * <p>Notes per database product:</p>
-     * <ul>
-     *   <li><b>PostgreSQL:</b> while enumeration were introduced in PostgreSQL 8.3,
-     *       we require PostgreSQL 8.4 because we need the {@code CAST … WITH INOUT} feature.</li>
-     *   <li><b>Other databases:</b> assumed not supported.</li>
-     * </ul>
-     *
-     * @see #statementsToSkip
-     */
-    protected final boolean isEnumTypeSupported;
-
-    /**
-     * {@code true} if the database supports catalogs.
-     */
-    protected final boolean isCatalogSupported;
-
-    /**
-     * {@code true} if the database supports schemas.
-     */
-    protected final boolean isSchemaSupported;
-
-    /**
-     * {@code true} if the database supports {@code "GRANT USAGE ON SCHEMA"} statements.
-     * Read-only permissions are typically granted to {@link #PUBLIC}.
-     * Example:
-     *
-     * {@preformat sql
-     *     GRANT USAGE ON SCHEMA metadata TO PUBLIC;
-     * }
-     *
-     * @see #statementsToSkip
-     */
-    protected final boolean isGrantOnSchemaSupported;
-
-    /**
-     * {@code true} if the database supports {@code "GRANT SELECT ON TABLE"} statements.
-     * Read-only permissions are typically granted to {@link #PUBLIC}.
-     * Example:
-     *
-     * {@preformat sql
-     *     GRANT SELECT ON TABLE epsg_coordinatereferencesystem TO PUBLIC;
-     * }
-     *
-     * @see #statementsToSkip
-     */
-    protected final boolean isGrantOnTableSupported;
-
-    /**
-     * {@code true} if the database supports the {@code COMMENT} statement.
-     * Example:
-     *
-     * {@preformat sql
-     *     COMMENT ON SCHEMA metadata IS 'ISO 19115 metadata';
-     * }
-     *
-     * @see #statementsToSkip
-     */
-    protected final boolean isCommentSupported;
-
-    /**
-     * {@code true} if the following instruction shall be executed
-     * (assuming that the PostgreSQL {@code "plpgsql"} language is desired):
-     *
-     * {@code sql
-     *   CREATE TRUSTED PROCEDURAL LANGUAGE 'plpgsql'
-     *     HANDLER plpgsql_call_handler
-     *     VALIDATOR plpgsql_validator;
-     * }
-     *
-     * <p>Notes per database product:</p>
-     * <ul>
-     *   <li><b>PostgreSQL:</b> {@code true} only for database prior to version 9.
-     *       Starting at version 9, the language is installed by default.</li>
-     *   <li><b>Other databases:</b> {@code false} because not supported.</li>
-     * </ul>
-     */
-    protected final boolean isCreateLanguageRequired;
-
-    /**
      * The maximum number of rows allowed per {@code "INSERT"} statement.
      * This is 1 if the database does not support multi-rows insertion.
      * For other database, this is set to an arbitrary "reasonable" value since attempts to insert
@@ -220,10 +98,10 @@ public class ScriptRunner implements AutoCloseable {
      * The list of statements to skip depends on which {@code is*Supported} fields are set to {@code true}:
      *
      * <ul>
-     *   <li>{@link #isEnumTypeSupported} for {@code "CREATE TYPE …"} or {@code "CREATE CAST …"} statements.</li>
-     *   <li>{@link #isGrantOnSchemaSupported} for {@code "GRANT USAGE ON SCHEMA …"} statements.</li>
-     *   <li>{@link #isGrantOnTableSupported} for {@code "GRANT SELECT ON TABLE …"} statements.</li>
-     *   <li>{@link #isCommentSupported} for {@code "COMMENT ON …"} statements.</li>
+     *   <li>{@link SQLiteDialect#isEnumTypeSupported} for {@code "CREATE TYPE …"} or {@code "CREATE CAST …"} statements.</li>
+     *   <li>{@link SQLiteDialect#isGrantOnSchemaSupported} for {@code "GRANT USAGE ON SCHEMA …"} statements.</li>
+     *   <li>{@link SQLiteDialect#isGrantOnTableSupported} for {@code "GRANT SELECT ON TABLE …"} statements.</li>
+     *   <li>{@link SQLiteDialect#isCommentSupported} for {@code "COMMENT ON …"} statements.</li>
      * </ul>
      */
     private Matcher statementsToSkip;
@@ -279,15 +157,6 @@ public class ScriptRunner implements AutoCloseable {
     protected ScriptRunner(final SQLiteDatabase database, int maxRowsPerInsert) {
         ArgumentChecks.ensurePositive("maxRowsPerInsert", maxRowsPerInsert);
         this.database = database;
-        this.identifierQuote    = "\"";
-        this.isSchemaSupported  = false;
-        this.isCatalogSupported = false;
-
-        isEnumTypeSupported      = false;
-        isGrantOnSchemaSupported = false;
-        isGrantOnTableSupported  = false;
-        isCreateLanguageRequired = false;
-        isCommentSupported       = true;
         /**
          *  SQLite expects "CHR" to be spelled "CHAR".
          */
@@ -299,21 +168,21 @@ public class ScriptRunner implements AutoCloseable {
          * WARNING: do not use capturing group here, because some subclasses (e.g. EPSGInstaller) will use their
          * own capturing groups. A non-capturing group is declared by "(?:A|B)" instead than a plain "(A|B)".
          */
-        if (!isEnumTypeSupported) {
+        if (!SQLiteDialect.isEnumTypeSupported) {
             addStatementToSkip("CREATE\\s+(?:TYPE|CAST)\\s+.*");
         }
-        if (!isGrantOnSchemaSupported || !isGrantOnTableSupported) {
+        if (!SQLiteDialect.isGrantOnSchemaSupported || !SQLiteDialect.isGrantOnTableSupported) {
             addStatementToSkip("GRANT\\s+\\w+\\s+ON\\s+");
-            if (isGrantOnSchemaSupported) {
+            if (SQLiteDialect.isGrantOnSchemaSupported) {
                 regexOfStmtToSkip.append("TABLE");
-            } else if (isGrantOnTableSupported) {
+            } else if (SQLiteDialect.isGrantOnTableSupported) {
                 regexOfStmtToSkip.append("SCHEMA");
             } else {
                 regexOfStmtToSkip.append("(?:TABLE|SCHEMA)");
             }
             regexOfStmtToSkip.append("\\s+.*");
         }
-        if (!isCommentSupported) {
+        if (!SQLiteDialect.isCommentSupported) {
             addStatementToSkip("COMMENT\\s+ON\\s+.*");
         }
     }
@@ -336,10 +205,10 @@ public class ScriptRunner implements AutoCloseable {
      * Adds a statement to skip. By default {@code ScriptRunner} ignores the following statements:
      *
      * <ul>
-     *   <li>{@code "CREATE TYPE …"} or {@code "CREATE CAST …"} if {@link #isEnumTypeSupported} is {@code false}.</li>
-     *   <li>{@code "GRANT USAGE ON SCHEMA …"} if {@link #isGrantOnSchemaSupported} is {@code false}.</li>
-     *   <li>{@code "GRANT SELECT ON TABLE …"} if {@link #isGrantOnTableSupported} is {@code false}.</li>
-     *   <li>{@code "COMMENT ON …"} if {@link #isCommentSupported} is {@code false}.</li>
+     *   <li>{@code "CREATE TYPE …"} or {@code "CREATE CAST …"} if {@link SQLiteDialect#isEnumTypeSupported} is {@code false}.</li>
+     *   <li>{@code "GRANT USAGE ON SCHEMA …"} if {@link SQLiteDialect#isGrantOnSchemaSupported} is {@code false}.</li>
+     *   <li>{@code "GRANT SELECT ON TABLE …"} if {@link SQLiteDialect#isGrantOnTableSupported} is {@code false}.</li>
+     *   <li>{@code "COMMENT ON …"} if {@link SQLiteDialect#isCommentSupported} is {@code false}.</li>
      * </ul>
      *
      * This method can be invoked for ignoring some additional statements.
@@ -404,7 +273,7 @@ public class ScriptRunner implements AutoCloseable {
 
     /**
      * Runs the given SQL script.
-     * Lines are read and grouped up to the terminal {@value #END_OF_STATEMENT} character, then sent to the database.
+     * Lines are read and grouped up to the terminal {@value SQLiteDialect#END_OF_STATEMENT} character, then sent to the database.
      *
      * @param  statement  the SQL statements to execute.
      * @return the number of rows added or modified as a result of the statement execution.
@@ -433,7 +302,7 @@ public class ScriptRunner implements AutoCloseable {
 
     /**
      * Runs the script from the given reader. Lines are read and grouped up to the
-     * terminal {@value #END_OF_STATEMENT} character, then sent to the database.
+     * terminal {@value SQLiteDialect#END_OF_STATEMENT} character, then sent to the database.
      *
      * @param  filename  name of the SQL script being executed. This is used only for error reporting.
      * @param  in        the stream to read. It is caller's responsibility to close this reader.
@@ -455,7 +324,7 @@ public class ScriptRunner implements AutoCloseable {
              */
             if (buffer.length() == 0) {
                 final int s = CharSequences.skipLeadingWhitespaces(line, 0, line.length());
-                if (s >= line.length() || line.regionMatches(s, COMMENT, 0, COMMENT.length())) {
+                if (s >= line.length() || line.regionMatches(s, SQLiteDialect.COMMENT, 0, SQLiteDialect.COMMENT.length())) {
                     continue;
                 }
                 if (in instanceof LineNumberReader) {
@@ -542,18 +411,17 @@ parseLine:  while (pos < length) {
                 }
                 switch (c) {
                     /*
-                     * Found a character for an identifier like "Coordinate Operations".
-                     * Check if we have found the opening or the closing character. Then
-                     * replace the standard quote character by the database-specific one.
+                     * No need to check for identifier character since the character
+                     * found in the SQL script (") is same as the database-specific one.
                      */
-                    case IDENTIFIER_QUOTE: {
-                        if (posOpeningQuote < 0) {
-                            isInsideIdentifier = !isInsideIdentifier;
-                            length = buffer.replace(pos, pos + n, identifierQuote).length();
-                            n = identifierQuote.length();
-                        }
-                        break;
-                    }
+//                    case SQLiteDialect.IDENTIFIER_QUOTE: {
+//                        if (posOpeningQuote < 0) {
+//                            isInsideIdentifier = !isInsideIdentifier;
+//                            length = buffer.replace(pos, pos + n, String.valueOf(SQLiteDialect.IDENTIFIER_QUOTE)).length();
+//                            n = SQLiteDialect.IDENTIFIER_QUOTE.length();
+//                        }
+//                        break;
+//                    }
                     /*
                      * Found a character for a text like 'This is a text'. Check if we have
                      * found the opening or closing character, ignoring the '' escape sequence.
@@ -575,7 +443,7 @@ parseLine:  while (pos < length) {
                      * Found the end of statement. Remove that character if it is the last non-white character,
                      * since SQL statement in JDBC are not expected to contain it.
                      */
-                    case END_OF_STATEMENT: {
+                    case SQLiteDialect.END_OF_STATEMENT: {
                         if (posOpeningQuote < 0 && !isInsideIdentifier) {
                             if (CharSequences.skipLeadingWhitespaces(buffer, pos + n, length) >= length) {
                                 buffer.setLength(pos);
@@ -591,7 +459,7 @@ parseLine:  while (pos < length) {
             }
         }
         line = buffer.toString().trim();
-        if (!line.isEmpty() && !line.startsWith(COMMENT)) {
+        if (!line.isEmpty() && !line.startsWith(SQLiteDialect.COMMENT)) {
             throw new EOFException(Errors.format(Errors.Keys.UnexpectedEndOfString_1, line));
         }
         currentFile = null;
