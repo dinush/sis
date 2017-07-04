@@ -17,12 +17,15 @@
 package org.apache.sis.metadata.sql;
 
 import java.io.IOException;
-import java.sql.Connection;
-import java.sql.SQLException;
+
+import org.apache.sis.internal.metadata.sql.SQLiteDialect;
 import org.apache.sis.internal.metadata.sql.ScriptRunner;
 import org.apache.sis.util.CharSequences;
 import org.apache.sis.util.StringBuilders;
 
+// Branch dependent imports
+import android.database.sqlite.SQLiteDatabase;
+import android.database.SQLException;
 
 /**
  * Executes the installation scripts for the "metadata" schema in the "SpatialMetadata" database.
@@ -37,9 +40,8 @@ final class Installer extends ScriptRunner {
      * Creates a new installer for the metadata database.
      *
      * @param  connection  connection to the metadata database.
-     * @throws SQLException if an error occurred while executing a SQL statement.
      */
-    Installer(final Connection connection) throws SQLException {
+    Installer(final SQLiteDatabase connection) {
         super(connection, 100);
     }
 
@@ -59,7 +61,7 @@ final class Installer extends ScriptRunner {
      */
     @Override
     protected int execute(final StringBuilder sql) throws SQLException, IOException {
-        if (!isEnumTypeSupported && CharSequences.startsWith(sql, "CREATE TABLE", true)) {
+        if (!SQLiteDialect.isEnumTypeSupported && CharSequences.startsWith(sql, "CREATE TABLE", true)) {
             StringBuilders.replace(sql, "metadata.\"CI_RoleCode\"", "VARCHAR(25)");
             StringBuilders.replace(sql, "metadata.\"CI_DateTypeCode\"", "VARCHAR(25)");
             StringBuilders.replace(sql, "metadata.\"CI_PresentationFormCode\"", "VARCHAR(25)");
