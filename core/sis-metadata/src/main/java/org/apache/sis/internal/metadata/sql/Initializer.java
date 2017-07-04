@@ -96,19 +96,14 @@ public abstract class Initializer {
      * </ol>
      *
      * @return the data source for the {@code $SIS_DATA/Databases/SpatialMetadata} or equivalent database, or {@code null} if none.
-     * @throws java.net.MalformedURLException   if an error occurred while converting the {@code derby.jar} file to URL.
-     * @throws java.lang.ClassNotFoundException if {@code derby.jar} has not been found on the JDK installation directory.
-     * @throws java.lang.InstantiationException if an error occurred while creating {@code org.apache.derby.jdbc.EmbeddedDataSource}.
-     * @throws java.lang.NoSuchMethodException  if a JDBC bean property has not been found on the data source.
-     * @throws java.lang.IllegalAccessException if a JDBC bean property of the data source is not public.
-     * @throws java.lang.reflect.InvocationTargetException if an error occurred while setting a data source bean property.
-     * @throws Exception for any other kind of errors. This include {@link RuntimeException} not documented above like
-     *         {@link IllegalArgumentException}, {@link ClassCastException}, {@link SecurityException}, <i>etc.</i>
+     * @throws Exception for any kind of errors. This include {@link RuntimeException} not documented above like
+     *         {@link IllegalArgumentException}, {@link SecurityException}, <i>etc.</i>
      */
     public static synchronized SQLiteDatabase getDataSource(Context context) throws Exception {
         if (source == null) {
             source = new DatabaseOpenHelper(context, DATABASE, null, 1).getWritableDatabase();
         }
+        source.enableWriteAheadLogging();
         return source;
     }
 
