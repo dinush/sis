@@ -38,13 +38,13 @@ import org.apache.sis.util.resources.Errors;
 import org.apache.sis.internal.jdk8.JDK8;
 import org.apache.sis.internal.jdk8.BiFunction;
 
-import static org.apache.sis.internal.metadata.sql.SQLiteDialect.QUOTE;
+import static org.apache.sis.internal.metadata.sql.SQLiteConfiguration.QUOTE;
 
 
 /**
- * Run SQL scripts. The script is expected to use a standardized syntax, where the {@value SQLiteDialect#QUOTE} character
- * is used for quoting text, the {@value SQLiteDialect#IDENTIFIER_QUOTE} character is used for quoting identifier and the
- * {@value SQLiteDialect#END_OF_STATEMENT} character is used at the end for every SQL statement. Those characters will be
+ * Run SQL scripts. The script is expected to use a standardized syntax, where the {@value SQLiteConfiguration#QUOTE} character
+ * is used for quoting text, the {@value SQLiteConfiguration#IDENTIFIER_QUOTE} character is used for quoting identifier and the
+ * {@value SQLiteConfiguration#END_OF_STATEMENT} character is used at the end for every SQL statement. Those characters will be
  * replaced on-the-fly by the characters actually used by the database engine.
  *
  * <p><strong>This class is not intended for executing arbitrary SQL scripts.</strong>
@@ -98,10 +98,10 @@ public class ScriptRunner implements AutoCloseable {
      * The list of statements to skip depends on which {@code is*Supported} fields are set to {@code true}:
      *
      * <ul>
-     *   <li>{@link SQLiteDialect#isEnumTypeSupported} for {@code "CREATE TYPE …"} or {@code "CREATE CAST …"} statements.</li>
-     *   <li>{@link SQLiteDialect#isGrantOnSchemaSupported} for {@code "GRANT USAGE ON SCHEMA …"} statements.</li>
-     *   <li>{@link SQLiteDialect#isGrantOnTableSupported} for {@code "GRANT SELECT ON TABLE …"} statements.</li>
-     *   <li>{@link SQLiteDialect#isCommentSupported} for {@code "COMMENT ON …"} statements.</li>
+     *   <li>{@link SQLiteConfiguration#isEnumTypeSupported} for {@code "CREATE TYPE …"} or {@code "CREATE CAST …"} statements.</li>
+     *   <li>{@link SQLiteConfiguration#isGrantOnSchemaSupported} for {@code "GRANT USAGE ON SCHEMA …"} statements.</li>
+     *   <li>{@link SQLiteConfiguration#isGrantOnTableSupported} for {@code "GRANT SELECT ON TABLE …"} statements.</li>
+     *   <li>{@link SQLiteConfiguration#isCommentSupported} for {@code "COMMENT ON …"} statements.</li>
      * </ul>
      */
     private Matcher statementsToSkip;
@@ -168,21 +168,21 @@ public class ScriptRunner implements AutoCloseable {
          * WARNING: do not use capturing group here, because some subclasses (e.g. EPSGInstaller) will use their
          * own capturing groups. A non-capturing group is declared by "(?:A|B)" instead than a plain "(A|B)".
          */
-        if (!SQLiteDialect.isEnumTypeSupported) {
+        if (!SQLiteConfiguration.isEnumTypeSupported) {
             addStatementToSkip("CREATE\\s+(?:TYPE|CAST)\\s+.*");
         }
-        if (!SQLiteDialect.isGrantOnSchemaSupported || !SQLiteDialect.isGrantOnTableSupported) {
+        if (!SQLiteConfiguration.isGrantOnSchemaSupported || !SQLiteConfiguration.isGrantOnTableSupported) {
             addStatementToSkip("GRANT\\s+\\w+\\s+ON\\s+");
-            if (SQLiteDialect.isGrantOnSchemaSupported) {
+            if (SQLiteConfiguration.isGrantOnSchemaSupported) {
                 regexOfStmtToSkip.append("TABLE");
-            } else if (SQLiteDialect.isGrantOnTableSupported) {
+            } else if (SQLiteConfiguration.isGrantOnTableSupported) {
                 regexOfStmtToSkip.append("SCHEMA");
             } else {
                 regexOfStmtToSkip.append("(?:TABLE|SCHEMA)");
             }
             regexOfStmtToSkip.append("\\s+.*");
         }
-        if (!SQLiteDialect.isCommentSupported) {
+        if (!SQLiteConfiguration.isCommentSupported) {
             addStatementToSkip("COMMENT\\s+ON\\s+.*");
         }
     }
@@ -205,10 +205,10 @@ public class ScriptRunner implements AutoCloseable {
      * Adds a statement to skip. By default {@code ScriptRunner} ignores the following statements:
      *
      * <ul>
-     *   <li>{@code "CREATE TYPE …"} or {@code "CREATE CAST …"} if {@link SQLiteDialect#isEnumTypeSupported} is {@code false}.</li>
-     *   <li>{@code "GRANT USAGE ON SCHEMA …"} if {@link SQLiteDialect#isGrantOnSchemaSupported} is {@code false}.</li>
-     *   <li>{@code "GRANT SELECT ON TABLE …"} if {@link SQLiteDialect#isGrantOnTableSupported} is {@code false}.</li>
-     *   <li>{@code "COMMENT ON …"} if {@link SQLiteDialect#isCommentSupported} is {@code false}.</li>
+     *   <li>{@code "CREATE TYPE …"} or {@code "CREATE CAST …"} if {@link SQLiteConfiguration#isEnumTypeSupported} is {@code false}.</li>
+     *   <li>{@code "GRANT USAGE ON SCHEMA …"} if {@link SQLiteConfiguration#isGrantOnSchemaSupported} is {@code false}.</li>
+     *   <li>{@code "GRANT SELECT ON TABLE …"} if {@link SQLiteConfiguration#isGrantOnTableSupported} is {@code false}.</li>
+     *   <li>{@code "COMMENT ON …"} if {@link SQLiteConfiguration#isCommentSupported} is {@code false}.</li>
      * </ul>
      *
      * This method can be invoked for ignoring some additional statements.
@@ -273,7 +273,7 @@ public class ScriptRunner implements AutoCloseable {
 
     /**
      * Runs the given SQL script.
-     * Lines are read and grouped up to the terminal {@value SQLiteDialect#END_OF_STATEMENT} character, then sent to the database.
+     * Lines are read and grouped up to the terminal {@value SQLiteConfiguration#END_OF_STATEMENT} character, then sent to the database.
      *
      * @param  statement  the SQL statements to execute.
      * @return the number of rows added or modified as a result of the statement execution.
@@ -302,7 +302,7 @@ public class ScriptRunner implements AutoCloseable {
 
     /**
      * Runs the script from the given reader. Lines are read and grouped up to the
-     * terminal {@value SQLiteDialect#END_OF_STATEMENT} character, then sent to the database.
+     * terminal {@value SQLiteConfiguration#END_OF_STATEMENT} character, then sent to the database.
      *
      * @param  filename  name of the SQL script being executed. This is used only for error reporting.
      * @param  in        the stream to read. It is caller's responsibility to close this reader.
@@ -324,7 +324,7 @@ public class ScriptRunner implements AutoCloseable {
              */
             if (buffer.length() == 0) {
                 final int s = CharSequences.skipLeadingWhitespaces(line, 0, line.length());
-                if (s >= line.length() || line.regionMatches(s, SQLiteDialect.COMMENT, 0, SQLiteDialect.COMMENT.length())) {
+                if (s >= line.length() || line.regionMatches(s, SQLiteConfiguration.COMMENT, 0, SQLiteConfiguration.COMMENT.length())) {
                     continue;
                 }
                 if (in instanceof LineNumberReader) {
@@ -443,7 +443,7 @@ parseLine:  while (pos < length) {
                      * Found the end of statement. Remove that character if it is the last non-white character,
                      * since SQL statement in JDBC are not expected to contain it.
                      */
-                    case SQLiteDialect.END_OF_STATEMENT: {
+                    case SQLiteConfiguration.END_OF_STATEMENT: {
                         if (posOpeningQuote < 0 && !isInsideIdentifier) {
                             if (CharSequences.skipLeadingWhitespaces(buffer, pos + n, length) >= length) {
                                 buffer.setLength(pos);
@@ -459,7 +459,7 @@ parseLine:  while (pos < length) {
             }
         }
         line = buffer.toString().trim();
-        if (!line.isEmpty() && !line.startsWith(SQLiteDialect.COMMENT)) {
+        if (!line.isEmpty() && !line.startsWith(SQLiteConfiguration.COMMENT)) {
             throw new EOFException(Errors.format(Errors.Keys.UnexpectedEndOfString_1, line));
         }
         currentFile = null;

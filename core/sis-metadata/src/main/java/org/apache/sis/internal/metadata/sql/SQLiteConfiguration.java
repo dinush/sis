@@ -4,7 +4,7 @@ package org.apache.sis.internal.metadata.sql;
  * Holds property values related to SQLite Databases. Purpose of
  * this class is to maintain a central place for the properties.
  */
-public class SQLiteDialect {
+public class SQLiteConfiguration {
 
     /**
      * The quote character expected to be found in the SQL script.

@@ -18,8 +18,8 @@ package org.apache.sis.internal.metadata.sql;
 
 import java.util.StringTokenizer;
 
-import static org.apache.sis.internal.metadata.sql.SQLiteDialect.escape;
-import static org.apache.sis.internal.metadata.sql.SQLiteDialect.quote;
+import static org.apache.sis.internal.metadata.sql.SQLiteConfiguration.escape;
+import static org.apache.sis.internal.metadata.sql.SQLiteConfiguration.quote;
 
 /**
  * Utility methods for building SQL statements.

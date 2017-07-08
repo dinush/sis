@@ -18,7 +18,7 @@ package org.apache.sis.metadata.sql;
 
 import java.io.IOException;
 
-import org.apache.sis.internal.metadata.sql.SQLiteDialect;
+import org.apache.sis.internal.metadata.sql.SQLiteConfiguration;
 import org.apache.sis.internal.metadata.sql.ScriptRunner;
 import org.apache.sis.util.CharSequences;
 import org.apache.sis.util.StringBuilders;
@@ -61,7 +61,7 @@ final class Installer extends ScriptRunner {
      */
     @Override
     protected int execute(final StringBuilder sql) throws SQLException, IOException {
-        if (!SQLiteDialect.isEnumTypeSupported && CharSequences.startsWith(sql, "CREATE TABLE", true)) {
+        if (!SQLiteConfiguration.isEnumTypeSupported && CharSequences.startsWith(sql, "CREATE TABLE", true)) {
             StringBuilders.replace(sql, "metadata.\"CI_RoleCode\"", "VARCHAR(25)");
             StringBuilders.replace(sql, "metadata.\"CI_DateTypeCode\"", "VARCHAR(25)");
             StringBuilders.replace(sql, "metadata.\"CI_PresentationFormCode\"", "VARCHAR(25)");
