@@ -17,15 +17,11 @@
 package org.apache.sis.internal.metadata.sql;
 
 import android.content.Context;
-import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import org.apache.sis.internal.system.DefaultFactories;
-import org.apache.sis.internal.util.Constants;
-import org.apache.sis.setup.InstallationResources;
 
 import java.io.IOException;
-import java.util.Iterator;
 import java.util.Locale;
 import java.util.NoSuchElementException;
 import java.util.ServiceLoader;
@@ -50,6 +46,10 @@ public class DatabaseOpenHelper extends SQLiteOpenHelper {
      */
     @Override
     public void onCreate(SQLiteDatabase sqLiteDatabase) {
+
+        /**
+         * EPSG dataset installer
+         */
         Installer installer;
         sqLiteDatabase.beginTransaction();
         try {
@@ -62,6 +62,16 @@ public class DatabaseOpenHelper extends SQLiteOpenHelper {
             e.printStackTrace();
         } finally {
             sqLiteDatabase.endTransaction();
+        }
+
+        /**
+         * Metadata installer
+         */
+        org.apache.sis.metadata.sql.Installer metaInstaller = new org.apache.sis.metadata.sql.Installer(sqLiteDatabase);
+        try {
+            metaInstaller.run();
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 

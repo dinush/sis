@@ -52,6 +52,8 @@ import static org.apache.sis.internal.metadata.sql.SQLiteConfiguration.QUOTE;
  * (for example the scripts for creating the EPSG database). We do not try to support SQL
  * functionalities other than what we need for those scripts.</p>
  *
+ * NOTE: All the database configurations are placed in the {@link SQLiteConfiguration} class.
+ *
  * @author  Martin Desruisseaux (Geomatys)
  * @version 0.8
  * @since   0.7
