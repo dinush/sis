@@ -35,13 +35,13 @@ import android.database.SQLException;
  * @since   0.8
  * @module
  */
-final class Installer extends ScriptRunner {
+public final class Installer extends ScriptRunner {
     /**
      * Creates a new installer for the metadata database.
      *
      * @param  connection  connection to the metadata database.
      */
-    Installer(final SQLiteDatabase connection) {
+    public Installer(final SQLiteDatabase connection) {
         super(connection, 100);
     }
 

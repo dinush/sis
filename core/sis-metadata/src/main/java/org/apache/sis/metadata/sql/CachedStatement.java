@@ -19,19 +19,22 @@ package org.apache.sis.metadata.sql;
 import java.util.Locale;
 import java.util.logging.Level;
 import java.util.logging.LogRecord;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
+
 import org.apache.sis.util.resources.Errors;
 import org.apache.sis.util.logging.WarningListeners;
 import org.apache.sis.internal.system.Loggers;
 
+// Branch-dependent imports
+import android.database.Cursor;
+import android.database.SQLException;
+import android.database.sqlite.SQLiteDatabase;
+
 
 /**
- * The result of a query for metadata attributes. This object {@linkplain PreparedStatement prepares a statement}
+ * The result of a query for metadata attributes. This object {@linkplain String stores a statement}
  * only once for a given table, until a certain period of inactivity is elapsed. When a particular record in the
- * table is fetched, the {@link ResultSet} is automatically constructed. If many attributes are fetched consecutively
- * for the same record, then the same {@link ResultSet} is reused.
+ * table is fetched, the {@link Cursor} is automatically constructed. If many attributes are fetched consecutively
+ * for the same record, then the same {@link Cursor} is reused.
  *
  * <div class="section"><b>Synchronization</b>:
  * This class is <strong>not</strong> thread-safe. Callers must perform their own synchronization in such a way
@@ -65,13 +68,18 @@ final class CachedStatement implements AutoCloseable {
      * which can not be changed, and the {@link #identifier}, which can be changed at any time.
      * The first parameter of the statement shall be the identifier.
      */
-    private final PreparedStatement statement;
+    private final String statement;
 
     /**
-     * The results of last call to {@link PreparedStatement#executeQuery()},
+     * Connection to the database. Should be provide in the constructor.
+     */
+    private final SQLiteDatabase database;
+
+    /**
+     * The results of last call to {@link SQLiteDatabase#rawQuery(String, String[])}()},
      * or {@code null} if not yet determined.
      */
-    private ResultSet results;
+    private Cursor results;
 
     /**
      * The expiration time of this result, in nanoseconds as given by {@link System#nanoTime()}.
@@ -91,10 +99,11 @@ final class CachedStatement implements AutoCloseable {
      * @param statement  the prepared statement.
      * @param listeners  where to report the warnings.
      */
-    CachedStatement(final Class<?> type, final PreparedStatement statement,
+    CachedStatement(final Class<?> type, final SQLiteDatabase database, final String statement,
             final WarningListeners<MetadataSource> listeners)
     {
         this.type      = type;
+        this.database  = database;
         this.statement = statement;
         this.listeners = listeners;
     }
@@ -108,35 +117,48 @@ final class CachedStatement implements AutoCloseable {
      * @throws SQLException if an SQL operation failed.
      * @throws MetadataStoreException if no record has been found for the given key.
      */
-    final Object getValue(final String id, final String attribute) throws SQLException, MetadataStoreException {
+    final Object getValue(final String id, final String attribute) throws SQLException, MetadataStoreException ,IllegalArgumentException {
         if (!id.equals(identifier)) {
             closeResultSet();
         }
-        ResultSet r = results;
+        Cursor r = results;
         if (r == null) {
-            statement.setString(1, id);
-            r = statement.executeQuery();
-            if (!r.next()) {
-                final String table = r.getMetaData().getTableName(1);
+            r = database.rawQuery(statement, new String[]{id});
+            if (!r.moveToNext()) {
                 r.close();
-                throw new MetadataStoreException(Errors.format(Errors.Keys.RecordNotFound_2, table, id));
+                throw new MetadataStoreException(Errors.format(Errors.Keys.RecordNotFound_2, statement, id));
             }
             results = r;
             identifier = id;
         }
-        return r.getObject(attribute);
+        return objectFromResult(r.getColumnIndexOrThrow(attribute));
     }
 
     /**
-     * Closes the current {@link ResultSet}. Before doing so, we make an opportunist check for duplicated values
+     * Returns the value of the column in the given id as {@linkplain Object}.
+     * @param id    ID of the column
+     * @return      value as {@linkplain Object}
+     */
+    private Object objectFromResult(int id) {
+        switch (results.getType(id)) {
+            case Cursor.FIELD_TYPE_INTEGER: return results.getInt(id);
+            case Cursor.FIELD_TYPE_FLOAT:   return results.getFloat(id);
+            case Cursor.FIELD_TYPE_STRING:  return results.getString(id);
+            case Cursor.FIELD_TYPE_BLOB:    return results.getBlob(id);
+            default:                        return null;
+        }
+    }
+
+    /**
+     * Closes the current {@link Cursor}. Before doing so, we make an opportunist check for duplicated values
      * in the table. If a duplicate is found, a warning is logged. The log message pretends to be emitted by the
      * interface constructor, which does not exist. But this is the closest we can get from a public API.
      */
     private void closeResultSet() throws SQLException {
-        final ResultSet r = results;
+        final Cursor r = results;
         results = null;               // Make sure that this field is cleared even if an exception occurs below.
         if (r != null) {
-            final boolean hasNext = r.next();
+            final boolean hasNext = r.moveToNext();
             r.close();
             if (hasNext) {
                 warning(type, "<init>", Errors.getResources((Locale) null).getLogRecord(
@@ -158,7 +180,6 @@ final class CachedStatement implements AutoCloseable {
     @Override
     public void close() throws SQLException {
         closeResultSet();
-        statement.close();
     }
 
     /**
