@@ -99,7 +99,7 @@ public abstract class Initializer {
      * @throws Exception for any kind of errors. This include {@link RuntimeException} not documented above like
      *         {@link IllegalArgumentException}, {@link SecurityException}, <i>etc.</i>
      */
-    public static synchronized SQLiteDatabase getDataSource(Context context) throws Exception {
+    public static synchronized SQLiteDatabase getDataSource(Context context) {
         if (source == null) {
             source = new DatabaseOpenHelper(context, DATABASE, null, 1).getWritableDatabase();
         }

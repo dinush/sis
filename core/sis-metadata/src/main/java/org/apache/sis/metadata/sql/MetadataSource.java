@@ -16,7 +16,6 @@
  */
 package org.apache.sis.metadata.sql;
 
-import java.sql.SQLNonTransientException;
 import java.util.Map;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
@@ -36,9 +35,6 @@ import java.lang.reflect.Array;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 
-import android.content.Context;
-import android.database.Cursor;
-import android.database.SQLException;
 import org.opengis.annotation.UML;
 import org.opengis.util.CodeList;
 import org.apache.sis.metadata.MetadataStandard;
@@ -58,7 +54,6 @@ import org.apache.sis.util.collection.CodeListSet;
 import org.apache.sis.util.collection.WeakValueHashMap;
 import org.apache.sis.util.logging.WarningListeners;
 import org.apache.sis.util.logging.WarningListener;
-import org.apache.sis.util.logging.Logging;
 import org.apache.sis.util.resources.Errors;
 import org.apache.sis.util.ArgumentChecks;
 import org.apache.sis.util.UnconvertibleObjectException;
@@ -70,6 +65,9 @@ import org.apache.sis.util.iso.Types;
 import org.apache.sis.internal.jdk8.JDK8;
 import org.apache.sis.internal.geoapi.evolution.Interim;
 import android.database.sqlite.SQLiteDatabase;
+import android.content.Context;
+import android.database.Cursor;
+import android.database.SQLException;
 
 
 /**
@@ -377,21 +375,15 @@ public class MetadataSource implements AutoCloseable {
     }
 
     /**
-     * Returns the connection to the database, creating a new one if needed. This method shall
-     * be invoked inside a synchronized block wider than just the scope of this method in order
-     * to ensure that the connection is used by only one thread at time. This is also necessary
-     * for preventing the background thread to close the connection too early.
+     * Returns the connection to the database.
      *
-     * <p>Callers shall not close the connection returned by this method.
-     * The connection will be closed by {@link #closeExpired()} after an arbitrary timeout.</p>
+     * <p>Callers shall not close the connection returned by this method.</p>
      *
      * @return the connection to the database.
      */
-    // TODO: CHECK AGAIN
-//    final SQLiteDatabase connection() {
-//        assert Thread.holdsLock(this);
-//        return dataSource;
-//    }
+    final SQLiteDatabase connection() {
+        return dataSource;
+    }
 
     /**
      * Returns the database schema where metadata are stored, or {@code null} if none.

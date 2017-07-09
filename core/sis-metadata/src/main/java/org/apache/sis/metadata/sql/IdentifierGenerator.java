@@ -16,10 +16,9 @@
  */
 package org.apache.sis.metadata.sql;
 
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.SQLNonTransientException;
+import android.database.Cursor;
+import android.database.SQLException;
+import android.database.sqlite.SQLiteDatabase;
 import org.apache.sis.internal.metadata.sql.SQLBuilder;
 
 
@@ -60,9 +59,14 @@ final class IdentifierGenerator implements AutoCloseable {
     static final char SEPARATOR = '-';
 
     /**
+     * The database connection.
+     */
+    private final SQLiteDatabase database;
+
+    /**
      * The statement to use for searching free identifiers.
      */
-    private final PreparedStatement statement;
+    private final String statement;
 
     /**
      * A helper object for building SQL statements, determined from database metadata.
@@ -88,22 +92,23 @@ final class IdentifierGenerator implements AutoCloseable {
     /**
      * Creates a new generator.
      *
-     * @param  schema  the schema, or {@code null} if none.
+     * @param  schema  the schema, or {@code null} if none. (Ignored for SQLite)
      * @param  table   the table name where to search for an identifier.
      * @param  source  information about the metadata database.
      * @param  column  name of the identifier (primary key) column.
      * @param  buffer  a helper object for building SQL statements, determined from database metadata.
      */
     IdentifierGenerator(final MetadataSource source, final String schema, final String table, final String column,
-            final SQLBuilder buffer) throws SQLException
+            final SQLBuilder buffer)
     {
         assert Thread.holdsLock(source);
+        this.database = source.connection();
         this.buffer = buffer;
         buffer.clear().append("SELECT DISTINCT ")
-              .appendIdentifier(column).append(" FROM ").appendIdentifier(schema, table).append(" WHERE ")
+              .appendIdentifier(column).append(" FROM ").appendIdentifier(table).append(" WHERE ")
               .appendIdentifier(column).append(" LIKE ? ORDER BY ")
               .appendIdentifier(column);
-        statement = source.connection().prepareStatement(buffer.toString());
+        statement = buffer.toString();
     }
 
     /**
@@ -115,10 +120,9 @@ final class IdentifierGenerator implements AutoCloseable {
      * @throws SQLException if an error occurred while searching for an identifier.
      */
     final String identifier(String proposal) throws SQLException {
-        statement.setString(1, buffer.clear().appendEscaped(proposal).append('%').toString());
-        try (ResultSet rs = statement.executeQuery()) {
-            if (rs.next()) {
-                String current = rs.getString(1);
+        try (Cursor cursor = database.rawQuery(statement, new String[]{buffer.clear().appendEscaped(proposal).append('%').toString()})) {
+            if (cursor.moveToNext()) {
+                String current = cursor.getString(1);
                 if (current.equals(proposal)) {
                     /*
                      * The proposed identifier is already used. If there is no other identifiers,
@@ -129,8 +133,8 @@ final class IdentifierGenerator implements AutoCloseable {
                     freeSequenceNumber    = 0;
                     maximalSequenceNumber = 0;
                     int expected = 0;
-searchValidRecord:  while (rs.next()) {
-                        current = rs.getString(1);
+searchValidRecord:  while (cursor.moveToNext()) {
+                        current = cursor.getString(1);
                         assert current.startsWith(proposal) : current;
                         while (current.length() > parseAt) {
                             int c = current.codePointBefore(parseAt);
@@ -144,7 +148,7 @@ searchValidRecord:  while (rs.next()) {
                             if (c < '1') continue searchValidRecord;
                             if (c > '9') break searchValidRecord;
                             final String prefix = current.substring(0, parseAt);
-                            current = search(rs, current, prefix, ++expected);
+                            current = search(cursor, current, prefix, ++expected);
                             if (current == null) {
                                 break searchValidRecord;
                             }
@@ -165,7 +169,7 @@ searchValidRecord:  while (rs.next()) {
      * Searches for an available identifier, assuming that the elements in the given
      * {@code ResultSet} are sorted in alphabetical (not numerical) order.
      *
-     * @param rs        the result set from which to get next records. Its cursor position is the
+     * @param cursor    the cursor from which to get next records. Its cursor position is the
      *                  <strong>second</strong> record to inspect (i.e. a record has already been
      *                  extracted before the call to this method).
      * @param current   the ID of the record which has been extracted before the call to this method.
@@ -176,7 +180,7 @@ searchValidRecord:  while (rs.next()) {
      *                  or {@code null} if we should stop the search.
      * @throws SQLException if an error occurred while querying the database.
      */
-    private String search(final ResultSet rs, String current, final String prefix, int expected)
+    private String search(final Cursor cursor, String current, final String prefix, int expected)
             throws SQLException
     {
         /*
@@ -196,8 +200,8 @@ searchValidRecord:  while (rs.next()) {
                  * encounter a non-compliant identifier, just ignore it. There is no risk of
                  * key collision since we are not going to generate a non-compliant ID.
                  */
-                if (rs.next()) {
-                    current = rs.getString(1);
+                if (cursor.moveToNext()) {
+                    current = cursor.getString(1);
                     continue;
                 }
                 return null;
@@ -213,7 +217,7 @@ searchValidRecord:  while (rs.next()) {
             }
             if (n != expected) {
                 // Following should never happen (I think).
-                throw new SQLNonTransientException(current);
+                throw new SQLException(current);
             }
             expected++;
             /*
@@ -223,7 +227,7 @@ searchValidRecord:  while (rs.next()) {
             if (n > maximalSequenceNumber) {
                 maximalSequenceNumber = n;
             }
-            if (!rs.next()) {
+            if (!cursor.moveToNext()) {
                 return null;
             }
             /*
@@ -232,9 +236,9 @@ searchValidRecord:  while (rs.next()) {
              * will skip "proposal-10", "proposal-11", etc. until it reaches "proposal-2".
              */
             final String next = current.substring(0, prefix.length() + 1);
-            current = rs.getString(1);
+            current = cursor.getString(1);
             if (current.startsWith(next)) {
-                current = search(rs, current, next, n*10);
+                current = search(cursor, current, next, n*10);
                 if (current == null) {
                     return null;
                 }
@@ -248,6 +252,6 @@ searchValidRecord:  while (rs.next()) {
      */
     @Override
     public void close() throws SQLException {
-        statement.close();
+        // Nothing to close here.
     }
 }
