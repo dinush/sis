@@ -23,9 +23,8 @@ import java.util.logging.Level;
 import java.util.logging.LogRecord;
 import java.io.BufferedReader;
 
-import android.database.SQLException;
-import android.database.sqlite.SQLiteDatabase;
 import org.apache.sis.internal.metadata.sql.Installer;
+import org.apache.sis.internal.metadata.sql.SQLiteConfiguration;
 import org.apache.sis.util.StringBuilders;
 import org.apache.sis.internal.metadata.sql.ScriptRunner;
 import org.apache.sis.internal.metadata.sql.SQLUtilities;
@@ -41,6 +40,8 @@ import static org.apache.sis.internal.util.Constants.EPSG;
 
 // Branch-dependent imports
 import org.apache.sis.internal.jdk8.BiFunction;
+import android.database.SQLException;
+import android.database.sqlite.SQLiteDatabase;
 
 
 /**
@@ -116,15 +117,15 @@ final class EPSGInstaller extends ScriptRunner implements Installer {
      * @throws IOException if an I/O operation was required and failed.
      */
     public void setSchema(final String schema) throws SQLException, IOException {
-        if (isSchemaSupported) {
+        if (SQLiteConfiguration.isSchemaSupported) {
             /*
              * Creates the schema on the database. We do that before to setup the 'toSchema' map, while the map still null.
              * Note that we do not quote the schema name, which is a somewhat arbitrary choice.
              */
-            execute(new StringBuilder("CREATE SCHEMA ").append(identifierQuote).append(schema).append(identifierQuote));
-            if (isGrantOnSchemaSupported) {
+            execute(new StringBuilder("CREATE SCHEMA ").append(SQLiteConfiguration.IDENTIFIER_QUOTE).append(schema).append(SQLiteConfiguration.IDENTIFIER_QUOTE));
+            if (SQLiteConfiguration.isGrantOnSchemaSupported) {
                 execute(new StringBuilder("GRANT USAGE ON SCHEMA ")
-                        .append(identifierQuote).append(schema).append(identifierQuote).append(" TO ").append(PUBLIC));
+                        .append(SQLiteConfiguration.IDENTIFIER_QUOTE).append(schema).append(SQLiteConfiguration.IDENTIFIER_QUOTE).append(" TO ").append("PUBLIC"));
             }
             /*
              * Mapping from the table names used in the SQL scripts to the original names used in the MS-Access database.
@@ -151,7 +152,7 @@ final class EPSGInstaller extends ScriptRunner implements Installer {
             addReplacement(SQLTranslator.TABLE_PREFIX + "supersession",               "Supersession");
             addReplacement(SQLTranslator.TABLE_PREFIX + "unitofmeasure",              "Unit of Measure");
             addReplacement(SQLTranslator.TABLE_PREFIX + "versionhistory",             "Version History");
-            if (isEnumTypeSupported) {
+            if (SQLiteConfiguration.isEnumTypeSupported) {
                 addReplacement(SQLTranslator.TABLE_PREFIX + "datum_kind",             "Datum Kind");
                 addReplacement(SQLTranslator.TABLE_PREFIX + "crs_kind",               "CRS Kind");
                 addReplacement(SQLTranslator.TABLE_PREFIX + "cs_kind",                "CS Kind");
@@ -159,7 +160,7 @@ final class EPSGInstaller extends ScriptRunner implements Installer {
             }
             prependNamespace(schema);
         }
-        if (!isEnumTypeSupported) {
+        if (!SQLiteConfiguration.isEnumTypeSupported) {
             addReplacement(SQLTranslator.TABLE_PREFIX + "datum_kind", TableInfo.ENUM_REPLACEMENT);
             addReplacement(SQLTranslator.TABLE_PREFIX + "crs_kind",   TableInfo.ENUM_REPLACEMENT);
             addReplacement(SQLTranslator.TABLE_PREFIX + "cs_kind",    TableInfo.ENUM_REPLACEMENT);
@@ -175,11 +176,11 @@ final class EPSGInstaller extends ScriptRunner implements Installer {
             @Override public String apply(String key, String value) {
                 if (key.startsWith(SQLTranslator.TABLE_PREFIX)) {
                     final StringBuilder buffer = new StringBuilder(value.length() + schema.length() + 5);
-                    buffer.append(identifierQuote).append(schema).append(identifierQuote).append('.');
-                    final boolean isQuoted = value.endsWith(identifierQuote);
-                    if (!isQuoted) buffer.append(identifierQuote);
+                    buffer.append(SQLiteConfiguration.IDENTIFIER_QUOTE).append(schema).append(SQLiteConfiguration.IDENTIFIER_QUOTE).append('.');
+                    final boolean isQuoted = value.endsWith(String.valueOf(SQLiteConfiguration.IDENTIFIER_QUOTE));
+                    if (!isQuoted) buffer.append(SQLiteConfiguration.IDENTIFIER_QUOTE);
                     buffer.append(value);
-                    if (!isQuoted) buffer.append(identifierQuote);
+                    if (!isQuoted) buffer.append(SQLiteConfiguration.IDENTIFIER_QUOTE);
                     value = buffer.toString();
                 }
                 return value;
