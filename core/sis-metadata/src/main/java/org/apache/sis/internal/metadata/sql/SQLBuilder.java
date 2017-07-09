@@ -18,9 +18,6 @@ package org.apache.sis.internal.metadata.sql;
 
 import java.util.StringTokenizer;
 
-import static org.apache.sis.internal.metadata.sql.SQLiteConfiguration.escape;
-import static org.apache.sis.internal.metadata.sql.SQLiteConfiguration.quote;
-
 /**
  * Utility methods for building SQL statements.
  * This class is for internal purpose only and may change or be removed in any future SIS version.
@@ -37,30 +34,9 @@ public class SQLBuilder {
     private final StringBuilder buffer = new StringBuilder();
 
     /**
-     * Whether the schema name should be written between quotes. If {@code false},
-     * we will let the database engine uses its default lower case / upper case policy.
-     *
-     * @see #appendIdentifier(String, String)
+     * Creates a new {@code SQLBuilder}.
      */
-    private final boolean quoteSchema;
-
-    /**
-     * Creates a new {@code SQLBuilder} initialized from the given database metadata.
-     *
-     * @param  quoteSchema  whether the schema name should be written between quotes.
-     */
-    public SQLBuilder(final boolean quoteSchema) {
-        this.quoteSchema = quoteSchema;
-    }
-
-    /**
-     * Creates a new {@code SQLBuilder} initialized to the same metadata than the given builder.
-     *
-     * @param other  the builder from which to copy metadata.
-     */
-    public SQLBuilder(final SQLBuilder other) {
-        quoteSchema = other.quoteSchema;
-    }
+    public SQLBuilder() { }
 
     /**
      * Returns {@code true} if the builder is currently empty.
@@ -122,32 +98,8 @@ public class SQLBuilder {
      * @return this builder, for method call chaining.
      */
     public final SQLBuilder appendIdentifier(final String identifier) {
-        buffer.append(quote).append(identifier).append(quote);
+        buffer.append(SQLiteConfiguration.IDENTIFIER_QUOTE).append(identifier).append(SQLiteConfiguration.IDENTIFIER_QUOTE);
         return this;
-    }
-
-    /**
-     * Appends an identifier for an element in the given schema.
-     * <ul>
-     *   <li>The given schema will be written only if non-null</li>
-     *   <li>The given schema will be quoted only if {@code quoteSchema} is {@code true}.</li>
-     *   <li>The given identifier is always quoted.</li>
-     * </ul>
-     *
-     * @param  schema      the schema, or {@code null} if none.
-     * @param  identifier  the identifier to append.
-     * @return this builder, for method call chaining.
-     */
-    public final SQLBuilder appendIdentifier(final String schema, final String identifier) {
-        if (schema != null) {
-            if (quoteSchema) {
-                appendIdentifier(schema);
-            } else {
-                buffer.append(schema);
-            }
-            buffer.append('.');
-        }
-        return appendIdentifier(identifier);
     }
 
     /**
@@ -203,7 +155,7 @@ public class SQLBuilder {
             if (!tokens.hasMoreTokens()) {
                 break;
             }
-            buffer.append(escape).append(tokens.nextToken());
+            buffer.append(SQLiteConfiguration.ESCAPE_WILDCARD).append(tokens.nextToken());
         }
         return this;
     }
@@ -229,7 +181,7 @@ public class SQLBuilder {
     public final String createColumn(final String schema, final String table,
             final String column, final Class<?> type, final int maxLength)
     {
-        clear().append("ALTER TABLE ").appendIdentifier(schema, table)
+        clear().append("ALTER TABLE ").appendIdentifier(table)
                .append(" ADD COLUMN ").appendIdentifier(column).append(' ');
         final String sqlType = TypeMapper.keywordFor(type);
         if (sqlType != null) {
@@ -252,7 +204,6 @@ public class SQLBuilder {
      * Note that the primary key is <strong>not</strong> quoted on intend.
      * If quoted are desired, then they must be added explicitly before to call this method.
      *
-     * @param  schema      the schema for both tables.
      * @param  table       the table to alter with the new constraint.
      * @param  column      the column to alter with the new constraint.
      * @param  target      the table to reference.
@@ -261,14 +212,14 @@ public class SQLBuilder {
      *                     this apply to updates only; delete is always restricted.
      * @return a SQL statement for creating the foreigner key constraint.
      */
-    public final String createForeignKey(final String schema, final String table, final String column,
+    public final String createForeignKey(final String table, final String column,
             final String target, final String primaryKey, boolean cascade)
     {
         buffer.setLength(0);
         final String name = buffer.append(table).append('_').append(column).append("_fkey").toString();
-        return clear().append("ALTER TABLE ").appendIdentifier(schema, table).append(" ADD CONSTRAINT ")
+        return clear().append("ALTER TABLE ").appendIdentifier(table).append(" ADD CONSTRAINT ")
                 .appendIdentifier(name).append(" FOREIGN KEY(").appendIdentifier(column).append(") REFERENCES ")
-                .appendIdentifier(schema, target).append(" (").append(primaryKey)
+                .appendIdentifier(target).append(" (").append(primaryKey)
                 .append(") ON UPDATE ").append(cascade ? "CASCADE" : "RESTRICT")
                 .append(" ON DELETE RESTRICT").toString();
     }

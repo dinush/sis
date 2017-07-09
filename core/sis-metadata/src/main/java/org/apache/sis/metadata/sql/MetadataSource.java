@@ -16,6 +16,7 @@
  */
 package org.apache.sis.metadata.sql;
 
+import java.sql.SQLNonTransientException;
 import java.util.Map;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
@@ -34,15 +35,10 @@ import java.util.logging.LogRecord;
 import java.lang.reflect.Array;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
-import java.io.IOException;
-import javax.sql.DataSource;
-import java.sql.DatabaseMetaData;
-import java.sql.Connection;
-import java.sql.Statement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.SQLNonTransientException;
-import java.sql.PreparedStatement;
+
+import android.content.Context;
+import android.database.Cursor;
+import android.database.SQLException;
 import org.opengis.annotation.UML;
 import org.opengis.util.CodeList;
 import org.apache.sis.metadata.MetadataStandard;
@@ -73,11 +69,12 @@ import org.apache.sis.util.iso.Types;
 // Branch-dependent imports
 import org.apache.sis.internal.jdk8.JDK8;
 import org.apache.sis.internal.geoapi.evolution.Interim;
+import android.database.sqlite.SQLiteDatabase;
 
 
 /**
- * A connection to a metadata database in read-only mode. It can be either the database
- * {@linkplain #getProvided() provided by Apache SIS} with pre-defined ISO 19115 metadata,
+ * A connection to a metadata database. It can be either the database
+ * {@linkplain #getProvided(Context) provided by Apache SIS} with pre-defined ISO 19115 metadata,
  * or another database specified at construction time.
  * Metadata instances can be obtained as in the example below:
  *
@@ -90,7 +87,7 @@ import org.apache.sis.internal.geoapi.evolution.Interim;
  *
  * <div class="section">Properties</div>
  * The constructor expects three Java arguments (the {@linkplain MetadataStandard metadata standard},
- * the {@linkplain DataSource data source} and the database schema) completed by an arbitrary amount
+ * the {@linkplain SQLiteDatabase data source} and the database schema) completed by an arbitrary amount
  * of optional arguments given as a map of properties.
  * The following keys are recognized by {@code MetadataSource} and all other entries are ignored:
  *
@@ -99,12 +96,12 @@ import org.apache.sis.internal.geoapi.evolution.Interim;
  *   <tr><th>Key</th>                     <th>Value type</th>          <th>Description</th></tr>
  *   <tr><td>{@code "catalog"}</td>       <td>{@link String}</td>      <td>The database catalog where the metadata schema is stored.</td></tr>
  *   <tr><td>{@code "classloader"}</td>   <td>{@link ClassLoader}</td> <td>The class loader to use for creating {@link Proxy} instances.</td></tr>
- *   <tr><td>{@code "maxStatements"}</td> <td>{@link Integer}</td>     <td>Maximal number of {@link PreparedStatement}s that can be kept simultaneously open.</td></tr>
+ *   <tr><td>{@code "maxStatements"}</td> <td>{@link Integer}</td>     <td>Maximal number of statements that can be kept simultaneously open.</td></tr>
  * </table>
  *
  * <div class="section">Concurrency</div>
  * {@code MetadataSource} is thread-safe but is not concurrent. If concurrency is desired,
- * multiple instances of {@code MetadataSource} can be created for the same {@link DataSource}.
+ * multiple instances of {@code MetadataSource} can be created for the same {@link SQLiteDatabase}.
  * The {@link #MetadataSource(MetadataSource)} convenience constructor can be used for this purpose.
  *
  * @author  Touraïvane (IRD)
@@ -158,30 +155,15 @@ public class MetadataSource implements AutoCloseable {
     protected final MetadataStandard standard;
 
     /**
-     * The data source object for fetching the connection to the database.
+     * The SQLite database object for fetching the connection to the database.
      * This is specified at construction time.
      */
-    private final DataSource dataSource;
-
-    /**
-     * The connection to the database, or {@code null} if not yet created or if closed.
-     * This field is set to a non-null value when {@link #connection()} is invoked, then
-     * closed and set to {@code null} after all {@linkplain #statements cached statements}
-     * have been closed.
-     *
-     * @see #connection()
-     */
-    private Connection connection;
+    private final SQLiteDatabase dataSource;
 
     /**
      * A pool of prepared statements with a maximal capacity equals to the array length.
      * The array length should be reasonably small. The array may contain null element anywhere.
      * Inactive statements are closed after some timeout.
-     *
-     * <div class="note"><b>Note:</b>
-     * this array duplicates the work done by statement pools in modern JDBC drivers. Nevertheless
-     * it still useful in our case since we retain some additional JDBC resources together with the
-     * {@link PreparedStatement}, for example the {@link ResultSet} created from that statement.</div>
      *
      * Every access to this array <strong>must</strong> be synchronized on {@code MetadataSource.this}.
      * Execution of a prepared statement may also need to be done inside the synchronized block,
@@ -308,15 +290,10 @@ public class MetadataSource implements AutoCloseable {
      * @return source of pre-defined metadata records from the {@code "jdbc/SpatialMetadata"} database.
      * @throws MetadataStoreException if this method can not connect to the database.
      */
-    public static MetadataSource getProvided() throws MetadataStoreException {
+    public static MetadataSource getProvided(Context context) throws MetadataStoreException {
         MetadataSource ms = instance;
         if (ms == null) {
-            final DataSource dataSource;
-            try {
-                dataSource = Initializer.getDataSource();
-            } catch (Exception e) {
-                throw new MetadataStoreException(Errors.format(Errors.Keys.CanNotConnectTo_1, Initializer.JNDI), e);
-            }
+            final SQLiteDatabase dataSource = Initializer.getDataSource(context);
             if (dataSource == null) {
                 throw new MetadataStoreException(Initializer.unspecified(null));
             }
@@ -324,7 +301,6 @@ public class MetadataSource implements AutoCloseable {
                 ms = instance;
                 if (ms == null) {
                     ms = new MetadataSource(MetadataStandard.ISO_19115, dataSource, "metadata", null);
-                    ms.install();
                     instance = ms;
                 }
             }
@@ -340,10 +316,10 @@ public class MetadataSource implements AutoCloseable {
      *
      * @param  standard    the metadata standard to implement.
      * @param  dataSource  the source for getting a connection to the database.
-     * @param  schema      the database schema were metadata tables are stored, or {@code null} if none.
+     * @param  schema      the database schema were metadata tables are stored, or {@code null} if none. (Ignored for SQLite})
      * @param  properties  additional options, or {@code null} if none. See class javadoc for a description.
      */
-    public MetadataSource(final MetadataStandard standard, final DataSource dataSource,
+    public MetadataSource(final MetadataStandard standard, final SQLiteDatabase dataSource,
             final String schema, final Map<String,?> properties)
     {
         ArgumentChecks.ensureNonNull("standard",   standard);
@@ -364,8 +340,6 @@ public class MetadataSource implements AutoCloseable {
         }
         this.standard     = standard;
         this.dataSource   = dataSource;
-        this.schema       = schema;
-        this.quoteSchema  = true;
         this.classloader  = classloader;
         this.statements   = new CachedStatement[maxStatements - 1];
         this.tableColumns = new HashMap<>();
@@ -380,8 +354,7 @@ public class MetadataSource implements AutoCloseable {
 
     /**
      * Creates a new metadata source with the same configuration than the given source.
-     * The two {@code MetadataSource} instances will share the same {@code DataSource}
-     * but will use their own {@link Connection}.
+     * The two {@code MetadataSource} instances will share the same {@code DataSource}.
      * This constructor is useful when concurrency is desired.
      *
      * <p>The new {@code MetadataSource} initially contains all {@linkplain #addWarningListener warning listeners}
@@ -395,51 +368,12 @@ public class MetadataSource implements AutoCloseable {
         standard     = source.standard;
         dataSource   = source.dataSource;
         catalog      = source.catalog;
-        schema       = source.schema;
-        quoteSchema  = source.quoteSchema;
         statements   = new CachedStatement[source.statements.length];
         tableColumns = new HashMap<>();
         classloader  = source.classloader;
         pool         = source.pool;
         lastUsed     = source.lastUsed;
         listeners    = new WarningListeners<>(this, source.listeners);
-    }
-
-    /**
-     * If the metadata schema does not exist in the database, creates it and inserts the pre-defined metadata values.
-     * The current implementation has the following restrictions:
-     *
-     * <ul>
-     *   <li>Metadata standard must be {@link MetadataStandard#ISO_19115} or compatible.</li>
-     *   <li>The schema name must be {@code "metadata"}, as this is the name used unquoted in SQL scripts.</li>
-     * </ul>
-     *
-     * @throws MetadataStoreException if an error occurred while inserting the metadata.
-     */
-    final synchronized void install() throws MetadataStoreException {
-        try {
-            final Connection connection = connection();
-            final DatabaseMetaData md = connection.getMetaData();
-            if (md.storesUpperCaseIdentifiers()) {
-                schema = schema.toUpperCase(Locale.US);
-            } else if (md.storesLowerCaseIdentifiers()) {
-                schema = schema.toLowerCase(Locale.US);
-            }
-            quoteSchema = false;
-            try (ResultSet result = md.getTables(catalog, schema, "CI_Citation", null)) {
-                if (result.next()) {
-                    return;
-                }
-            }
-            final Installer installer = new Installer(connection);
-            installer.run();
-        } catch (IOException | SQLException e) {
-            /*
-             * Derby sometime wraps SQLException into another SQLException.  For making the stack strace a
-             * little bit simpler, keep only the root cause provided that the exception type is compatible.
-             */
-            throw new MetadataStoreException(e.getLocalizedMessage(), Exceptions.unwrap(e));
-        }
     }
 
     /**
@@ -452,24 +386,19 @@ public class MetadataSource implements AutoCloseable {
      * The connection will be closed by {@link #closeExpired()} after an arbitrary timeout.</p>
      *
      * @return the connection to the database.
-     * @throws SQLException if an error occurred while fetching the connection.
      */
-    final Connection connection() throws SQLException {
-        assert Thread.holdsLock(this);
-        Connection c = connection;
-        if (c == null) {
-            connection = c = dataSource.getConnection();
-            Logging.log(MetadataSource.class, "lookup", Initializer.connected(c.getMetaData()));
-            scheduleCloseTask();
-        }
-        return c;
-    }
+    // TODO: CHECK AGAIN
+//    final SQLiteDatabase connection() {
+//        assert Thread.holdsLock(this);
+//        return dataSource;
+//    }
 
     /**
      * Returns the database schema where metadata are stored, or {@code null} if none.
+     * NOTE: Always {@code null} for SQLite.
      */
     final String schema() {
-        return schema;
+        return null;
     }
 
     /**
@@ -478,7 +407,7 @@ public class MetadataSource implements AutoCloseable {
     final SQLBuilder helper() throws SQLException {
         assert Thread.holdsLock(this);
         if (helper == null) {
-            helper = new SQLBuilder(connection().getMetaData(), quoteSchema);
+            helper = new SQLBuilder();
         }
         return helper;
     }
@@ -637,8 +566,8 @@ public class MetadataSource implements AutoCloseable {
                             Errors.Keys.IllegalArgumentClass_2, "metadata", metadata.getClass()));
                 }
                 synchronized (this) {
-                    try (Statement stmt = connection().createStatement()) {
-                        identifier = search(table, null, asMap, stmt, helper());
+                    try {
+                        identifier = search(table, null, asMap, helper());
                     } catch (SQLException e) {
                         throw new MetadataStoreException(e.getLocalizedMessage(), Exceptions.unwrap(e));
                     }
@@ -655,13 +584,12 @@ public class MetadataSource implements AutoCloseable {
      * @param  table     the table where to search.
      * @param  columns   the table columns as given by {@link #getExistingColumns(String)}, or {@code null}.
      * @param  metadata  a map view of the metadata to search for.
-     * @param  stmt      the statement to use for executing the query.
      * @param  helper    an helper class for creating the SQL query.
      * @return the identifier of the given metadata, or {@code null} if none.
      * @throws SQLException if an error occurred while searching in the database.
      */
     final String search(final String table, Set<String> columns, final Map<String,Object> metadata,
-            final Statement stmt, final SQLBuilder helper) throws SQLException
+            final SQLBuilder helper) throws SQLException
     {
         assert Thread.holdsLock(this);
         helper.clear();
@@ -699,7 +627,7 @@ public class MetadataSource implements AutoCloseable {
                         final Class<?> type = value.getClass();
                         if (standard.isMetadata(type)) {
                             dependency = search(getTableName(standard.getInterface(type)),
-                                    null, asValueMap(value), stmt, new SQLBuilder(helper));
+                                    null, asValueMap(value), new SQLBuilder());
                             if (dependency == null) {
                                 return null;                    // Dependency not found.
                             }
@@ -713,7 +641,7 @@ public class MetadataSource implements AutoCloseable {
              */
             if (helper.isEmpty()) {
                 helper.append("SELECT ").append(ID_COLUMN).append(" FROM ")
-                        .appendIdentifier(schema, table).append(" WHERE ");
+                        .appendIdentifier(table).append(" WHERE ");
             } else {
                 helper.append(" AND ");
             }
@@ -725,9 +653,9 @@ public class MetadataSource implements AutoCloseable {
          * will be logged.
          */
         String identifier = null;
-        try (ResultSet rs = stmt.executeQuery(helper.toString())) {
-            while (rs.next()) {
-                final String candidate = rs.getString(1);
+        try (Cursor cursor = dataSource.rawQuery(helper.toString(), null)) {
+            while (cursor.moveToNext()) {
+                final String candidate = cursor.getString(1);
                 if (candidate != null) {
                     if (identifier == null) {
                         identifier = candidate;
@@ -765,12 +693,11 @@ public class MetadataSource implements AutoCloseable {
              * want because if we do not specify a schema in a SELECT statement, then the actual schema used depends
              * on the search path specified in the database environment variables.
              */
-            final DatabaseMetaData md = connection().getMetaData();
-            try (ResultSet rs = md.getColumns(catalog, schema, table, null)) {
-                while (rs.next()) {
-                    if (!columns.add(rs.getString("COLUMN_NAME"))) {
+            try (Cursor cursor = dataSource.query(table, null, null, null, null, null, null)) {
+                for (String column : cursor.getColumnNames()) {
+                    if (!columns.add(column)) {
                         // Paranoiac check, but should never happen.
-                        throw new SQLNonTransientException(table);
+                        throw new SQLException(table);
                     }
                 }
             }
@@ -919,16 +846,19 @@ public class MetadataSource implements AutoCloseable {
                 if (result == null) {
                     final SQLBuilder helper = helper();
                     final String query = helper.clear().append("SELECT * FROM ")
-                            .appendIdentifier(schema, tableName).append(" WHERE ")
+                            .appendIdentifier(tableName).append(" WHERE ")
                             .append(ID_COLUMN).append("=?").toString();
-                    result = new CachedStatement(type, connection().prepareStatement(query), listeners);
+                    result = new CachedStatement(type, dataSource, query, listeners);
                 }
                 value = result.getValue(toSearch.identifier, columnName);
-                isArray = (value instanceof java.sql.Array);
+                /**
+                 * If value is type of String and contains more than 1 element when split by "," ,
+                 * we assume the value is an array. Reason to use such method is due to lack of support
+                 * for storing arrays in SQLite. Arrays are also stored as Strings.
+                 */
+                isArray = (value instanceof String) && ((String) value).split(",").length > 1;
                 if (isArray) {
-                    final java.sql.Array array = (java.sql.Array) value;
-                    value = array.getArray();
-                    array.free();
+                    value = ((String) value).split(",");
                 }
                 toSearch.preferredIndex = (byte) recycle(result, JDK8.toUnsignedInt(toSearch.preferredIndex));
             }
@@ -1159,10 +1089,8 @@ public class MetadataSource implements AutoCloseable {
             isCloseScheduled = true;
         } else {
             // No more prepared statements.
-            final Connection c = this.connection;
-            connection = null;
+            // Does not close the connection to the database here.
             helper = null;
-            closeQuietly(c);
         }
     }
 
@@ -1187,7 +1115,7 @@ public class MetadataSource implements AutoCloseable {
     }
 
     /**
-     * Closes the database connection used by this object.
+     * Closes the {@link CachedStatement}s used by this object.
      *
      * @throws MetadataStoreException if an error occurred while closing the connection.
      */
@@ -1201,10 +1129,7 @@ public class MetadataSource implements AutoCloseable {
                     statements[i] = null;
                 }
             }
-            if (connection != null) {
-                connection.close();
-                connection = null;
-            }
+            // Not closing database connection here. Other classes might still using it.
             helper = null;
         } catch (SQLException e) {
             throw new MetadataStoreException(e.getLocalizedMessage(), Exceptions.unwrap(e));
