@@ -16,12 +16,11 @@
  */
 package org.apache.sis.internal.metadata.sql;
 
-import java.util.Date;
-import java.sql.Types;
+import android.database.Cursor;
 
 
 /**
- * Maps a few basic Java types to JDBC types.
+ * Maps a few basic Java types to SQLite types.
  *
  * @author  Martin Desruisseaux (Geomatys)
  * @version 0.8
@@ -37,15 +36,10 @@ public final class TypeMapper {
      * <p>The types declared here matches both the JavaDB and PostgreSQL mapping.</p>
      */
     private static final TypeMapper[] TYPES = {
-        new TypeMapper(Boolean.class, Types.BOOLEAN,   "BOOLEAN"),
-        new TypeMapper(Date   .class, Types.TIMESTAMP, "TIMESTAMP"),
-        new TypeMapper(Double .class, Types.DOUBLE,    "DOUBLE PRECISION"),
-        new TypeMapper(Float  .class, Types.REAL,      "REAL"),
-        new TypeMapper(Long   .class, Types.BIGINT,    "BIGINT"),
-        new TypeMapper(Integer.class, Types.INTEGER,   "INTEGER"),
-        new TypeMapper(Short  .class, Types.SMALLINT,  "SMALLINT"),
-        new TypeMapper(Byte   .class, Types.TINYINT,   "SMALLINT"),     // JavaDB does not support TINYINT.
-        new TypeMapper(Number .class, Types.DECIMAL,   "DECIMAL")       // Implemented by BigDecimal.
+        new TypeMapper(Integer  .class, Cursor.FIELD_TYPE_INTEGER,  "INTEGER"),
+        new TypeMapper(Double   .class, Cursor.FIELD_TYPE_FLOAT,    "REAL"),
+        new TypeMapper(String   .class, Cursor.FIELD_TYPE_STRING,   "TEXT"),
+        new TypeMapper(Byte     .class, Cursor.FIELD_TYPE_BLOB,     "BLOB")
     };
 
     /**
@@ -54,7 +48,7 @@ public final class TypeMapper {
     private final Class<?> classe;
 
     /**
-     * A constant from the SQL {@link Types} enumeration.
+     * A constant from the Android {@link Cursor} field type.
      */
     private final int type;
 
@@ -94,7 +88,7 @@ public final class TypeMapper {
     /**
      * Return the Java class for the given SQL type, or {@code null} if none.
      *
-     * @param  type  one of the {@link Types} constants.
+     * @param  type  one of the {@link Cursor} field type constants.
      * @return the Java class, or {@code null} if none.
      */
     public static Class<?> toJavaType(final int type) {
