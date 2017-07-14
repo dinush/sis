@@ -50,7 +50,8 @@ CREATE TABLE metadata."MD_Identifier" (
   "authority" VARCHAR(15),
   "code"      VARCHAR(120),
   "codeSpace" VARCHAR(120),
-  "version"   VARCHAR(120));
+  "version"   VARCHAR(120),
+  CONSTRAINT fk_identifier_citation FOREIGN KEY ("authority") REFERENCES metadata."CI_Citation" (ID) ON UPDATE RESTRICT ON DELETE RESTRICT);
 
 CREATE TABLE metadata."CI_Party" (
   ID     VARCHAR(15) NOT NULL PRIMARY KEY,
@@ -76,9 +77,6 @@ CREATE TABLE metadata."CI_Citation" (
   "identifier"            VARCHAR(15) REFERENCES metadata."MD_Identifier"     (ID) ON UPDATE RESTRICT ON DELETE RESTRICT,
   "citedResponsibleParty" VARCHAR(15) REFERENCES metadata."CI_Responsibility" (ID) ON UPDATE RESTRICT ON DELETE RESTRICT,
   "presentationForm"      metadata."CI_PresentationFormCode");
-
-ALTER TABLE metadata."MD_Identifier" ADD CONSTRAINT fk_identifier_citation
-FOREIGN KEY ("authority") REFERENCES metadata."CI_Citation" (ID) ON UPDATE RESTRICT ON DELETE RESTRICT;
 
 CREATE TABLE metadata."MD_Format" (
   ID                            VARCHAR(15) NOT NULL PRIMARY KEY,
