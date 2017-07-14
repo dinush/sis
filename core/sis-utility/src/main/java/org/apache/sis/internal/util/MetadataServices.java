@@ -19,11 +19,14 @@ package org.apache.sis.internal.util;
 import java.text.Format;
 import java.util.Locale;
 import java.util.TimeZone;
+
 import org.opengis.metadata.citation.Citation;
 import org.apache.sis.internal.simple.CitationConstant;
 import org.apache.sis.internal.system.Modules;
 import org.apache.sis.internal.system.OptionalDependency;
 
+// Branch-dependent imports
+import android.content.Context;
 
 /**
  * Provides access to services defined in the {@code "sis-metadata"} module.
@@ -132,7 +135,7 @@ public class MetadataServices extends OptionalDependency {
      *
      * @see org.apache.sis.internal.metadata.ReferencingServices#getInformation(String, Locale)
      */
-    public String getInformation(String key, Locale locale) {
+    public String getInformation(Context context, String key, Locale locale) {
         return null;
     }
 

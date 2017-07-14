@@ -21,7 +21,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Locale;
 import java.util.TimeZone;
-import javax.sql.DataSource;
+
 import org.opengis.metadata.Identifier;
 import org.opengis.metadata.citation.Role;
 import org.opengis.metadata.citation.Citation;
@@ -41,6 +41,8 @@ import org.apache.sis.util.logging.Logging;
 import org.apache.sis.util.iso.Types;
 import org.apache.sis.util.Exceptions;
 import org.apache.sis.util.Classes;
+import android.content.Context;
+import android.database.sqlite.SQLiteDatabase;
 
 import static java.util.Collections.singleton;
 
@@ -227,39 +229,25 @@ public final class ServicesForUtility extends MetadataServices {
      * @return the information, or {@code null} if none.
      */
     @Override
-    public String getInformation(final String key, final Locale locale) {
+    public String getInformation(final Context context, final String key, final Locale locale) {
         switch (key) {
             case "DataSource": {
-                Object server = null, database = null;
-                try {
-                    final DataSource ds = Initializer.getDataSource();
-                    if (ds != null) {
-                        final Class<?> type = ds.getClass();
-                        database = type.getMethod("getDatabaseName", (Class[]) null).invoke(ds, (Object[]) null);
-                        server   = type.getMethod("getServerName", (Class[]) null).invoke(ds, (Object[]) null);
-                    }
-                } catch (NoSuchMethodException e) {
-                    Logging.recoverableException(Logging.getLogger(Loggers.SYSTEM),
-                            MetadataServices.class, "getInformation", e);
-                } catch (Exception e) {
-                    // Leave the message alone if it contains at least 2 words.
-                    String message = Exceptions.getLocalizedMessage(e, locale);
-                    if (message == null || message.indexOf(' ') < 0) {
-                        message = Classes.getShortClassName(e) + ": " + message;
-                    }
-                    return message;
+                String server = null, database = null;
+                final SQLiteDatabase db = Initializer.getDataSource(context);
+                if (db != null) {
+                    final Class<?> type = db.getClass();
+                    database = db.getPath() + " version " + db.getVersion();
+                    server   = "SQLite on Android";
                 }
                 if (database != null) {
-                    if (server != null) {
-                        database = "//" + server + '/' + database;
-                    }
-                    return database.toString();
+                    database = "//" + server + '/' + database;
+                    return database;
                 }
                 return null;
             }
             // More cases may be added in future SIS versions.
         }
-        return ReferencingServices.getInstance().getInformation(key, locale);
+        return ReferencingServices.getInstance().getInformation(context, key, locale);
     }
 
     /**
