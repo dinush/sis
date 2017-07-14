@@ -80,6 +80,18 @@ public class DatabaseOpenHelper extends SQLiteOpenHelper {
 
     }
 
+    @Override
+    public void onConfigure(SQLiteDatabase db) {
+        super.onConfigure(db);
+        db.setForeignKeyConstraintsEnabled(true);
+    }
+
+    @Override
+    public void onOpen(SQLiteDatabase db) {
+        super.onOpen(db);
+        db.enableWriteAheadLogging();
+    }
+
     /**
      * Gets database installer which is in sis-referencing module.
      * This method assumes only one provider is available.

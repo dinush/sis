@@ -23,6 +23,7 @@ import java.util.TimeZone;
 import java.text.Format;
 import javax.measure.Unit;
 import javax.measure.quantity.Length;
+
 import org.opengis.geometry.Envelope;
 import org.opengis.geometry.DirectPosition;
 import org.opengis.parameter.ParameterDescriptor;
@@ -64,6 +65,7 @@ import org.apache.sis.util.Deprecable;
 import org.opengis.referencing.datum.Datum;
 import org.opengis.referencing.datum.DatumFactory;
 import org.opengis.util.NoSuchIdentifierException;
+import android.content.Context;
 
 
 /**
@@ -763,11 +765,11 @@ public class ReferencingServices extends OptionalDependency {
      * @param  locale  language to use if possible.
      * @return the information, or {@code null} if none.
      *
-     * @see org.apache.sis.internal.util.MetadataServices#getInformation(String, Locale)
+     * @see org.apache.sis.internal.util.MetadataServices#getInformation(android.content.Context, String, Locale)
      *
      * @since 0.7
      */
-    public String getInformation(String key, Locale locale) {
+    public String getInformation(Context context, String key, Locale locale) {
         return null;
     }
 }

@@ -103,7 +103,6 @@ public abstract class Initializer {
         if (source == null) {
             source = new DatabaseOpenHelper(context, DATABASE, null, 1).getWritableDatabase();
         }
-        source.enableWriteAheadLogging();
         return source;
     }
 

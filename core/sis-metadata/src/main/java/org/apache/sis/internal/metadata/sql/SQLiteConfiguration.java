@@ -40,9 +40,9 @@ public class SQLiteConfiguration {
     public static final boolean isTableInheritanceSupported = false;
 
     /**
-     * Child tables does not inherit the index of their parent tables.
+     * Child tables inherit the index of their parent tables.
      */
-    public static final boolean isIndexInheritanceSupported = false;
+    public static final boolean isIndexInheritanceSupported = true;
 
     /**
      * Database does not support enums.
