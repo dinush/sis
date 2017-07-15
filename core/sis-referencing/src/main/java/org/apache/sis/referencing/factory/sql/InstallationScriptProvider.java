@@ -311,10 +311,10 @@ public abstract class InstallationScriptProvider extends InstallationResources {
          */
         Default(final Locale locale) throws IOException {
             super(Constants.EPSG,
+                    "FKeys",    // Read fkeys first to apply while table creation.
                     PREPARE,
                     "Tables",
                     "Data",
-                    "FKeys",
                     FINISH);
 
             Path dir = DataDirectory.DATABASES.getDirectory();

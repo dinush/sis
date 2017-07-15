@@ -16,7 +16,7 @@
  */
 package org.apache.sis.referencing.factory.sql;
 
-import java.util.Locale;
+import java.util.*;
 import java.io.IOException;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
@@ -25,9 +25,9 @@ import java.io.BufferedReader;
 
 import org.apache.sis.internal.metadata.sql.Installer;
 import org.apache.sis.internal.metadata.sql.SQLiteConfiguration;
+import org.apache.sis.util.CharSequences;
 import org.apache.sis.util.StringBuilders;
 import org.apache.sis.internal.metadata.sql.ScriptRunner;
-import org.apache.sis.internal.metadata.sql.SQLUtilities;
 import org.apache.sis.internal.system.DefaultFactories;
 import org.apache.sis.internal.util.StandardDateFormat;
 import org.apache.sis.internal.util.Fallback;
@@ -76,6 +76,13 @@ final class EPSGInstaller extends ScriptRunner implements Installer {
      * {@code REPLACE(column, CHAR(182), CHAR(10))} SQL statement, but accepts LF.
      */
     private final boolean replacePilcrow;
+
+    /**
+     * Map of foreign key constraints to apply while table creation, since SQLite does not
+     * support to add constraints to existing tables.
+     * Keys are names of tables. Values are constraint queries related to the table.
+     */
+    private Map<String, List<String>> fkeys = new HashMap<>();
 
     /**
      * Zero argument constructor for ServiceLoader
@@ -248,6 +255,14 @@ final class EPSGInstaller extends ScriptRunner implements Installer {
         int numRows = 0;
         for (int i=0; i<scripts.length; i++) {
             try (BufferedReader in = scriptProvider.openScript(EPSG, i)) {
+                if (i == 0) {
+                    /**
+                     * First element should be fkey scripts. They do not execute immediately.
+                     * Memorize them instead to later use while creating the tables.
+                     */
+                    memorizeFkeys(readStatementsIntoArray(in));
+                    continue;
+                }
                 numRows += run(scripts[i], in);
             }
         }
@@ -287,5 +302,55 @@ final class EPSGInstaller extends ScriptRunner implements Installer {
         }
         message = Exceptions.formatChainedMessages(locale, message, cause);
         InstallationScriptProvider.log(new LogRecord(Level.WARNING, message));
+    }
+
+    /**
+     * Reads statements from provided {@link BufferedReader} and build array of statements.
+     * @param in    Reader object to read statements
+     * @return      Array of statements
+     * @throws IOException
+     */
+    private String[] readStatementsIntoArray(final BufferedReader in) throws IOException {
+        final StringBuilder buffer = new StringBuilder();
+        String line;
+        while ((line = in.readLine()) != null) {
+            /*
+             * Ignore empty lines and comment lines, but only if they appear at the begining of the SQL statement.
+             */
+            if (buffer.length() == 0) {
+                final int s = CharSequences.skipLeadingWhitespaces(line, 0, line.length());
+                if (s >= line.length() || line.regionMatches(s, SQLiteConfiguration.COMMENT, 0, SQLiteConfiguration.COMMENT.length())) {
+                    continue;
+                }
+            }
+
+            buffer.append(line);
+        }
+
+        return buffer.toString().split(String.valueOf(SQLiteConfiguration.END_OF_STATEMENT));
+    }
+
+    /**
+     * Extracts foreign key constraints from the provided array of statements and put in
+     * to the {@link this#fkeys} {@link Map}.
+     * Key is name of the table. Values are {@link List} of constraints that are needed
+     * to add while creating the table.
+     * @param statements
+     * @throws IOException
+     */
+    private void memorizeFkeys(String[] statements) throws IOException {
+        for (String stmt : statements) {
+            String table = stmt.substring(stmt.indexOf("TABLE") + 6, stmt.indexOf("ADD")).trim();
+            String constraint = stmt.substring(stmt.indexOf("ADD") + 4, stmt.length() - 1);
+
+            List<String> rules;
+            if (fkeys.containsKey(table)) {
+                rules = fkeys.get(table);
+            } else {
+                rules = new ArrayList<>();
+            }
+            rules.add(constraint);
+            fkeys.put(table, rules);
+        }
     }
 }
