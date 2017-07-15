@@ -16,9 +16,10 @@
  */
 package org.apache.sis.internal.metadata.sql;
 
-import java.util.Map;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.regex.Pattern;
 import java.util.regex.Matcher;
 import java.io.EOFException;
@@ -27,8 +28,6 @@ import java.io.BufferedReader;
 import java.io.LineNumberReader;
 import java.io.InputStreamReader;
 import java.io.StringReader;
-import android.database.SQLException;
-import android.database.sqlite.SQLiteDatabase;
 import org.apache.sis.util.Debug;
 import org.apache.sis.util.ArgumentChecks;
 import org.apache.sis.util.CharSequences;
@@ -37,6 +36,8 @@ import org.apache.sis.util.resources.Errors;
 // Branch-specific imports
 import org.apache.sis.internal.jdk8.JDK8;
 import org.apache.sis.internal.jdk8.BiFunction;
+import android.database.SQLException;
+import android.database.sqlite.SQLiteDatabase;
 
 import static org.apache.sis.internal.metadata.sql.SQLiteConfiguration.QUOTE;
 
@@ -283,7 +284,7 @@ public class ScriptRunner implements AutoCloseable {
      * @throws SQLException if an error occurred while executing a SQL statement.
      */
     public final int run(final String statement) throws IOException, SQLException {
-        return run(null, new LineNumberReader(new StringReader(statement)));
+        return run(null, new LineNumberReader(new StringReader(statement)), null);
     }
 
     /**
@@ -298,7 +299,7 @@ public class ScriptRunner implements AutoCloseable {
      */
     public final int run(final Class<?> loader, final String filename) throws IOException, SQLException {
         try (BufferedReader in = new LineNumberReader(new InputStreamReader(loader.getResourceAsStream(filename), "UTF-8"))) {
-            return run(filename, in);
+            return run(filename, in, null);
         }
     }
 
@@ -312,7 +313,7 @@ public class ScriptRunner implements AutoCloseable {
      * @throws IOException if an error occurred while reading the input.
      * @throws SQLException if an error occurred while executing a SQL statement.
      */
-    public final int run(final String filename, final BufferedReader in) throws IOException, SQLException {
+    public final int run(final String filename, final BufferedReader in, final Map<String, List<String>> fkeys) throws IOException, SQLException {
         currentFile = filename;
         currentLine = 0;
         int     statementCount     = 0;         // For informative purpose only.
@@ -450,7 +451,7 @@ parseLine:  while (pos < length) {
                             if (CharSequences.skipLeadingWhitespaces(buffer, pos + n, length) >= length) {
                                 buffer.setLength(pos);
                             }
-                            statementCount += execute(buffer);
+                            statementCount += execute(fkeys != null ? injectConstraints(buffer.toString(), fkeys) : buffer);
                             buffer.setLength(0);
                             break parseLine;
                         }
@@ -466,6 +467,24 @@ parseLine:  while (pos < length) {
         }
         currentFile = null;
         return statementCount;
+    }
+
+    /**
+     * Adds any foreign key constraint statements for the table create query.
+     * @param stmt      table create query
+     * @param fkeys     foreign key constraints
+     * @return          table create query with foreign key constraints
+     */
+    private StringBuilder injectConstraints(final String stmt, final Map<String, List<String>> fkeys) {
+        String table = stmt.substring(stmt.indexOf("TABLE") + 6, stmt.indexOf("(")).trim();
+        StringBuilder buffer = new StringBuilder();
+        buffer.append(stmt.substring(0, stmt.lastIndexOf(")")));
+        for (String fkey : fkeys.get(table)) {
+            buffer.append(",").append(fkey);
+        }
+        buffer.append(stmt.substring(stmt.lastIndexOf(")")));
+
+        return buffer;
     }
 
     /**

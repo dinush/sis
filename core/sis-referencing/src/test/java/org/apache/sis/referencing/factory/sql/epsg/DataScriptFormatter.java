@@ -180,7 +180,7 @@ public final class DataScriptFormatter extends ScriptRunner {
                       "---    See org.apache.sis.referencing.factory.sql.epsg.DataScriptFormatter.\n" +
                       "---\n" +
                       "\n");
-            run(inputFile.getName(), in);
+            run(inputFile.getName(), in, null);
         } finally {
             out.close();
             out = null;

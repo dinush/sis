@@ -263,7 +263,10 @@ final class EPSGInstaller extends ScriptRunner implements Installer {
                     memorizeFkeys(readStatementsIntoArray(in));
                     continue;
                 }
-                numRows += run(scripts[i], in);
+                /**
+                 * When creating tables, add previously memorized foreign key constraints.
+                 */
+                numRows += run(scripts[i], in, scripts[i].equals("Tables") ? fkeys : null);
             }
         }
         time = System.nanoTime() - time;
