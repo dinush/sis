@@ -20,6 +20,7 @@ import java.util.Collections;
 
 import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
+import android.support.test.InstrumentationRegistry;
 import org.opengis.metadata.distribution.Format;
 import org.apache.sis.metadata.MetadataStandard;
 import org.apache.sis.internal.metadata.sql.TestDatabase;
@@ -51,8 +52,8 @@ public final strictfp class MetadataSourceTest extends TestCase {
      * @throws Exception if an error occurred while executing the script runner.
      */
     @Test
-    public void testOnSqlite(Context context) throws Exception {
-        final SQLiteDatabase db = TestDatabase.create(context);
+    public void testOnSqlite() throws Exception {
+        final SQLiteDatabase db = TestDatabase.create(InstrumentationRegistry.getContext());
         try (MetadataSource source = new MetadataSource(MetadataStandard.ISO_19115, db, "metadata", null)) {
             final Installer installer = new Installer(db);
             installer.run();

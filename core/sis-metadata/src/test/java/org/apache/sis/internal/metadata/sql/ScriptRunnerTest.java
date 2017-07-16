@@ -18,6 +18,7 @@ package org.apache.sis.internal.metadata.sql;
 
 import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
+import android.support.test.InstrumentationRegistry;
 import org.apache.sis.test.TestCase;
 import org.apache.sis.test.TestStep;
 import org.junit.Test;
@@ -41,8 +42,8 @@ public final strictfp class ScriptRunnerTest extends TestCase {
      * @throws Exception if an error occurred while executing the script runner.
      */
     @Test
-    public void testOnSqlite(Context context) throws Exception {
-        final SQLiteDatabase db = TestDatabase.create(context);
+    public void testOnSqlite() throws Exception {
+        final SQLiteDatabase db = TestDatabase.create(InstrumentationRegistry.getContext());
         try {
             final ScriptRunner sr = new ScriptRunner(db, 3);
             testRegularExpressions(sr);
