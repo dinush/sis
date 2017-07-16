@@ -16,9 +16,10 @@
  */
 package org.apache.sis.metadata.sql;
 
-import java.sql.Statement;
-import java.sql.SQLException;
-import javax.sql.DataSource;
+import android.content.ContentValues;
+import android.content.Context;
+import android.database.SQLException;
+import android.database.sqlite.SQLiteDatabase;
 import org.apache.sis.internal.metadata.sql.SQLBuilder;
 import org.apache.sis.internal.metadata.sql.TestDatabase;
 import org.apache.sis.metadata.MetadataStandard;
@@ -48,9 +49,9 @@ public final strictfp class IdentifierGeneratorTest extends TestCase {
     private IdentifierGenerator generator;
 
     /**
-     * A statement to be used for various usage.
+     * The in-memory database.
      */
-    private Statement stmt;
+    private SQLiteDatabase db;
 
     /**
      * Tests the creation of identifiers with sequence numbers.
@@ -58,15 +59,14 @@ public final strictfp class IdentifierGeneratorTest extends TestCase {
      * @throws Exception if an error occurred while reading or writing in the temporary database.
      */
     @Test
-    public void testSequence() throws Exception {
-        final DataSource ds = TestDatabase.create("IdentifierGenerator");
+    public void testSequence(final Context context) throws Exception {
+        db = TestDatabase.create(context);
         try {
-            final MetadataSource source = new MetadataSource(MetadataStandard.ISO_19115, ds, null, null);
+            final MetadataSource source = new MetadataSource(MetadataStandard.ISO_19115, db, null, null);
             synchronized (source) {
-                stmt = source.connection().createStatement();
-                stmt.executeUpdate("CREATE TABLE \"" + TABLE + "\" (ID VARCHAR(6) NOT NULL PRIMARY KEY)");
+                db.execSQL("CREATE TABLE \"" + TABLE + "\" (ID VARCHAR(6) NOT NULL PRIMARY KEY)");
                 generator = new IdentifierGenerator(source, null, TABLE, "ID",
-                        new SQLBuilder(source.connection().getMetaData(), false));
+                        new SQLBuilder());
                 /*
                  * Actual tests.
                  */
@@ -76,13 +76,12 @@ public final strictfp class IdentifierGeneratorTest extends TestCase {
                 /*
                  * Cleaning.
                  */
-                stmt.executeUpdate("DROP TABLE \"" + TABLE + '"');
-                stmt.close();
+                db.execSQL("DROP TABLE \"" + TABLE + '"');
                 generator.close();
                 source.close();
             }
         } finally {
-            TestDatabase.drop(ds);
+            TestDatabase.drop(db);
         }
     }
 
@@ -94,7 +93,9 @@ public final strictfp class IdentifierGeneratorTest extends TestCase {
      */
     private String addRecord(final String prefix) throws SQLException {
         final String identifier = generator.identifier(prefix);
-        assertEquals(1, stmt.executeUpdate("INSERT INTO \"" + TABLE + "\" VALUES ('" + identifier + "')"));
+        ContentValues values = new ContentValues(1);
+        values.put("ID", identifier);
+        assertEquals(1, db.insert(TABLE, null, values));
         return identifier;
     }
 
@@ -116,12 +117,18 @@ public final strictfp class IdentifierGeneratorTest extends TestCase {
      * Tries to remove a few pre-selected record, then add them again.
      */
     private void removeAndAddRecords(final String prefix) throws SQLException {
-        assertEquals(5, stmt.executeUpdate("DELETE FROM \"" + TABLE + "\" WHERE " +
-                "ID='" + prefix + IdentifierGenerator.SEPARATOR +   "4' OR " +
-                "ID='" + prefix + IdentifierGenerator.SEPARATOR +  "12' OR " +
-                "ID='" + prefix + IdentifierGenerator.SEPARATOR +  "32' OR " +
-                "ID='" + prefix + IdentifierGenerator.SEPARATOR + "125' OR " +
-                "ID='" + prefix + IdentifierGenerator.SEPARATOR + "224'"));
+        assertEquals(5, db.delete(TABLE, "ID='?' OR " +
+                "ID='?' OR " +
+                "ID='?' OR " +
+                "ID='?' OR " +
+                "ID='?'", new String[]{
+                prefix + IdentifierGenerator.SEPARATOR +   "4",
+                prefix + IdentifierGenerator.SEPARATOR +   "12",
+                prefix + IdentifierGenerator.SEPARATOR +   "32",
+                prefix + IdentifierGenerator.SEPARATOR +   "125",
+                prefix + IdentifierGenerator.SEPARATOR +   "224",
+                })
+        );
         assertEquals("12 is before 4 in alphabetical order.",    prefix+"-12",  addRecord(prefix));
         assertEquals("125 is next to 12 in alphabetical order.", prefix+"-125", addRecord(prefix));
         assertEquals("224 is before 32 in alphabetical order.",  prefix+"-224", addRecord(prefix));

@@ -18,8 +18,10 @@ package org.apache.sis.internal.metadata.sql;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.sql.SQLException;
-import javax.sql.DataSource;
+
+import android.content.Context;
+import android.database.sqlite.SQLiteDatabase;
+import android.database.sqlite.SQLiteOpenHelper;
 import org.apache.sis.util.Debug;
 import org.apache.sis.internal.system.DataDirectory;
 
@@ -68,7 +70,7 @@ public final strictfp class TestDatabase {
      * registered in his development environment (we may not declare them in the {@code pom.xml} file).
      */
     @Debug
-    private static final DataSource TEST_DATABASE = null;
+    private static SQLiteDatabase TEST_DATABASE = null;
 
     /**
      * Do not allow (for now) instantiation of this class.
@@ -95,43 +97,41 @@ public final strictfp class TestDatabase {
      * Creates a Derby database in memory. If no Derby or JavaDB driver is not found,
      * then the test will be interrupted by an {@code org.junit.Assume} statement.
      *
-     * @param  name  the database name (without {@code "memory:"} prefix).
+     * @param  context  the {@link Context} of the app
      * @return the data source.
      * @throws Exception if an error occurred while creating the database.
      */
-    public static DataSource create(final String name) throws Exception {
-        if (TEST_DATABASE != null) {
-            return TEST_DATABASE;
-        }
-        final DataSource ds;
-        try {
-            ds = Initializer.forJavaDB("memory:" + name);
-        } catch (ClassNotFoundException e) {
-            assumeNoException(e);
-            throw e;
-        }
-        ds.getClass().getMethod("setCreateDatabase", String.class).invoke(ds, "create");
-        return ds;
+    public static SQLiteDatabase create(final Context context) throws Exception {
+        return new Database(context).getWritableDatabase();
     }
 
     /**
      * Drops an in-memory Derby database after usage.
      *
-     * @param  ds  the data source created by {@link #create(String)}.
+     * @param  db  the data source created by {@link #create(Context)}.
      * @throws Exception if an error occurred while dropping the database.
      */
-    public static void drop(final DataSource ds) throws Exception {
-        if (ds == TEST_DATABASE) {
-            return;
+    public static void drop(final SQLiteDatabase db) throws Exception {
+        db.close();
+    }
+
+    /**
+     * Test database. This database will be a on-memory database.
+     */
+    private static class Database extends SQLiteOpenHelper {
+
+        public Database(Context context) {
+            super(context, null, null, 1);
         }
-        ds.getClass().getMethod("setCreateDatabase", String.class).invoke(ds, "no");
-        ds.getClass().getMethod("setConnectionAttributes", String.class).invoke(ds, "drop=true");
-        try {
-            ds.getConnection().close();
-        } catch (SQLException e) {                          // This is the expected exception.
-            if (!Initializer.isSuccessfulShutdown(e)) {
-                throw e;
-            }
+
+        @Override
+        public void onCreate(SQLiteDatabase sqLiteDatabase) {
+
+        }
+
+        @Override
+        public void onUpgrade(SQLiteDatabase sqLiteDatabase, int i, int i1) {
+
         }
     }
 }
