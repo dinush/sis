@@ -17,7 +17,9 @@
 package org.apache.sis.metadata.sql;
 
 import java.util.Collections;
-import javax.sql.DataSource;
+
+import android.content.Context;
+import android.database.sqlite.SQLiteDatabase;
 import org.opengis.metadata.distribution.Format;
 import org.apache.sis.metadata.MetadataStandard;
 import org.apache.sis.internal.metadata.sql.TestDatabase;
@@ -43,20 +45,21 @@ import static org.junit.Assert.*;
 @DependsOn(org.apache.sis.internal.metadata.sql.ScriptRunnerTest.class)
 public final strictfp class MetadataSourceTest extends TestCase {
     /**
-     * Tests {@link MetadataSource} with an in-memory Derby database.
+     * Tests {@link MetadataSource} with an in-memory SQLite database.
      * This method delegates its work to all other methods in this class that expect a {@link MetadataSource} argument.
      *
      * @throws Exception if an error occurred while executing the script runner.
      */
     @Test
-    public void testOnDerby() throws Exception {
-        final DataSource ds = TestDatabase.create("MetadataSource");
-        try (MetadataSource source = new MetadataSource(MetadataStandard.ISO_19115, ds, "metadata", null)) {
-            source.install();
+    public void testOnSqlite(Context context) throws Exception {
+        final SQLiteDatabase db = TestDatabase.create(context);
+        try (MetadataSource source = new MetadataSource(MetadataStandard.ISO_19115, db, "metadata", null)) {
+            final Installer installer = new Installer(db);
+            installer.run();
             verifyFormats(source);
             testSearch(source);
         } finally {
-            TestDatabase.drop(ds);
+            TestDatabase.drop(db);
         }
     }
 
