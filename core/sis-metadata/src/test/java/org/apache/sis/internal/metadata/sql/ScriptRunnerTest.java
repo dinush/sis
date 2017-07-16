@@ -16,8 +16,8 @@
  */
 package org.apache.sis.internal.metadata.sql;
 
-import java.sql.Connection;
-import javax.sql.DataSource;
+import android.content.Context;
+import android.database.sqlite.SQLiteDatabase;
 import org.apache.sis.test.TestCase;
 import org.apache.sis.test.TestStep;
 import org.junit.Test;
@@ -35,36 +35,20 @@ import static org.junit.Assert.*;
  */
 public final strictfp class ScriptRunnerTest extends TestCase {
     /**
-     * Tests {@link ScriptRunner} with an in-memory Derby database.
+     * Tests {@link ScriptRunner} with an in-memory SQLite database.
      * This method delegates its work to all other methods in this class that expect a {@link ScriptRunner} argument.
      *
      * @throws Exception if an error occurred while executing the script runner.
      */
     @Test
-    public void testOnDerby() throws Exception {
-        final DataSource ds = TestDatabase.create("ScriptRunner");
-        try (Connection c = ds.getConnection()) {
-            final ScriptRunner sr = new ScriptRunner(c, 3);
-            testSupportedFlags(sr);
+    public void testOnSqlite(Context context) throws Exception {
+        final SQLiteDatabase db = TestDatabase.create(context);
+        try {
+            final ScriptRunner sr = new ScriptRunner(db, 3);
             testRegularExpressions(sr);
         } finally {
-            TestDatabase.drop(ds);
+            TestDatabase.drop(db);
         }
-    }
-
-    /**
-     * Verifies the values of {@code is*Supported} flags in the given script runner.
-     *
-     * @param  sr  the script runner for which to verify flag values.
-     */
-    @TestStep
-    public static void testSupportedFlags(final ScriptRunner sr) {
-        assertFalse("isCatalogSupported",       sr.isCatalogSupported);
-        assertTrue ("isSchemaSupported",        sr.isSchemaSupported);
-        assertFalse("isGrantOnSchemaSupported", sr.isGrantOnSchemaSupported);
-        assertFalse("isGrantOnTableSupported",  sr.isGrantOnTableSupported);
-        assertFalse("isEnumTypeSupported",      sr.isEnumTypeSupported);
-        assertFalse("isCommentSupported",       sr.isCommentSupported);
     }
 
     /**
