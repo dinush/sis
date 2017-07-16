@@ -157,29 +157,6 @@ public final strictfp class WeakValueHashMapTest extends TestCase {
                 }
                 assertTrue("containsAll:", weakMap.entrySet().containsAll(strongMap.entrySet()));
             }
-            /*
-             * The test below needs the garbage collector to complete fully its job in a timely
-             * manner. A failure in those tests is not necessarily a WeakValueHashMap bug, as it
-             * could be caused by a heavy server load preventing GC to complete its work. If this
-             * happen too often, we may turn off the "allow garbage collector dependent tests" flag.
-             */
-            if (TestConfiguration.allowGarbageCollectorDependentTests()) {
-                waitForGarbageCollection(new Callable<Boolean>() {
-                    @Override public Boolean call() {
-                        return weakMap.size() == strongMap.size();
-                    }
-                });
-                assertMapEquals(strongMap, weakMap);
-                /*
-                 * Clearing all strong references should make the map empty.
-                 */
-                strongMap.clear();
-                assertTrue("Expected an empty map.", waitForGarbageCollection(new Callable<Boolean>() {
-                    @Override public Boolean call() {
-                        return weakMap.isEmpty();
-                    }
-                }));
-            }
         }
     }
 
