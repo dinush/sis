@@ -16,9 +16,10 @@
  */
 package org.apache.sis.internal.metadata.sql;
 
-import java.sql.Types;
+import android.database.Cursor;
 import org.apache.sis.test.TestCase;
 import org.junit.Test;
+import java.sql.Types;
 
 import static org.junit.Assert.*;
 
@@ -37,8 +38,8 @@ public final strictfp class TypeMapperTest extends TestCase {
      */
     @Test
     public void testToJavaType() {
-        assertEquals(Integer.class, TypeMapper.toJavaType(Types.INTEGER));
-        assertEquals(Boolean.class, TypeMapper.toJavaType(Types.BOOLEAN));
+        assertEquals(Integer.class, TypeMapper.toJavaType(Cursor.FIELD_TYPE_INTEGER));
+        assertEquals(Double.class,  TypeMapper.toJavaType(Cursor.FIELD_TYPE_FLOAT));
         assertNull  (               TypeMapper.toJavaType(Types.LONGVARCHAR));
     }
 }
