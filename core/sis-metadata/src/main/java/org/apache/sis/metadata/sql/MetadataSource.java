@@ -699,6 +699,19 @@ public class MetadataSource implements AutoCloseable {
     }
 
     /**
+     * Checks if the given table exists.
+     * @param table table name.
+     * @return      {@code true} if table exists. {@code false} otherwise.
+     */
+    final boolean isTableExists(final String table) {
+        Cursor cursor = dataSource.query("sqlite_master", null, "type='?' AND name='?'",
+                new String[]{"table", table}, null, null, null);
+        boolean ret = cursor.moveToNext();
+        cursor.close();
+        return ret;
+    }
+
+    /**
      * If the given identifier specifies a subtype of the given type, then returns that subtype.
      * For example if the given type is {@code Party.class} and the given identifier is
      * {@code "{CI_Organisation}EPSG"}, then this method returns {@code Organisation.class}.

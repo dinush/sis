@@ -193,6 +193,47 @@ public class SQLBuilder {
     }
 
     /**
+     * Returns a SQL statement for adding a column with foreign key reference in a table.
+     * The returned statement is of the form:
+     *
+     * {@preformat sql
+     *   ALTER TABLE "schema"."table" ADD COLUMN "column" type REFERENCES "target" (primaryKey)
+     *   ON UPDATE CASCADE ON DELETE RESTRICT
+     * }
+     *
+     * where {@code type} is some SQL keyword like {@code INTEGER} or {@code VARCHAR}
+     * depending on the {@code type} argument.
+     *
+     * Note that the primary key is <strong>not</strong> quoted on intend.
+     * If quoted are desired, then they must be added explicitly before to call this method.
+     *
+     * @param  table      the table to alter with the new column.
+     * @param  column     the column to add.
+     * @param  type       the column type, or {@code null} for {@code VARCHAR}.
+     * @param  target      the table to reference.
+     * @param  primaryKey  the primary key in the target table.
+     * @param  cascade     {@code true} if updates in primary key should be cascaded.
+     *                     this apply to updates only; delete is always restricted.
+     * @return a SQL statement for creating the column.
+     */
+    public final String createColumnWithForeignKey(final String table, final String column,
+           final Class<?> type, final String target, final String primaryKey, boolean cascade)
+    {
+        clear().append("ALTER TABLE ").appendIdentifier(table)
+                .append(" ADD COLUMN ").appendIdentifier(column).append(' ');
+        final String sqlType = TypeMapper.keywordFor(type);
+        if (sqlType != null) {
+            append(sqlType);
+        } else {
+            append("TEXT");
+        }
+        append(" REFERENCES ").appendIdentifier(target).append(" (").append(primaryKey)
+                .append(") ON UPDATE ").append(cascade ? "CASCADE" : "RESTRICT")
+                .append(" ON DELETE RESTRICT");
+        return toString();
+    }
+
+    /**
      * Returns a SQL statement for creating a foreigner key constraint.
      * The returned statement is of the form:
      *

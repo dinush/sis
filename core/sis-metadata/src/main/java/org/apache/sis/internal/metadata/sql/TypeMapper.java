@@ -18,7 +18,6 @@ package org.apache.sis.internal.metadata.sql;
 
 import android.database.Cursor;
 
-
 /**
  * Maps a few basic Java types to SQLite types.
  *
@@ -39,7 +38,9 @@ public final class TypeMapper {
         new TypeMapper(Integer  .class, Cursor.FIELD_TYPE_INTEGER,  "INTEGER"),
         new TypeMapper(Double   .class, Cursor.FIELD_TYPE_FLOAT,    "REAL"),
         new TypeMapper(String   .class, Cursor.FIELD_TYPE_STRING,   "TEXT"),
-        new TypeMapper(Byte     .class, Cursor.FIELD_TYPE_BLOB,     "BLOB")
+        new TypeMapper(Byte     .class, Cursor.FIELD_TYPE_BLOB,     "BLOB"),
+        new TypeMapper(Float    .class, Cursor.FIELD_TYPE_FLOAT,    "REAL"),
+        new TypeMapper(Boolean  .class, Cursor.FIELD_TYPE_INTEGER,  "INTEGER")
     };
 
     /**

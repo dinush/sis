@@ -16,21 +16,17 @@
  */
 package org.apache.sis.metadata.sql;
 
+import java.lang.reflect.Modifier;
+import java.util.IdentityHashMap;
+import java.util.LinkedHashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.StringTokenizer;
+import java.util.ArrayList;
 import java.util.Map;
 import java.util.Set;
-import java.util.Iterator;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.IdentityHashMap;
-import java.util.StringTokenizer;
-import java.util.logging.Level;
-import java.sql.Statement;
-import java.sql.Connection;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import javax.sql.DataSource;
-import java.lang.reflect.Modifier;
 
+import org.apache.sis.internal.metadata.sql.SQLiteConfiguration;
 import org.opengis.util.CodeList;
 import org.opengis.metadata.Identifier;
 import org.opengis.metadata.citation.Citation;
@@ -38,7 +34,6 @@ import org.opengis.metadata.citation.Citation;
 import org.apache.sis.util.Exceptions;
 import org.apache.sis.util.ArgumentChecks;
 import org.apache.sis.util.resources.Errors;
-import org.apache.sis.util.resources.Messages;
 import org.apache.sis.util.iso.DefaultNameSpace;
 import org.apache.sis.util.iso.Types;
 import org.apache.sis.util.collection.Containers;
@@ -52,6 +47,9 @@ import org.apache.sis.internal.metadata.sql.SQLBuilder;
 
 // Branch-dependent imports
 import org.opengis.referencing.ReferenceIdentifier;
+import android.database.Cursor;
+import android.database.SQLException;
+import android.database.sqlite.SQLiteDatabase;
 
 
 /**
@@ -65,7 +63,7 @@ import org.opengis.referencing.ReferenceIdentifier;
  *
  * <div class="section">Properties</div>
  * The constructor expects three Java arguments (the {@linkplain MetadataStandard metadata standard},
- * the {@linkplain DataSource data source} and the database schema) completed by an arbitrary amount
+ * the {@linkplain SQLiteDatabase data source} and the database schema) completed by an arbitrary amount
  * of optional arguments given as a map of properties.
  * The following keys are recognized by {@code MetadataSource} and all other entries are ignored:
  *
@@ -146,8 +144,8 @@ public class MetadataWriter extends MetadataSource {
      * @param  schema      the database schema were metadata tables are stored, or {@code null} if none.
      * @param  properties  additional options, or {@code null} if none. See class javadoc for a description.
      */
-    public MetadataWriter(final MetadataStandard standard, final DataSource dataSource, final String schema,
-            final Map<String,?> properties)
+    public MetadataWriter(final MetadataStandard standard, final SQLiteDatabase dataSource, final String schema,
+                          final Map<String,?> properties)
     {
         super(standard, dataSource, schema, properties);
         Integer maximumIdentifierLength           = Containers.property(properties, "maximumIdentifierLength", Integer.class);
@@ -185,26 +183,13 @@ public class MetadataWriter extends MetadataSource {
         String identifier = proxy(metadata);
         if (identifier == null) try {
             synchronized (this) {
-                final Connection connection = connection();
-                connection.setAutoCommit(false);
                 boolean success = false;
-                try {
-                    try (Statement stmt = connection.createStatement()) {
-                        if (metadata instanceof CodeList<?>) {
-                            identifier = addCode(stmt, (CodeList<?>) metadata);
-                        } else {
-                            identifier = add(stmt, metadata, new IdentityHashMap<Object,String>(), null);
-                        }
-                    }
-                    success = true;
-                } finally {
-                    if (success) {
-                        connection.commit();
-                    } else {
-                        connection.rollback();
-                    }
-                    connection.setAutoCommit(true);
+                if (metadata instanceof CodeList<?>) {
+                    identifier = addCode((CodeList<?>) metadata);
+                } else {
+                    identifier = add(metadata, new IdentityHashMap<Object,String>(), null);
                 }
+                success = true;
             }
         } catch (ClassCastException e) {
             throw new MetadataStoreException(Errors.format(
@@ -223,7 +208,6 @@ public class MetadataWriter extends MetadataSource {
      * Implementation of the {@link #add(Object)} method. This method invokes itself recursively,
      * and maintains a map of metadata inserted up to date in order to avoid infinite recursivity.
      *
-     * @param  stmt      the statement to use for inserting data.
      * @param  metadata  the metadata object to add.
      * @param  done      the metadata objects already added, mapped to their primary keys.
      * @param  parent    the primary key of the parent, or {@code null} if there is no parent.
@@ -233,7 +217,7 @@ public class MetadataWriter extends MetadataSource {
      * @throws ClassCastException if the metadata object does not implement a metadata interface
      *         of the expected package.
      */
-    private String add(final Statement stmt, final Object metadata, final Map<Object,String> done,
+    private String add(final Object metadata, final Map<Object,String> done,
             final String parent) throws ClassCastException, SQLException
     {
         final SQLBuilder helper = helper();
@@ -254,7 +238,7 @@ public class MetadataWriter extends MetadataSource {
         final Class<?> interfaceType = standard.getInterface(implementationType);
         final String table = getTableName(interfaceType);
         final Set<String> columns = getExistingColumns(table);
-        String identifier = search(table, columns, asSingletons, stmt, helper);
+        String identifier = search(table, columns, asSingletons, helper);
         if (identifier != null) {
             if (done.put(metadata, identifier) != null) {
                 throw new AssertionError(metadata);
@@ -277,7 +261,7 @@ public class MetadataWriter extends MetadataSource {
          * created first. The later will work only for database supporting table inheritance, like PostgreSQL.
          * For other kind of database engine, we can not store metadata having parent interfaces.
          */
-        Boolean isChildTable = createTable(stmt, interfaceType, table, columns);
+        Boolean isChildTable = createTable(interfaceType, table, columns);
         if (isChildTable == null) {
             isChildTable = isChildTable(interfaceType);
         }
@@ -287,7 +271,7 @@ public class MetadataWriter extends MetadataSource {
          * They will be created later by recursive calls to this method a little bit below.
          */
         Map<String,Class<?>> colTypes = null, colTables = null;
-        final Map<String,FKey> foreigners = new LinkedHashMap<>();
+        final List<ColumnWithFKey> columnWithFKeyMap = new ArrayList<>();
         for (final String column : asSingletons.keySet()) {
             if (!columns.contains(column)) {
                 if (colTypes == null) {
@@ -299,7 +283,7 @@ public class MetadataWriter extends MetadataSource {
                  * (if such parent exists). In most case, the answer is "no" and 'addTo' is equals to 'table'.
                  */
                 String addTo = table;
-                if (helper.dialect.isTableInheritanceSupported) {
+                if (SQLiteConfiguration.isTableInheritanceSupported) {
                     @SuppressWarnings("null")
                     final Class<?> declaring = colTables.get(column);
                     if (!interfaceType.isAssignableFrom(declaring)) {
@@ -323,16 +307,42 @@ public class MetadataWriter extends MetadataSource {
                      * are using.
                      */
                     if (!isCodeList || !Modifier.isAbstract(rt.getModifiers())) {
-                        if (foreigners.put(column, new FKey(addTo, rt, null)) != null) {
-                            throw new AssertionError(column);                           // Should never happen.
+                        final String primaryKey;
+                        if (isCodeList) {
+                            primaryKey = CODE_COLUMN;
+                        } else {
+                            primaryKey = ID_COLUMN;
+                            rt = standard.getInterface(rt);
                         }
+                        String target = getTableName(rt);
+                        if (!isTableExists(target)) {
+                            columnWithFKeyMap.add(new ColumnWithFKey(addTo, column, rt,
+                                                    new FKey(addTo, rt, target, primaryKey,null)));
+                            continue;
+                        }
+//                        if (foreigners.put(column, new FKey(addTo, rt, null)) != null) {
+//                            throw new AssertionError(column);                           // Should never happen.
+//                        }
                     }
                     rt = null;                                                          // For forcing VARCHAR type.
                     maxLength = maximumIdentifierLength;
                 } else if (rt.isEnum()) {
                     maxLength = maximumIdentifierLength;
                 }
-                stmt.executeUpdate(helper.createColumn(schema(), addTo, column, rt, maxLength));
+
+                final String primaryKey;
+                if (isCodeList) {
+                    primaryKey = CODE_COLUMN;
+                } else {
+                    primaryKey = ID_COLUMN;
+                    rt = standard.getInterface(rt);
+                }
+                final String target = getTableName(rt);
+
+                connection().beginTransaction();
+                connection().execSQL(helper.createColumnWithForeignKey(addTo, column, rt, target, primaryKey, !isCodeList));
+                connection().setTransactionSuccessful();
+                connection().endTransaction();
                 columns.add(column);
             }
         }
@@ -404,7 +414,7 @@ public class MetadataWriter extends MetadataSource {
             Object value = entry.getValue();
             final Class<?> type = value.getClass();
             if (CodeList.class.isAssignableFrom(type)) {
-                value = addCode(stmt, (CodeList<?>) value);
+                value = addCode((CodeList<?>) value);
             } else if (type.isEnum()) {
                 value = ((Enum<?>) value).name();
             } else if (standard.isMetadata(type)) {
@@ -412,9 +422,10 @@ public class MetadataWriter extends MetadataSource {
                 if (dependency == null) {
                     dependency = done.get(value);
                     if (dependency == null) {
-                        dependency = add(stmt, value, done, identifier);
+                        dependency = add(value, done, identifier);
                         assert done.get(value) == dependency;                       // Really identity comparison.
-                        if (!helper.dialect.isIndexInheritanceSupported) {
+                        if (!SQLiteConfiguration.isIndexInheritanceSupported) {
+                            // TODO Recheck
                             /*
                              * In a classical object-oriented model, the foreigner key constraints declared in the
                              * parent table would take in account the records in the child table and we would have
@@ -422,49 +433,49 @@ public class MetadataWriter extends MetadataSource {
                              * detect that a column references some records in two different tables, then we must
                              * suppress the foreigner key constraint.
                              */
-                            final String column = entry.getKey();
-                            final Class<?> targetType = standard.getInterface(value.getClass());
-                            FKey fkey = foreigners.get(column);
-                            if (fkey != null && !targetType.isAssignableFrom(fkey.tableType)) {
-                                /*
-                                 * The foreigner key constraint does not yet exist, so we can
-                                 * change the target table. Set the target to the child table.
-                                 */
-                                fkey.tableType = targetType;
-                            }
-                            if (fkey == null) {
-                                /*
-                                 * The foreigner key constraint may already exist. Get a list of all foreigner keys for
-                                 * the current table, then verify if the existing constraint references the right table.
-                                 */
-                                if (referencedTables == null) {
-                                    referencedTables = new HashMap<>();
-                                    try (ResultSet rs = stmt.getConnection().getMetaData().getImportedKeys(catalog, schema(), table)) {
-                                        while (rs.next()) {
-                                            if ((schema() == null || schema().equals(rs.getString("PKTABLE_SCHEM"))) &&
-                                                (catalog  == null || catalog.equals(rs.getString("PKTABLE_CAT"))))
-                                            {
-                                                referencedTables.put(rs.getString("FKCOLUMN_NAME"),
-                                                            new FKey(rs.getString("PKTABLE_NAME"), null,
-                                                                     rs.getString("FK_NAME")));
-                                            }
-                                        }
-                                    }
-                                }
-                                fkey = referencedTables.remove(column);
-                                if (fkey != null && !fkey.tableName.equals(getTableName(targetType))) {
-                                    /*
-                                     * The existing foreigner key constraint doesn't reference the right table.
-                                     * We have no other choice than removing it...
-                                     */
-                                    stmt.executeUpdate(helper.clear().append("ALTER TABLE ")
-                                            .appendIdentifier(schema(), table).append(" DROP CONSTRAINT ")
-                                            .appendIdentifier(fkey.keyName).toString());
-                                    warning(MetadataWriter.class, "add", Messages.getResources(null)
-                                            .getLogRecord(Level.WARNING, Messages.Keys.DroppedForeignerKey_1,
-                                            table + '.' + column + " ⇒ " + fkey.tableName + '.' + ID_COLUMN));
-                                }
-                            }
+//                            final String column = entry.getKey();
+//                            final Class<?> targetType = standard.getInterface(value.getClass());
+//                            FKey fkey = foreigners.get(column);
+//                            if (fkey != null && !targetType.isAssignableFrom(fkey.tableType)) {
+//                                /*
+//                                 * The foreigner key constraint does not yet exist, so we can
+//                                 * change the target table. Set the target to the child table.
+//                                 */
+//                                fkey.tableType = targetType;
+//                            }
+//                            if (fkey == null) {
+//                                /*
+//                                 * The foreigner key constraint may already exist. Get a list of all foreigner keys for
+//                                 * the current table, then verify if the existing constraint references the right table.
+//                                 */
+//                                if (referencedTables == null) {
+//                                    referencedTables = new HashMap<>();
+//                                    try (ResultSet rs = stmt.getConnection().getMetaData().getImportedKeys(catalog, schema(), table)) {
+//                                        while (rs.next()) {
+//                                            if ((schema() == null || schema().equals(rs.getString("PKTABLE_SCHEM"))) &&
+//                                                (catalog  == null || catalog.equals(rs.getString("PKTABLE_CAT"))))
+//                                            {
+//                                                referencedTables.put(rs.getString("FKCOLUMN_NAME"),
+//                                                            new FKey(rs.getString("PKTABLE_NAME"), null,
+//                                                                     rs.getString("FK_NAME")));
+//                                            }
+//                                        }
+//                                    }
+//                                }
+//                                fkey = referencedTables.remove(column);
+//                                if (fkey != null && !fkey.tableName.equals(getTableName(targetType))) {
+//                                    /*
+//                                     * The existing foreigner key constraint doesn't reference the right table.
+//                                     * We have no other choice than removing it...
+//                                     */
+//                                    stmt.executeUpdate(helper.clear().append("ALTER TABLE ")
+//                                            .appendIdentifier(table).append(" DROP CONSTRAINT ")
+//                                            .appendIdentifier(fkey.keyName).toString());
+//                                    warning(MetadataWriter.class, "add", Messages.getResources(null)
+//                                            .getLogRecord(Level.WARNING, Messages.Keys.DroppedForeignerKey_1,
+//                                            table + '.' + column + " ⇒ " + fkey.tableName + '.' + ID_COLUMN));
+//                                }
+//                            }
                         }
                     }
                 }
@@ -472,43 +483,34 @@ public class MetadataWriter extends MetadataSource {
             }
             entry.setValue(value);
         }
-        /*
-         * Now that all dependencies have been inserted in the database, we can setup the foreigner key constraints
-         * if there is any. Note that we deferred the foreigner key creations not because of the missing rows,
-         * but because of missing tables (since new tables may be created in the process of inserting dependencies).
+        /**
+         * Now that all the possible columns have been inserted in the database, we can setup the remaining
+         * columns (not created because of absence of target table for foreign key), if there is any.
          */
-        if (!foreigners.isEmpty()) {
-            for (final Map.Entry<String,FKey> entry : foreigners.entrySet()) {
-                final FKey fkey = entry.getValue();
-                Class<?> rt = fkey.tableType;
-                final boolean isCodeList = CodeList.class.isAssignableFrom(rt);
-                final String primaryKey;
-                if (isCodeList) {
-                    primaryKey = CODE_COLUMN;
-                } else {
-                    primaryKey = ID_COLUMN;
-                    rt = standard.getInterface(rt);
-                }
-                final String column = entry.getKey();
-                final String target = getTableName(rt);
-                stmt.executeUpdate(helper.createForeignKey(
-                        schema(), fkey.tableName, column,       // Source (schema.table.column)
-                        target, primaryKey,                     // Target (table.column)
-                        !isCodeList));                          // CASCADE if metadata, RESTRICT if CodeList or Enum.
+        if (!columnWithFKeyMap.isEmpty()) {
+            for (ColumnWithFKey columnWithFKey : columnWithFKeyMap) {
+                connection().beginTransaction();
+                connection().execSQL(helper.createColumnWithForeignKey(columnWithFKey.tableName,
+                        columnWithFKey.columnName, columnWithFKey.columnType, columnWithFKey.fKey.target,
+                        columnWithFKey.fKey.primaryKey, !CodeList.class.isAssignableFrom(columnWithFKey.columnType)));
+                connection().setTransactionSuccessful();
+                connection().endTransaction();
+
                 /*
                  * In a classical object-oriented model, the constraint would be inherited by child tables.
                  * However this is not yet supported as of PostgreSQL 9.6. If inheritance is not supported,
                  * then we have to repeat the constraint creation in child tables.
                  */
-                if (!helper.dialect.isIndexInheritanceSupported && !table.equals(fkey.tableName)) {
-                    stmt.executeUpdate(helper.createForeignKey(schema(), table, column, target, primaryKey, !isCodeList));
-                }
+                // TODO Not sure if this needed for SQLite. Have to recheck.
+//                if (!helper.dialect.isIndexInheritanceSupported && !table.equals(fkey.tableName)) {
+//                    stmt.executeUpdate(helper.createForeignKey(table, column, target, primaryKey, !isCodeList));
+//                }
             }
         }
         /*
          * Create the SQL statement which will insert the data.
          */
-        helper.clear().append("INSERT INTO ").appendIdentifier(schema(), table).append(" (").append(ID_COLUMN);
+        helper.clear().append("INSERT INTO ").appendIdentifier(table).append(" (").append(ID_COLUMN);
         for (final String column : asSingletons.keySet()) {
             helper.append(", ").appendIdentifier(column);
         }
@@ -517,7 +519,9 @@ public class MetadataWriter extends MetadataSource {
             helper.append(", ").appendValue(value);
         }
         final String sql = helper.append(')').toString();
-        if (stmt.executeUpdate(sql) != 1) {
+        try {
+            connection().execSQL(sql);
+        } catch (SQLException e) {
             throw new SQLException(Errors.format(Errors.Keys.DatabaseUpdateFailure_3, 0, table, identifier));
         }
         return identifier;
@@ -532,12 +536,33 @@ public class MetadataWriter extends MetadataSource {
     private static final class FKey {
         final String tableName;                 // May be source or target, depending on the context.
         Class<?>     tableType;                 // Always the target table.
+        final String target;
+        final String primaryKey;
         final String keyName;
 
-        FKey(final String tableName, final Class<?> tableType, final String keyName) {
-            this.tableName = tableName;
-            this.tableType = tableType;
-            this.keyName   = keyName;
+        FKey(final String tableName, final Class<?> tableType, final String target, final String primaryKey, final String keyName) {
+            this.tableName  = tableName;
+            this.tableType  = tableType;
+            this.target     = target;
+            this.primaryKey = primaryKey;
+            this.keyName    = keyName;
+        }
+    }
+
+    /**
+     * Information about the columns with references to be added later.
+     */
+    private static final class ColumnWithFKey {
+        final String tableName;
+        final String columnName;
+        Class<?>     columnType;
+        final FKey   fKey;
+
+        ColumnWithFKey(final String tableName, final String columnName, final Class<?> columnType, final FKey fKey) {
+            this.tableName  = tableName;
+            this.columnName = columnName;
+            this.columnType = columnType;
+            this.fKey       = fKey;
         }
     }
 
@@ -572,14 +597,13 @@ public class MetadataWriter extends MetadataSource {
      * This method may call itself recursively for creating parent tables, if they do not exist neither.
      * This method opportunistically computes the same return value than {@link #isChildTable(Class)}.
      *
-     * @param  stmt     the statement to use for creating tables.
      * @param  type     the interface class.
      * @param  table    the name of the table (should be consistent with the type).
      * @param  columns  the existing columns, as an empty set if the table does not exist yet.
      * @return the value that {@code isChildTable(type)} would return, or {@code null} if undetermined.
      * @throws SQLException if an error occurred while creating the table.
      */
-    private Boolean createTable(final Statement stmt, final Class<?> type, final String table, final Set<String> columns)
+    private Boolean createTable(final Class<?> type, final String table, final Set<String> columns)
             throws SQLException
     {
         Boolean isChildTable = null;
@@ -590,12 +614,12 @@ public class MetadataWriter extends MetadataSource {
                 if (standard.isMetadata(candidate)) {
                     isChildTable = Boolean.TRUE;
                     final SQLBuilder helper = helper();
-                    if (helper.dialect.isTableInheritanceSupported) {
+                    if (SQLiteConfiguration.isTableInheritanceSupported) {
                         final String parent = getTableName(candidate);
-                        createTable(stmt, candidate, parent, getExistingColumns(parent));
+                        createTable(candidate, parent, getExistingColumns(parent));
                         if (inherits == null) {
-                            helper.clear().append("CREATE TABLE ").appendIdentifier(schema(), table);
-                            if (!helper.dialect.isIndexInheritanceSupported) {
+                            helper.clear().append("CREATE TABLE ").appendIdentifier(table);
+                            if (!SQLiteConfiguration.isIndexInheritanceSupported) {
                                 /*
                                  * In a classical object-oriented model, the new child table would inherit the index from
                                  * its parent table. However this is not yet the case as of PostgreSQL 9.6. If the index is
@@ -608,7 +632,7 @@ public class MetadataWriter extends MetadataSource {
                         } else {
                             inherits.append(", ");
                         }
-                        inherits.append(helper.clear().appendIdentifier(schema(), parent));
+                        inherits.append(helper.clear().appendIdentifier(parent));
                     }
                 }
             }
@@ -618,7 +642,10 @@ public class MetadataWriter extends MetadataSource {
             } else {
                 sql = createTable(table, ID_COLUMN);
             }
-            stmt.executeUpdate(sql);
+            connection().beginTransaction();
+            connection().execSQL(sql);
+            connection().setTransactionSuccessful();
+            connection().endTransaction();
             columns.add(ID_COLUMN);
         }
         return isChildTable;
@@ -629,11 +656,11 @@ public class MetadataWriter extends MetadataSource {
      * This method returns a string of the following form:
      *
      * {@preformat sql
-     *     CREATE TABLE "schema"."table" (primaryKey VARCHAR(20) NOT NULL PRIMARY KEY)
+     *     CREATE TABLE "table" (primaryKey VARCHAR(20) NOT NULL PRIMARY KEY)
      * }
      */
     private String createTable(final String table, final String primaryKey) throws SQLException {
-        return helper().clear().append("CREATE TABLE ").appendIdentifier(schema(), table)
+        return helper().clear().append("CREATE TABLE ").appendIdentifier(table)
                 .append(" (").append(primaryKey).append(" VARCHAR(").append(maximumIdentifierLength)
                 .append(") NOT NULL PRIMARY KEY)").toString();
     }
@@ -643,28 +670,37 @@ public class MetadataWriter extends MetadataSource {
      * foreigner key constraints in the database. The value of CodeList tables are not used
      * at parsing time.
      */
-    private String addCode(final Statement stmt, final CodeList<?> code) throws SQLException {
+    private String addCode(final CodeList<?> code) throws SQLException {
         assert Thread.holdsLock(this);
         final String table = getTableName(code.getClass());
         final Set<String> columns = getExistingColumns(table);
         if (columns.isEmpty()) {
-            stmt.executeUpdate(createTable(table, CODE_COLUMN));
+            connection().beginTransaction();
+            connection().execSQL(createTable(table, CODE_COLUMN));
+            connection().setTransactionSuccessful();
+            connection().endTransaction();
             columns.add(CODE_COLUMN);
         }
         final String identifier = Types.getCodeName(code);
         final String query = helper().clear().append("SELECT ").append(CODE_COLUMN)
-                .append(" FROM ").appendIdentifier(schema(), table).append(" WHERE ")
+                .append(" FROM ").appendIdentifier(table).append(" WHERE ")
                 .append(CODE_COLUMN).appendCondition(identifier).toString();
         final boolean exists;
-        try (ResultSet rs = stmt.executeQuery(query)) {
-            exists = rs.next();
+        try (Cursor cursor = connection().rawQuery(query, null)) {
+            exists = cursor.moveToNext();
         }
         if (!exists) {
-            final String sql = helper().clear().append("INSERT INTO ").appendIdentifier(schema(), table)
+            final String sql = helper().clear().append("INSERT INTO ").appendIdentifier(table)
                     .append(" (").append(CODE_COLUMN).append(") VALUES (").appendValue(identifier)
                     .append(')').toString();
-            if (stmt.executeUpdate(sql) != 1) {
+            connection().beginTransaction();
+            try {
+                connection().execSQL(sql);
+                connection().setTransactionSuccessful();
+            } catch (SQLException e) {
                 throw new SQLException(Errors.format(Errors.Keys.DatabaseUpdateFailure_3, 0, table, identifier));
+            } finally {
+                connection().endTransaction();
             }
         }
         return identifier;
