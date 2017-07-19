@@ -21,7 +21,6 @@ import java.util.Locale;
 import java.util.Collections;
 import java.util.logging.Level;
 import java.util.logging.LogRecord;
-import java.sql.Connection;
 import java.io.BufferedReader;
 import java.io.LineNumberReader;
 import java.io.InputStream;
@@ -57,7 +56,7 @@ import org.apache.sis.internal.util.Constants;
  * The first time that an {@link EPSGDataAccess} needs to be instantiated,
  * {@link EPSGFactory} verifies if the EPSG database exists. If it does not, then:
  * <ol>
- *   <li>{@link EPSGFactory#install(Connection)} searches for the first instance of {@link InstallationResources}
+ *   <li>{@link EPSGFactory#install(android.database.sqlite.SQLiteDatabase)} searches for the first instance of {@link InstallationResources}
  *       (the parent of this class) for which the {@linkplain #getAuthorities() set of authorities} contains {@code "EPSG"}.</li>
  *   <li>The {@linkplain #getLicense license} may be shown to the user if the application allows that
  *       (for example when running as a {@linkplain org.apache.sis.console console application}).</li>

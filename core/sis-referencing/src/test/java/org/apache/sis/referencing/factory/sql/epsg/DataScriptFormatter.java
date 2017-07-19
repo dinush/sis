@@ -28,16 +28,18 @@ import java.io.BufferedWriter;
 import java.io.OutputStreamWriter;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.sql.Connection;
 import java.sql.SQLException;
-import javax.sql.DataSource;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
 import org.apache.sis.util.Workaround;
 import org.apache.sis.util.CharSequences;
 import org.apache.sis.internal.metadata.sql.ScriptRunner;
 import org.apache.sis.internal.metadata.sql.TestDatabase;
 
+// Branch-dependent imports
+import android.support.test.InstrumentationRegistry;
+import android.database.sqlite.SQLiteDatabase;
 
 /**
  * Rewrites the {@code INSERT TO ...} statements in a SQL script in a more compact form.
@@ -72,9 +74,9 @@ public final class DataScriptFormatter extends ScriptRunner {
             System.err.println("Expected two arguments: source SQL file and target SQL file.");
             return;
         }
-        final DataSource ds = TestDatabase.create("dummy");
-        try (Connection c = ds.getConnection()) {
-            final DataScriptFormatter f = new DataScriptFormatter(c);
+        final SQLiteDatabase ds = TestDatabase.create(InstrumentationRegistry.getContext());
+        try {
+            final DataScriptFormatter f = new DataScriptFormatter(ds);
             f.run(new File(arguments[0]), new File(arguments[1]));
         } finally {
             TestDatabase.drop(ds);
@@ -120,7 +122,7 @@ public final class DataScriptFormatter extends ScriptRunner {
      * @param  c  a dummy connection. Will be used for fetching metadata.
      * @throws SQLException if an error occurred while fetching metadata.
      */
-    private DataScriptFormatter(final Connection c) throws SQLException {
+    private DataScriptFormatter(final SQLiteDatabase c) throws SQLException {
         super(c, Integer.MAX_VALUE);
         final Map<String,int[]> m = new HashMap<>();
         m.put("epsg_alias",                     new int[] {   });

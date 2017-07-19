@@ -18,7 +18,6 @@ package org.apache.sis.metadata.sql;
 
 import java.util.Collections;
 
-import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
 import android.support.test.InstrumentationRegistry;
 import org.opengis.metadata.distribution.Format;

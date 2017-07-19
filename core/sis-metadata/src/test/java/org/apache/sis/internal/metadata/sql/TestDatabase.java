@@ -94,8 +94,7 @@ public final strictfp class TestDatabase {
     }
 
     /**
-     * Creates a SQLite database in memory. If no Derby or JavaDB driver is not found,
-     * then the test will be interrupted by an {@code org.junit.Assume} statement.
+     * Creates a SQLite database in memory.
      *
      * @param  context  the {@link Context} of the app
      * @return the data source.

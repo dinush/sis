@@ -22,13 +22,8 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.regex.Pattern;
 import java.io.IOException;
-import javax.sql.DataSource;
-import java.sql.Connection;
-import java.sql.Statement;
-import java.sql.ResultSet;
 import java.sql.SQLException;
-import org.hsqldb.jdbc.JDBCDataSource;
-import org.postgresql.ds.PGSimpleDataSource;
+
 import org.opengis.util.FactoryException;
 import org.opengis.referencing.crs.GeographicCRS;
 import org.opengis.referencing.crs.ProjectedCRS;
@@ -44,16 +39,19 @@ import org.apache.sis.test.LoggingWatcher;
 import org.apache.sis.test.DependsOn;
 import org.apache.sis.test.TestCase;
 import org.junit.After;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 
 import static org.junit.Assert.*;
 import static org.junit.Assume.*;
 
+//Branch-dependent imports
+import org.apache.sis.internal.metadata.sql.ResultSetCursor;
+import android.support.test.InstrumentationRegistry;
+import android.database.sqlite.SQLiteDatabase;
 
 /**
- * Tests {@link EPSGInstaller} indirectly, through {@link EPSGFactory#install(Connection)}.
+ * Tests {@link EPSGInstaller} indirectly, through {@link EPSGFactory#install(SQLiteDatabase)}.
  * We do not test {@code EPSGInstaller} directly because the EPSG database creation is costly,
  * and we want to use the {@code EPSGFactory} for creating a few CRS for testing purpose.
  *
@@ -122,15 +120,15 @@ public final strictfp class EPSGInstallerTest extends TestCase {
     }
 
     /**
-     * Tests the creation of an EPSG database on Derby.
+     * Tests the creation of an EPSG database on SQLite.
      * This test is skipped if Derby/JavaDB is not found, or if the SQL scripts are not found.
      *
      * @throws Exception if an error occurred while creating the database.
      */
     @Test
-    public void testCreationOnDerby() throws Exception {
+    public void testCreationOnSQLite() throws Exception {
         final InstallationScriptProvider scripts = getScripts();            // Needs to be invoked first.
-        final DataSource ds = TestDatabase.create("EPSGInstaller");
+        final SQLiteDatabase ds = TestDatabase.create(InstrumentationRegistry.getContext());
         try {
             createAndTest(ds, scripts);
         } finally {
@@ -141,55 +139,10 @@ public final strictfp class EPSGInstallerTest extends TestCase {
     }
 
     /**
-     * Tests the creation of an EPSG database on HSQLDB.
-     * This test is skipped if the SQL scripts are not found.
-     *
-     * @throws Exception if an error occurred while creating the database.
-     */
-    @Test
-    public void testCreationOnHSQLDB() throws Exception {
-        final InstallationScriptProvider scripts = getScripts();            // Needs to be invoked first.
-        final JDBCDataSource ds = new JDBCDataSource();
-        ds.setURL("jdbc:hsqldb:mem:EPSGInstaller");
-        try {
-            createAndTest(ds, scripts);
-        } finally {
-            try (Connection c = ds.getConnection(); Statement s = c.createStatement()) {
-                s.execute("SHUTDOWN");
-            }
-        }
-        loggings.assertNextLogContains("EPSG", "jdbc:hsqldb:mem:EPSGInstaller");
-        loggings.assertNoUnexpectedLog();
-    }
-
-    /**
-     * Tests the creation of an EPSG database on PostgreSQL. This test is disabled by default.
-     * To run this test, the tester needs to launch on {@code "localhost"} a PostgreSQL server
-     * having an empty database named {@code "SpatialMetadataTest"}. After the test completion,
-     * one can verify the {@code "EPSG"} schema created by the test, then delete that schema for future test executions
-     * (this test does <strong>not</strong> delete by itself the schema that it created).
-     *
-     * @throws Exception if an error occurred while creating the database.
-     *
-     * @since 0.8
-     */
-    @Test
-    @Ignore("This test need to be run manually on a machine having a local PostgreSQL database.")
-    public void testCreationOnPostgreSQL() throws Exception {
-        final InstallationScriptProvider scripts = getScripts();            // Needs to be invoked first.
-        final PGSimpleDataSource ds = new PGSimpleDataSource();
-        ds.setServerName("localhost");
-        ds.setDatabaseName("SpatialMetadataTest");
-        createAndTest(ds, scripts);
-        loggings.assertNextLogContains("EPSG", "jdbc:postgresql://localhost/SpatialMetadataTest");
-        loggings.assertNoUnexpectedLog();
-    }
-
-    /**
      * Requests the "WGS84" and the "WGS72 / UTM zone 15N" coordinate reference systems from the EPSG database
      * at the given {@code DataSource}. Those requests should trig the creation of the EPSG database.
      */
-    private void createAndTest(final DataSource ds, final InstallationScriptProvider scriptProvider)
+    private void createAndTest(final SQLiteDatabase ds, final InstallationScriptProvider scriptProvider)
             throws SQLException, FactoryException
     {
         final Map<String,Object> properties = new HashMap<>();
@@ -234,15 +187,11 @@ public final strictfp class EPSGInstallerTest extends TestCase {
      * Counts the number of {@code EPSG."Coordinate Reference System"} tables.
      * It should be 0 or 1. Any schema other than "EPSG" causes a test failure.
      */
-    private static int countCRSTables(final DataSource ds) throws SQLException {
+    private static int countCRSTables(final SQLiteDatabase ds) throws SQLException {
         int count = 0;
-        try (Connection c = ds.getConnection()) {
-            try (ResultSet r = c.getMetaData().getTables(null, null, "Coordinate Reference System", null)) {
-                while (r.next()) {
-                    final String schema = r.getString("TABLE_SCHEM");
-                    assertTrue(schema, "EPSG".equalsIgnoreCase(schema));
-                    count++;
-                }
+        try (ResultSetCursor r = new ResultSetCursor(ds.query("sqlite_master", null, "type=? AND name=?", new String[]{"table", "Coordinate Reference System"}, null, null, null))) {
+            while (r.next()) {
+                count++;
             }
         }
         return count;

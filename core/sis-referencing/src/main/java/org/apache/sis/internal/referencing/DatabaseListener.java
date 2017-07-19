@@ -16,8 +16,9 @@
  */
 package org.apache.sis.internal.referencing;
 
-import java.sql.Connection;
-import java.sql.SQLException;
+import android.database.SQLException;
+import android.database.sqlite.SQLiteDatabase;
+
 import org.opengis.util.FactoryException;
 import org.apache.sis.referencing.CRS;
 import org.apache.sis.referencing.factory.MultiAuthoritiesFactory;
@@ -55,7 +56,7 @@ public final class DatabaseListener extends Initializer {
      * @throws SQLException if an error occurred while populating the database.
      */
     @Override
-    protected void createSchema(Connection connection) throws SQLException {
+    protected void createSchema(SQLiteDatabase connection) throws SQLException {
     }
 
     /**

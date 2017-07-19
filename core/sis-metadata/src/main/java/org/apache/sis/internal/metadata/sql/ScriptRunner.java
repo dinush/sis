@@ -16,6 +16,7 @@
  */
 package org.apache.sis.internal.metadata.sql;
 
+import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
@@ -36,7 +37,6 @@ import org.apache.sis.util.resources.Errors;
 // Branch-specific imports
 import org.apache.sis.internal.jdk8.JDK8;
 import org.apache.sis.internal.jdk8.BiFunction;
-import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
 
 import static org.apache.sis.internal.metadata.sql.SQLiteConfiguration.QUOTE;
@@ -549,7 +549,7 @@ parseLine:  while (pos < length) {
      * @throws SQLException if an error occurred while executing the SQL statement.
      * @throws IOException if an I/O operation was required and failed.
      */
-    protected int execute(final StringBuilder sql) throws SQLException, IOException {
+    protected int execute(final StringBuilder sql) throws SQLException, IOException, SQLException {
         ArgumentChecks.ensureNonNull("connection", database);
         if (!isSupported(sql)) {
             return 0;
