@@ -252,7 +252,7 @@ public class ResultSetCursor extends AbstractResultSet {
 
     @Override
     public int findColumn(String s) {
-        return cursor.getColumnIndex(s);
+        return cursor.getColumnIndex(s)+1;
     }
 
     @Override
