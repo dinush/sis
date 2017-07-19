@@ -383,6 +383,25 @@ Apache SIS is a free software, Java language library for developing geospatial a
        ============================================================== -->
   <dependencyManagement>
     <dependencies>
+      <!--Android-->
+      <dependency>
+        <groupId>com.google.android</groupId>
+        <artifactId>android</artifactId>
+        <version>4.1.1.4</version>
+        <scope>provided</scope>
+      </dependency>
+      <dependency>
+        <groupId>com.google.android</groupId>
+        <artifactId>android-test</artifactId>
+        <version>4.1.1.4</version>
+        <scope>provided</scope>
+      </dependency>
+      <dependency>
+        <groupId>com.google.android</groupId>
+        <artifactId>support-v4</artifactId>
+        <version>r7</version>
+      </dependency>
+
       <!-- Import all dependency management used by the GeAPI project.
            This include JUnit and units of measurement. -->
       <dependency>

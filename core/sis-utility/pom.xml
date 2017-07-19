@@ -136,6 +136,10 @@ Miscellaneous utilities.
        =========================================================== -->
   <dependencies>
     <dependency>
+      <groupId>com.google.android</groupId>
+      <artifactId>android</artifactId>
+    </dependency>
+    <dependency>
       <groupId>javax.xml.bind</groupId>
       <artifactId>jaxb-api</artifactId>
     </dependency>
