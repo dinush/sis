@@ -17,6 +17,7 @@
 package org.apache.sis.metadata.sql;
 
 import java.lang.reflect.Modifier;
+import java.sql.SQLException;
 import java.util.IdentityHashMap;
 import java.util.LinkedHashMap;
 import java.util.Iterator;
@@ -26,6 +27,7 @@ import java.util.ArrayList;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.sis.internal.metadata.sql.ResultSetCursor;
 import org.apache.sis.internal.metadata.sql.SQLiteConfiguration;
 import org.opengis.util.CodeList;
 import org.opengis.metadata.Identifier;
@@ -47,8 +49,6 @@ import org.apache.sis.internal.metadata.sql.SQLBuilder;
 
 // Branch-dependent imports
 import org.opengis.referencing.ReferenceIdentifier;
-import android.database.Cursor;
-import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
 
 
@@ -521,7 +521,7 @@ public class MetadataWriter extends MetadataSource {
         final String sql = helper.append(')').toString();
         try {
             connection().execSQL(sql);
-        } catch (SQLException e) {
+        } catch (android.database.SQLException e) {
             throw new SQLException(Errors.format(Errors.Keys.DatabaseUpdateFailure_3, 0, table, identifier));
         }
         return identifier;
@@ -686,8 +686,8 @@ public class MetadataWriter extends MetadataSource {
                 .append(" FROM ").appendIdentifier(table).append(" WHERE ")
                 .append(CODE_COLUMN).appendCondition(identifier).toString();
         final boolean exists;
-        try (Cursor cursor = connection().rawQuery(query, null)) {
-            exists = cursor.moveToNext();
+        try (ResultSetCursor rs = new ResultSetCursor(connection().rawQuery(query, null))) {
+            exists = rs.next();
         }
         if (!exists) {
             final String sql = helper().clear().append("INSERT INTO ").appendIdentifier(table)
@@ -697,7 +697,7 @@ public class MetadataWriter extends MetadataSource {
             try {
                 connection().execSQL(sql);
                 connection().setTransactionSuccessful();
-            } catch (SQLException e) {
+            } catch (android.database.SQLException e) {
                 throw new SQLException(Errors.format(Errors.Keys.DatabaseUpdateFailure_3, 0, table, identifier));
             } finally {
                 connection().endTransaction();

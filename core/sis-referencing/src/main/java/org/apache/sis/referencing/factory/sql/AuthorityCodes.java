@@ -16,13 +16,13 @@
  */
 package org.apache.sis.referencing.factory.sql;
 
+import java.sql.SQLException;
 import java.util.LinkedHashMap;
 import java.io.Serializable;
 import java.io.ObjectStreamException;
 
-import android.database.Cursor;
-import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
+import org.apache.sis.internal.metadata.sql.ResultSetCursor;
 import org.opengis.referencing.operation.Projection;
 import org.apache.sis.util.collection.BackingStoreException;
 import org.apache.sis.internal.util.AbstractMap;
@@ -101,7 +101,7 @@ final class AuthorityCodes extends AbstractMap<String,String> implements Seriali
      * {@code statements[ALL]} will be closed. This is because JDBC specification said that closing
      * a statement also close its result set.</p>
      */
-    private transient Cursor results;
+    private transient ResultSetCursor results;
 
     /**
      * A cache of integer codes. Created only if the user wants to iterate over all codes or asked for the map size.
@@ -177,17 +177,17 @@ final class AuthorityCodes extends AbstractMap<String,String> implements Seriali
         synchronized (factory) {
             if (codes == null) {
                 codes = new IntegerList(100, MAX_CODE);
-                results = factory.connection.rawQuery(sql[ALL], null);
+                results = new ResultSetCursor(factory.connection.rawQuery(sql[ALL], null));
             }
             int more = index - codes.size();    // Positive as long as we need more data.
             if (more < 0) {
                 code = codes.getInt(index);     // Get a previously cached value.
             } else {
-                final Cursor r = results;
+                final ResultSetCursor r = results;
                 if (r == null) {
                     code = -1;                  // Already reached iteration end in a previous call.
                 } else do {
-                    if (!r.moveToNext()) {
+                    if (!r.next()) {
                         results = null;
                         r.close();
                         return -1;
@@ -251,8 +251,8 @@ final class AuthorityCodes extends AbstractMap<String,String> implements Seriali
             try {
                 synchronized (factory) {
                     if (filter(n)) {
-                        try (Cursor results = factory.connection.rawQuery(sql[ONE], new String[]{String.valueOf(n)})) {
-                            while (results.moveToNext()) {
+                        try (ResultSetCursor results = new ResultSetCursor(factory.connection.rawQuery(sql[ONE], new String[]{String.valueOf(n)}))) {
+                            while (results.next()) {
                                 String name = results.getString(1);
                                 if (name != null) {
                                     return name;

@@ -16,6 +16,7 @@
  */
 package org.apache.sis.referencing.factory.sql;
 
+import java.sql.SQLException;
 import java.util.Set;
 import java.util.Map;
 import java.util.List;
@@ -40,6 +41,7 @@ import javax.measure.quantity.Angle;
 import javax.measure.quantity.Length;
 import javax.measure.format.ParserException;
 
+import org.apache.sis.internal.metadata.sql.ResultSetCursor;
 import org.opengis.util.NameSpace;
 import org.opengis.util.GenericName;
 import org.opengis.util.InternationalString;
@@ -103,7 +105,6 @@ import org.apache.sis.util.logging.Logging;
 import org.apache.sis.util.ArgumentChecks;
 import org.apache.sis.util.CharSequences;
 import org.apache.sis.util.Localized;
-import org.apache.sis.util.Version;
 import org.apache.sis.util.Workaround;
 import org.apache.sis.util.ArraysExt;
 import org.apache.sis.util.collection.Containers;
@@ -116,8 +117,6 @@ import static org.apache.sis.internal.util.StandardDateFormat.UTC;
 import static org.apache.sis.internal.referencing.ServicesForMetadata.CONNECTION;
 
 // Branch-dependent imports
-import android.database.Cursor;
-import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
 import org.apache.sis.internal.jdk8.JDK8;
 import org.apache.sis.internal.util.StandardDateFormat;
@@ -429,11 +428,11 @@ public class EPSGDataAccess extends GeodeticAuthorityFactory implements CRSAutho
             final String query = translator.apply("SELECT VERSION_NUMBER, VERSION_DATE FROM [Version History]" +
                                                   " ORDER BY VERSION_DATE DESC, VERSION_HISTORY_CODE DESC");
             String version = null;
-            try (Cursor result = connection.rawQuery(query, null))
+            try (ResultSetCursor result = new ResultSetCursor(connection.rawQuery(query, null)))
             {
-                while (result.moveToNext()) {
+                while (result.next()) {
                     version = getOptionalString(result, 1);
-                    final Date date = new Date(result.getInt(2) * 1000);          // Local timezone.
+                    final Date date = result.getDate(2);                        // Local timezone.
                     if (version != null && date != null) {                          // Paranoiac check.
                         c.setEdition(new SimpleInternationalString(version));
                         c.setEditionDate(date);
@@ -692,8 +691,8 @@ addURIs:    for (int i=0; ; i++) {
                     lastTableForName = table;
                 }
                 Integer resolved = null;
-                try (Cursor result = connection.rawQuery(statement, new String[]{toLikePattern(code)})) {
-                    while (result.moveToNext()) {
+                try (ResultSetCursor result = new ResultSetCursor(connection.rawQuery(statement, new String[]{toLikePattern(code)}))) {
+                    while (result.next()) {
                         if (SQLUtilities.filterFalsePositive(code, result.getString(2))) {
                             resolved = ensureSingleton(getOptionalInteger(result, 1), resolved, code);
                         }
@@ -732,7 +731,7 @@ addURIs:    for (int i=0; ; i++) {
      * @return the result of the query.
      * @throws SQLException if an error occurred while querying the database.
      */
-    private Cursor executeQuery(final String table, final String codeColumn, final String nameColumn,
+    private ResultSetCursor executeQuery(final String table, final String codeColumn, final String nameColumn,
             final String sql, final String... codes) throws SQLException, FactoryException
     {
         assert Thread.holdsLock(this);
@@ -752,7 +751,7 @@ addURIs:    for (int i=0; ; i++) {
      * @return the result of the query.
      * @throws SQLException if an error occurred while querying the database.
      */
-    private Cursor executeQuery(final String table, final String sql, final int... codes) throws SQLException {
+    private ResultSetCursor executeQuery(final String table, final String sql, final int... codes) throws SQLException {
         assert Thread.holdsLock(this);
         String stmt = statements.get(table);
         if (stmt == null) {
@@ -764,66 +763,49 @@ addURIs:    for (int i=0; ; i++) {
         for (int i=0; i<codes.length; i++) {
             args[i] = String.valueOf(codes[i]);
         }
-        return connection.rawQuery(stmt, args);
+        return new ResultSetCursor(connection.rawQuery(stmt, args));
     }
 
     /**
-     * Gets the value from the specified {@link Cursor}, or {@code null} if none.
+     * Gets the value from the specified {@link ResultSetCursor}, or {@code null} if none.
      *
      * @param  result       the result set to fetch value from.
      * @param  columnIndex  the column index (1-based).
      * @return the string at the specified column, or {@code null}.
+     * @throws SQLException if an error occurred while querying the database.
      */
-    private static String getOptionalString(final Cursor result, final int columnIndex) {
-        try {
-            String value = result.getString(columnIndex);
-            return !(value = value.trim()).isEmpty() ? value : null;
-        } catch (Exception e) {
-            return null;    // Column value is null or the column type is not a string type
-        }
+    private static String getOptionalString(final ResultSetCursor result, final int columnIndex) throws SQLException {
+        String value = result.getString(columnIndex);
+        return (value != null) && !(value = value.trim()).isEmpty() && !result.wasNull() ? value : null;
     }
 
     /**
-     * Gets the value from the specified {@link Cursor}, or {@code NaN} if none.
+     * Gets the value from the specified {@link ResultSetCursor}, or {@code NaN} if none.
      *
      * @param  result       the result set to fetch value from.
      * @param  columnIndex  the column index (1-based).
      * @return the number at the specified column, or {@code NaN}.
      * @throws SQLException if an error occurred while querying the database.
      */
-    private static double getOptionalDouble(final Cursor result, final int columnIndex) {
-        try {
-            return result.getDouble(columnIndex);
-        } catch (Exception e) {
-            /**
-             * Column value is null, the column type is not a floating-point type, or the
-             * floating-point value is not representable as a double value
-             */
-            return Double.NaN;
-        }
+    private static double getOptionalDouble(final ResultSetCursor result, final int columnIndex) {
+        final double value = result.getDouble(columnIndex);
+        return result.wasNull() ? Double.NaN : value;
     }
 
     /**
-     * Gets the value from the specified {@link Cursor}, or {@code null} if none.
+     * Gets the value from the specified {@link ResultSetCursor}, or {@code null} if none.
      *
      * @param  result       the result set to fetch value from.
      * @param  columnIndex  the column index (1-based).
      * @return the integer at the specified column, or {@code null}.
      */
-    private static Integer getOptionalInteger(final Cursor result, final int columnIndex) {
-        try {
-            return result.getInt(columnIndex);
-        } catch (Exception e) {
-            /**
-             * column value is null, the column type is not an integral type, or the integer
-             * value is outside the range [Integer.MIN_VALUE, Integer.MAX_VALUE]
-             */
-            return null;
-        }
+    private static Integer getOptionalInteger(final ResultSetCursor result, final int columnIndex) {
+        final int value = result.getInt(columnIndex);
+        return result.wasNull() ? null : value;
     }
 
     /**
-     * Gets the value from the specified {@link Cursor}, or {@code false} if none.
+     * Gets the value from the specified {@link ResultSetCursor}, or {@code false} if none.
      * The EPSG database stores boolean values as integers instead than using the SQL type.
      *
      * @param  result       the result set to fetch value from.
@@ -831,47 +813,34 @@ addURIs:    for (int i=0; ; i++) {
      * @return the boolean at the specified column, or {@code null}.
      * @throws SQLException if an error occurred while querying the database.
      */
-    private boolean getOptionalBoolean(final Cursor result, final int columnIndex) {
-        try {
-            /**
-             * SQLite does not have boolean type
-             */
-            return result.getInt(columnIndex) != 0;
-        } catch (Exception e) {
-            return false;   // Default value
-        }
+    private boolean getOptionalBoolean(final ResultSetCursor result, final int columnIndex) {
+        return translator.useBoolean() ? result.getBoolean(columnIndex) : (result.getInt(columnIndex) != 0);
     }
 
     /**
      * Formats an error message for an unexpected null value.
      */
-    private String nullValue(final Cursor result, final int columnIndex, final Comparable<?> code) {
+    private String nullValue(final ResultSetCursor result, final int columnIndex, final Comparable<?> code) throws SQLException {
         final String column = result.getColumnName(columnIndex);
         result.close();
         return error().getString(Errors.Keys.NullValueInTable_3, column, code);
     }
 
     /**
-     * Same as {@link #getString(Comparable, Cursor, int)},
+     * Same as {@link #getString(Comparable, ResultSetCursor, int)},
      * but reports the fault on an alternative column if the value is null.
      */
-    private String getString(final String code, final Cursor result, final int columnIndex, final int columnFault)
-            throws FactoryDataException
-    {
-        String value;
-        try {
-            value = result.getString(columnIndex);
-            if ((value = value.trim()).isEmpty()) {
-                throw new Exception();
-            }
-        } catch (Exception e) {
+    private String getString(final String code, final ResultSetCursor result, final int columnIndex, final int columnFault)
+            throws FactoryDataException, SQLException {
+        String value = result.getString(columnIndex);
+        if (value == null || (value = value.trim()).isEmpty() || result.wasNull()) {
             throw new FactoryDataException(nullValue(result, columnFault, code));
         }
         return value;
     }
 
     /**
-     * Gets the string from the specified {@link Cursor}.
+     * Gets the string from the specified {@link ResultSetCursor}.
      * The string is required to be non-null. A null string will throw an exception.
      *
      * @param  code         the identifier of the record where the string was found.
@@ -880,23 +849,17 @@ addURIs:    for (int i=0; ; i++) {
      * @return the string at the specified column.
      * @throws FactoryDataException if a null value was found.
      */
-    private String getString(final Comparable<?> code, final Cursor result, final int columnIndex)
-            throws FactoryDataException
-    {
-        String value;
-        try {
-            value = result.getString(columnIndex);
-            if ((value = value.trim()).isEmpty()) {
-                throw new Exception();
-            }
-        } catch (Exception e) {
+    private String getString(final Comparable<?> code, final ResultSetCursor result, final int columnIndex)
+            throws FactoryDataException, SQLException {
+        String value = result.getString(columnIndex);
+        if (value == null || (value = value.trim()).isEmpty() || result.wasNull()) {
             throw new FactoryDataException(nullValue(result, columnIndex, code));
         }
         return value;
     }
 
     /**
-     * Gets the value from the specified {@link Cursor}.
+     * Gets the value from the specified {@link ResultSetCursor}.
      * The value is required to be non-null. A null value (i.e. blank) will throw an exception.
      *
      * @param  code         the identifier of the record where the double was found.
@@ -905,20 +868,17 @@ addURIs:    for (int i=0; ; i++) {
      * @return the double at the specified column.
      * @throws FactoryDataException if a null value was found.
      */
-    private double getDouble(final Comparable<?> code, final Cursor result, final int columnIndex)
-            throws FactoryDataException
-    {
-        final double value;
-        try {
-             value = result.getDouble(columnIndex);
-        } catch (Exception e) {
+    private double getDouble(final Comparable<?> code, final ResultSetCursor result, final int columnIndex)
+            throws FactoryDataException, SQLException {
+        final double value = result.getDouble(columnIndex);
+        if (Double.isNaN(value) || result.wasNull()) {
             throw new FactoryDataException(nullValue(result, columnIndex, code));
         }
         return value;
     }
 
     /**
-     * Gets the value from the specified {@link Cursor}.
+     * Gets the value from the specified {@link ResultSetCursor}.
      * The value is required to be non-null. A null value (i.e. blank) will throw an exception.
      *
      * <p>We return the value as the {@code Integer} wrapper instead than the {@code int} primitive type
@@ -930,13 +890,10 @@ addURIs:    for (int i=0; ; i++) {
      * @return the integer at the specified column.
      * @throws FactoryDataException if a null value was found.
      */
-    private Integer getInteger(final Comparable<?> code, final Cursor result, final int columnIndex)
-            throws FactoryDataException
-    {
-        final int value;
-        try {
-            value = result.getInt(columnIndex);
-        } catch (Exception e) {
+    private Integer getInteger(final Comparable<?> code, final ResultSetCursor result, final int columnIndex)
+            throws FactoryDataException, SQLException {
+        final int value = result.getInt(columnIndex);
+        if (result.wasNull()) {
             throw new FactoryDataException(nullValue(result, columnIndex, code));
         }
         return value;
@@ -1025,11 +982,11 @@ addURIs:    for (int i=0; ; i++) {
     private String getSupersession(final String table, final Integer code, final Locale locale) throws SQLException {
         String reason = null;
         Object replacedBy = null;
-        try (Cursor result = executeQuery("Deprecation",
+        try (ResultSetCursor result = executeQuery("Deprecation",
                 "SELECT OBJECT_TABLE_NAME, DEPRECATION_REASON, REPLACED_BY" +
                 " FROM [Deprecation] WHERE OBJECT_CODE = ?", code))
         {
-            while (result.moveToNext()) {
+            while (result.next()) {
                 if (tableMatches(table, result.getString(1))) {
                     reason     = getOptionalString (result, 2);
                     replacedBy = getOptionalInteger(result, 3);
@@ -1091,14 +1048,14 @@ addURIs:    for (int i=0; ; i++) {
          *     convenient for implementing accent-insensitive searches.
          */
         final List<GenericName> aliases = new ArrayList<>();
-        try (Cursor result = executeQuery("Alias",
+        try (ResultSetCursor result = executeQuery("Alias",
                 "SELECT OBJECT_TABLE_NAME, NAMING_SYSTEM_NAME, ALIAS" +
                 " FROM [Alias] INNER JOIN [Naming System]" +
                   " ON [Alias].NAMING_SYSTEM_CODE =" +
                 " [Naming System].NAMING_SYSTEM_CODE" +
                 " WHERE OBJECT_CODE = ?", code))
         {
-            while (result.moveToNext()) {
+            while (result.next()) {
                 if (tableMatches(table, result.getString(1))) {
                     final String naming = getOptionalString(result, 2);
                     final String alias  = getString(code,   result, 3);
@@ -1254,8 +1211,8 @@ addURIs:    for (int i=0; ; i++) {
                     arg[0] = toLikePattern(code);
                 }
                 Integer present = null;
-                try (Cursor result = connection.rawQuery(stmt, arg)) {
-                    while (result.moveToNext()) {
+                try (ResultSetCursor result = new ResultSetCursor(connection.rawQuery(stmt, arg))) {
+                    while (result.next()) {
                         if (isPrimaryKey || SQLUtilities.filterFalsePositive(code, result.getString(2))) {
                             present = ensureSingleton(getOptionalInteger(result, 1), present, code);
                         }
@@ -1322,7 +1279,7 @@ addURIs:    for (int i=0; ; i++) {
     {
         ArgumentChecks.ensureNonNull("code", code);
         CoordinateReferenceSystem returnValue = null;
-        try (Cursor result = executeQuery("Coordinate Reference System", "COORD_REF_SYS_CODE", "COORD_REF_SYS_NAME",
+        try (ResultSetCursor result = executeQuery("Coordinate Reference System", "COORD_REF_SYS_CODE", "COORD_REF_SYS_NAME",
                 "SELECT COORD_REF_SYS_CODE,"          +     // [ 1]
                       " COORD_REF_SYS_NAME,"          +     // [ 2]
                       " AREA_OF_USE_CODE,"            +     // [ 3]
@@ -1339,7 +1296,7 @@ addURIs:    for (int i=0; ; i++) {
                 " FROM [Coordinate Reference System]" +
                 " WHERE COORD_REF_SYS_CODE = ?", code))
         {
-            while (result.moveToNext()) {
+            while (result.next()) {
                 final Integer epsg       = getInteger  (code, result, 1);
                 final String  name       = getString   (code, result, 2);
                 final String  area       = getOptionalString (result, 3);
@@ -1599,7 +1556,7 @@ addURIs:    for (int i=0; ; i++) {
     public synchronized Datum createDatum(final String code) throws NoSuchAuthorityCodeException, FactoryException {
         ArgumentChecks.ensureNonNull("code", code);
         Datum returnValue = null;
-        try (Cursor result = executeQuery("Datum", "DATUM_CODE", "DATUM_NAME",
+        try (ResultSetCursor result = executeQuery("Datum", "DATUM_CODE", "DATUM_NAME",
                 "SELECT DATUM_CODE," +
                       " DATUM_NAME," +
                       " DATUM_TYPE," +
@@ -1614,7 +1571,7 @@ addURIs:    for (int i=0; ; i++) {
                 " FROM [Datum]" +
                 " WHERE DATUM_CODE = ?", code))
         {
-            while (result.moveToNext()) {
+            while (result.next()) {
                 final Integer epsg       = getInteger  (code, result, 1);
                 final String  name       = getString   (code, result, 2);
                 final String  type       = getString   (code, result, 3);
@@ -1762,7 +1719,7 @@ addURIs:    for (int i=0; ; i++) {
             return null;
         }
         final List<BursaWolfInfo> bwInfos = new ArrayList<>();
-        try (Cursor result = executeQuery("BursaWolfParametersSet",
+        try (ResultSetCursor result = executeQuery("BursaWolfParametersSet",
                 "SELECT COORD_OP_CODE," +
                       " COORD_OP_METHOD_CODE," +
                       " TARGET_CRS_CODE," +
@@ -1776,7 +1733,7 @@ addURIs:    for (int i=0; ; i++) {
                "(SELECT COORD_REF_SYS_CODE FROM [Coordinate Reference System] WHERE DATUM_CODE = ?)" +
             " ORDER BY TARGET_CRS_CODE, COORD_OP_ACCURACY, COORD_OP_CODE DESC", code))
         {
-            while (result.moveToNext()) {
+            while (result.next()) {
                 final BursaWolfInfo info = new BursaWolfInfo(
                         getInteger(code, result, 1),                // Operation
                         getInteger(code, result, 2),                // Method
@@ -1829,7 +1786,7 @@ addURIs:    for (int i=0; ; i++) {
                 continue;
             }
             final BursaWolfParameters bwp = new BursaWolfParameters(datum, info.getDomainOfValidity(owner));
-            try (Cursor result = executeQuery("BursaWolfParameters",
+            try (ResultSetCursor result = executeQuery("BursaWolfParameters",
                 "SELECT PARAMETER_CODE," +
                       " PARAMETER_VALUE," +
                       " UOM_CODE" +
@@ -1837,7 +1794,7 @@ addURIs:    for (int i=0; ; i++) {
                 " WHERE COORD_OP_CODE = ?" +
                   " AND COORD_OP_METHOD_CODE = ?", info.operation, info.method))
             {
-                while (result.moveToNext()) {
+                while (result.next()) {
                     BursaWolfInfo.setBursaWolfParameter(bwp,
                             getInteger(info.operation, result, 1),
                             getDouble (info.operation, result, 2),
@@ -1883,7 +1840,7 @@ addURIs:    for (int i=0; ; i++) {
     {
         ArgumentChecks.ensureNonNull("code", code);
         Ellipsoid returnValue = null;
-        try (Cursor result = executeQuery("Ellipsoid", "ELLIPSOID_CODE", "ELLIPSOID_NAME",
+        try (ResultSetCursor result = executeQuery("Ellipsoid", "ELLIPSOID_CODE", "ELLIPSOID_NAME",
                 "SELECT ELLIPSOID_CODE," +
                       " ELLIPSOID_NAME," +
                       " SEMI_MAJOR_AXIS," +
@@ -1895,7 +1852,7 @@ addURIs:    for (int i=0; ; i++) {
                 " FROM [Ellipsoid]" +
                 " WHERE ELLIPSOID_CODE = ?", code))
         {
-            while (result.moveToNext()) {
+            while (result.next()) {
                 /*
                  * One of 'semiMinorAxis' and 'inverseFlattening' values can be NULL in the database.
                  * Consequently, we don't use 'getString(ResultSet, int)' for those parameters because
@@ -1972,7 +1929,7 @@ addURIs:    for (int i=0; ; i++) {
     {
         ArgumentChecks.ensureNonNull("code", code);
         PrimeMeridian returnValue = null;
-        try (Cursor result = executeQuery("Prime Meridian", "PRIME_MERIDIAN_CODE", "PRIME_MERIDIAN_NAME",
+        try (ResultSetCursor result = executeQuery("Prime Meridian", "PRIME_MERIDIAN_CODE", "PRIME_MERIDIAN_NAME",
                 "SELECT PRIME_MERIDIAN_CODE," +
                       " PRIME_MERIDIAN_NAME," +
                       " GREENWICH_LONGITUDE," +
@@ -1982,7 +1939,7 @@ addURIs:    for (int i=0; ; i++) {
                 " FROM [Prime Meridian]" +
                 " WHERE PRIME_MERIDIAN_CODE = ?", code))
         {
-            while (result.moveToNext()) {
+            while (result.next()) {
                 final Integer epsg       = getInteger  (code, result, 1);
                 final String  name       = getString   (code, result, 2);
                 final double  longitude  = getDouble   (code, result, 3);
@@ -2030,7 +1987,7 @@ addURIs:    for (int i=0; ; i++) {
     {
         ArgumentChecks.ensureNonNull("code", code);
         Extent returnValue = null;
-        try (Cursor result = executeQuery("Area", "AREA_CODE", "AREA_NAME",
+        try (ResultSetCursor result = executeQuery("Area", "AREA_CODE", "AREA_NAME",
                 "SELECT AREA_OF_USE," +
                       " AREA_SOUTH_BOUND_LAT," +
                       " AREA_NORTH_BOUND_LAT," +
@@ -2039,7 +1996,7 @@ addURIs:    for (int i=0; ; i++) {
                 " FROM [Area]" +
                 " WHERE AREA_CODE = ?", code))
         {
-            while (result.moveToNext()) {
+            while (result.next()) {
                 final String description = getOptionalString(result, 1);
                 double ymin = getOptionalDouble(result, 2);
                 double ymax = getOptionalDouble(result, 3);
@@ -2109,7 +2066,7 @@ addURIs:    for (int i=0; ; i++) {
     {
         ArgumentChecks.ensureNonNull("code", code);
         CoordinateSystem returnValue = null;
-        try (Cursor result = executeQuery("Coordinate System", "COORD_SYS_CODE", "COORD_SYS_NAME",
+        try (ResultSetCursor result = executeQuery("Coordinate System", "COORD_SYS_CODE", "COORD_SYS_NAME",
                 "SELECT COORD_SYS_CODE," +
                       " COORD_SYS_NAME," +
                       " COORD_SYS_TYPE," +
@@ -2119,7 +2076,7 @@ addURIs:    for (int i=0; ; i++) {
                 " FROM [Coordinate System]" +
                 " WHERE COORD_SYS_CODE = ?", code))
         {
-            while (result.moveToNext()) {
+            while (result.next()) {
                 final Integer epsg       = getInteger  (code, result, 1);
                 final String  name       = getString   (code, result, 2);
                 final String  type       = getString   (code, result, 3);
@@ -2229,12 +2186,12 @@ addURIs:    for (int i=0; ; i++) {
     private Integer getDimensionForCS(final Integer cs) throws SQLException {
         Integer dimension = csDimensions.get(cs);
         if (dimension == null) {
-            try (Cursor result = executeQuery("Dimension",
+            try (ResultSetCursor result = executeQuery("Dimension",
                     " SELECT COUNT(COORD_AXIS_CODE)" +
                      " FROM [Coordinate Axis]" +
                      " WHERE COORD_SYS_CODE = ?", cs))
             {
-                dimension = result.moveToNext() ? result.getInt(1) : 0;
+                dimension = result.next() ? result.getInt(1) : 0;
                 csDimensions.put(cs, dimension);
             }
         }
@@ -2258,13 +2215,13 @@ addURIs:    for (int i=0; ; i++) {
     {
         int i = 0;
         final CoordinateSystemAxis[] axes = new CoordinateSystemAxis[dimension];
-        try (Cursor result = executeQuery("AxisOrder",
+        try (ResultSetCursor result = executeQuery("AxisOrder",
                 "SELECT COORD_AXIS_CODE" +
                 " FROM [Coordinate Axis]" +
                 " WHERE COORD_SYS_CODE = ?" +
                 " ORDER BY [ORDER]", cs))
         {
-            while (result.moveToNext()) {
+            while (result.next()) {
                 final String axis = getString(cs, result, 1);
                 if (i < axes.length) {
                     /*
@@ -2310,7 +2267,7 @@ addURIs:    for (int i=0; ; i++) {
     {
         ArgumentChecks.ensureNonNull("code", code);
         CoordinateSystemAxis returnValue = null;
-        try (Cursor result = executeQuery("Coordinate Axis", "COORD_AXIS_CODE", null,
+        try (ResultSetCursor result = executeQuery("Coordinate Axis", "COORD_AXIS_CODE", null,
                 "SELECT COORD_AXIS_CODE," +
                       " COORD_AXIS_NAME_CODE," +
                       " COORD_AXIS_ORIENTATION," +
@@ -2319,7 +2276,7 @@ addURIs:    for (int i=0; ; i++) {
                 " FROM [Coordinate Axis]" +
                " WHERE COORD_AXIS_CODE = ?", code))
         {
-            while (result.moveToNext()) {
+            while (result.next()) {
                 final Integer epsg         = getInteger(code, result, 1);
                 final Integer nameCode     = getInteger(code, result, 2);
                 final String  orientation  = getString (code, result, 3);
@@ -2354,12 +2311,12 @@ addURIs:    for (int i=0; ; i++) {
         assert Thread.holdsLock(this);
         AxisName returnValue = axisNames.get(code);
         if (returnValue == null) {
-            try (Cursor result = executeQuery("Coordinate Axis Name",
+            try (ResultSetCursor result = executeQuery("Coordinate Axis Name",
                     "SELECT COORD_AXIS_NAME, DESCRIPTION, REMARKS" +
                     " FROM [Coordinate Axis Name]" +
                     " WHERE COORD_AXIS_NAME_CODE = ?", code))
             {
-                while (result.moveToNext()) {
+                while (result.next()) {
                     final String name  = getString(code,   result, 1);
                     String description = getOptionalString(result, 2);
                     String remarks     = getOptionalString(result, 3);
@@ -2408,7 +2365,7 @@ addURIs:    for (int i=0; ; i++) {
     public synchronized Unit<?> createUnit(final String code) throws NoSuchAuthorityCodeException, FactoryException {
         ArgumentChecks.ensureNonNull("code", code);
         Unit<?> returnValue = null;
-        try (Cursor result = executeQuery("Unit of Measure", "UOM_CODE", "UNIT_OF_MEAS_NAME",
+        try (ResultSetCursor result = executeQuery("Unit of Measure", "UOM_CODE", "UNIT_OF_MEAS_NAME",
                 "SELECT UOM_CODE," +
                       " FACTOR_B," +
                       " FACTOR_C," +
@@ -2417,7 +2374,7 @@ addURIs:    for (int i=0; ; i++) {
                 " FROM [Unit of Measure]" +
                 " WHERE UOM_CODE = ?", code))
         {
-            while (result.moveToNext()) {
+            while (result.next()) {
                 final int source = getInteger(code,  result, 1);
                 final double   b = getOptionalDouble(result, 2);
                 final double   c = getOptionalDouble(result, 3);
@@ -2483,7 +2440,7 @@ addURIs:    for (int i=0; ; i++) {
     {
         ArgumentChecks.ensureNonNull("code", code);
         ParameterDescriptor<?> returnValue = null;
-        try (Cursor result = executeQuery("Coordinate_Operation Parameter", "PARAMETER_CODE", "PARAMETER_NAME",
+        try (ResultSetCursor result = executeQuery("Coordinate_Operation Parameter", "PARAMETER_CODE", "PARAMETER_NAME",
                 "SELECT PARAMETER_CODE," +
                       " PARAMETER_NAME," +
                       " DESCRIPTION," +
@@ -2491,7 +2448,7 @@ addURIs:    for (int i=0; ; i++) {
                 " FROM [Coordinate_Operation Parameter]" +
                 " WHERE PARAMETER_CODE = ?", code))
         {
-            while (result.moveToNext()) {
+            while (result.next()) {
                 final Integer epsg        = getInteger  (code, result, 1);
                 final String  name        = getString   (code, result, 2);
                 final String  description = getOptionalString (result, 3);
@@ -2501,11 +2458,11 @@ addURIs:    for (int i=0; ; i++) {
                  * If the parameter appears to have at least one non-null value in the "Parameter File Name" column,
                  * then the type is assumed to be URI as a string. Otherwise, the type is a floating point number.
                  */
-                try (Cursor r = executeQuery("ParameterType",
+                try (ResultSetCursor r = executeQuery("ParameterType",
                         "SELECT PARAM_VALUE_FILE_REF FROM [Coordinate_Operation Parameter Value]" +
                         " WHERE (PARAMETER_CODE = ?) AND PARAM_VALUE_FILE_REF IS NOT NULL", epsg))
                 {
-                    while (r.moveToNext()) {
+                    while (r.next()) {
                         String element = getOptionalString(r, 1);
                         if (element != null && !element.isEmpty()) {
                             type = String.class;
@@ -2522,13 +2479,13 @@ addURIs:    for (int i=0; ; i++) {
                  * will have two elements.
                  */
                 final Set<Unit<?>> units = new LinkedHashSet<>();
-                try (Cursor r = executeQuery("ParameterUnit",
+                try (ResultSetCursor r = executeQuery("ParameterUnit",
                         "SELECT UOM_CODE FROM [Coordinate_Operation Parameter Value]" +
                         " WHERE (PARAMETER_CODE = ?)" +
                         " GROUP BY UOM_CODE" +
                         " ORDER BY COUNT(UOM_CODE) DESC", epsg))
                 {
-next:               while (r.moveToNext()) {
+next:               while (r.next()) {
                         final String c = getOptionalString(r, 1);
                         if (c != null) {
                             final Unit<?> candidate = owner.createUnit(c);
@@ -2552,16 +2509,13 @@ next:               while (r.moveToNext()) {
                  * much more difficult to relate to the root cause than if we throw the exception here.
                  */
                 InternationalString isReversible = null;
-                try (Cursor r = executeQuery("ParameterSign",
+                try (ResultSetCursor r = executeQuery("ParameterSign",
                         "SELECT DISTINCT PARAM_SIGN_REVERSAL FROM [Coordinate_Operation Parameter Usage]" +
                         " WHERE (PARAMETER_CODE = ?)", epsg))
                 {
-                    if (r.moveToNext()) {
-                        Boolean b;
-                        /**
-                         * SQLite does not support native boolean
-                         */
-                        b = SQLUtilities.toBoolean(r.getString(1));     // May throw SQLException - see above comment.
+                    if (r.next()) {
+                        Boolean b = r.getBoolean(1);
+                        if (r.wasNull()) b = null;
                         if (b != null) {
                             isReversible = b ? SignReversalComment.OPPOSITE : SignReversalComment.SAME;
                         }
@@ -2602,13 +2556,13 @@ next:               while (r.moveToNext()) {
      */
     private ParameterDescriptor<?>[] createParameterDescriptors(final Integer method) throws FactoryException, SQLException {
         final List<ParameterDescriptor<?>> descriptors = new ArrayList<>();
-        try (Cursor result = executeQuery("Coordinate_Operation Parameter Usage",
+        try (ResultSetCursor result = executeQuery("Coordinate_Operation Parameter Usage",
                 "SELECT PARAMETER_CODE" +
                 " FROM [Coordinate_Operation Parameter Usage]" +
                 " WHERE COORD_OP_METHOD_CODE = ?" +
                 " ORDER BY SORT_ORDER", method))
         {
-            while (result.moveToNext()) {
+            while (result.next()) {
                 descriptors.add(owner.createParameterDescriptor(getString(method, result, 1)));
             }
         }
@@ -2626,7 +2580,7 @@ next:               while (r.moveToNext()) {
     private void fillParameterValues(final Integer method, final Integer operation, final ParameterValueGroup parameters)
             throws FactoryException, SQLException
     {
-        try (Cursor result = executeQuery("Coordinate_Operation Parameter Value",
+        try (ResultSetCursor result = executeQuery("Coordinate_Operation Parameter Value",
                 "SELECT CP.PARAMETER_NAME," +
                       " CV.PARAMETER_VALUE," +
                       " CV.PARAM_VALUE_FILE_REF," +
@@ -2641,7 +2595,7 @@ next:               while (r.moveToNext()) {
                   " AND CV.COORD_OP_CODE = ?" +
              " ORDER BY CU.SORT_ORDER", method, operation))
         {
-            while (result.moveToNext()) {
+            while (result.next()) {
                 final String name  = getString(operation, result, 1);
                 final double value = getOptionalDouble(result, 2);
                 final Unit<?> unit;
@@ -2717,7 +2671,7 @@ next:               while (r.moveToNext()) {
     {
         ArgumentChecks.ensureNonNull("code", code);
         OperationMethod returnValue = null;
-        try (Cursor result = executeQuery("Coordinate_Operation Method", "COORD_OP_METHOD_CODE", "COORD_OP_METHOD_NAME",
+        try (ResultSetCursor result = executeQuery("Coordinate_Operation Method", "COORD_OP_METHOD_CODE", "COORD_OP_METHOD_NAME",
                 "SELECT COORD_OP_METHOD_CODE," +
                       " COORD_OP_METHOD_NAME," +
                       " REMARKS," +
@@ -2725,7 +2679,7 @@ next:               while (r.moveToNext()) {
                  " FROM [Coordinate_Operation Method]" +
                 " WHERE COORD_OP_METHOD_CODE = ?", code))
         {
-            while (result.moveToNext()) {
+            while (result.next()) {
                 final Integer epsg       = getInteger  (code, result, 1);
                 final String  name       = getString   (code, result, 2);
                 final String  remarks    = getOptionalString (result, 3);
@@ -2775,7 +2729,7 @@ next:               while (r.moveToNext()) {
         ArgumentChecks.ensureNonNull("code", code);
         CoordinateOperation returnValue = null;
         try {
-            try (Cursor result = executeQuery("Coordinate_Operation", "COORD_OP_CODE", "COORD_OP_NAME",
+            try (ResultSetCursor result = executeQuery("Coordinate_Operation", "COORD_OP_CODE", "COORD_OP_NAME",
                     "SELECT COORD_OP_CODE," +
                           " COORD_OP_NAME," +
                           " COORD_OP_TYPE," +
@@ -2791,7 +2745,7 @@ next:               while (r.moveToNext()) {
                     " FROM [Coordinate_Operation]" +
                     " WHERE COORD_OP_CODE = ?", code))
             {
-                while (result.moveToNext()) {
+                while (result.next()) {
                     final Integer epsg = getInteger(code, result, 1);
                     final String  name = getString (code, result, 2);
                     final String  type = getString (code, result, 3).toLowerCase(Locale.US);
@@ -2898,13 +2852,13 @@ next:               while (r.moveToNext()) {
                         result.close();
                         opProperties = new HashMap<>(opProperties);         // Because this class uses a shared map.
                         final List<String> codes = new ArrayList<>();
-                        try (Cursor cr = executeQuery("Coordinate_Operation Path",
+                        try (ResultSetCursor cr = executeQuery("Coordinate_Operation Path",
                                 "SELECT SINGLE_OPERATION_CODE" +
                                  " FROM [Coordinate_Operation Path]" +
                                 " WHERE (CONCAT_OPERATION_CODE = ?)" +
                                 " ORDER BY OP_PATH_STEP", epsg))
                         {
-                            while (cr.moveToNext()) {
+                            while (cr.next()) {
                                 codes.add(getString(code, cr, 1));
                             }
                         }
@@ -3039,8 +2993,8 @@ next:               while (r.moveToNext()) {
                             " AND COORD_REF_SYS_CODE = ?";
                 }
                 final Integer targetKey = searchTransformations ? null : pair[1];
-                try (Cursor result = executeQuery(key, sql, pair)) {
-                    while (result.moveToNext()) {
+                try (ResultSetCursor result = executeQuery(key, sql, pair)) {
+                    while (result.next()) {
                         set.addAuthorityCode(getString(label, result, 1), targetKey);
                     }
                 }
@@ -3212,7 +3166,7 @@ next:               while (r.moveToNext()) {
             try {
                 String stmt = translator.apply(buffer.toString());
                 for (final Number code : codes) {
-                    Cursor cursor;
+                    ResultSetCursor cursor;
                     if (isFloat) {
                         final double value = code.doubleValue();
                         final double tolerance = Math.abs(value * (Formulas.LINEAR_TOLERANCE / ReferencingServices.AUTHALIC_RADIUS));
@@ -3221,11 +3175,11 @@ next:               while (r.moveToNext()) {
                                 String.valueOf(value + tolerance),
                                 String.valueOf(value)
                         };
-                        cursor = connection.rawQuery(stmt, args);
+                        cursor = new ResultSetCursor(connection.rawQuery(stmt, args));
                     } else {
-                        cursor = connection.rawQuery(stmt, new String[]{ String.valueOf(code.intValue()) });
+                        cursor = new ResultSetCursor(connection.rawQuery(stmt, new String[]{ String.valueOf(code.intValue()) }));
                     }
-                    while (cursor.moveToNext()) {
+                    while (cursor.next()) {
                         result.add(cursor.getString(1));
                     }
                 }
@@ -3258,13 +3212,13 @@ next:               while (r.moveToNext()) {
     final boolean isProjection(final Integer code) throws SQLException {
         Boolean projection = isProjection.get(code);
         if (projection == null) {
-            try (Cursor result = executeQuery("isProjection",
+            try (ResultSetCursor result = executeQuery("isProjection",
                     "SELECT COORD_REF_SYS_CODE" +
                     " FROM [Coordinate Reference System]" +
                     " WHERE PROJECTION_CONV_CODE = ?" +
                       " AND CAST(COORD_REF_SYS_KIND AS " + TableInfo.ENUM_REPLACEMENT + ") LIKE 'projected%'", code))
             {
-                projection = result.moveToNext();
+                projection = result.next();
             }
             isProjection.put(code, projection);
         }
@@ -3316,8 +3270,8 @@ next:               while (r.moveToNext()) {
                 " INNER JOIN [Coordinate_Operation] AS CO ON TGT.PROJECTION_CONV_CODE = CO.COORD_OP_CODE" +
                       " WHERE CO.DEPRECATED=0 AND COORD_OP_METHOD_CODE = ?";
             }
-            try (Cursor result = executeQuery(key, sql, method)) {
-                while (result.moveToNext()) {
+            try (ResultSetCursor result = executeQuery(key, sql, method)) {
+                while (result.next()) {
                     for (int i=0; i<dimensions.length; i++) {
                         if (!differents[i]) {   // Not worth to test heterogenous dimensions.
                             final Integer dim = getDimensionForCS(result.getInt(i + 1));
@@ -3359,13 +3313,13 @@ next:               while (r.moveToNext()) {
             boolean changed = false;
             for (int i=0; i<codes.length; i++) {
                 final String code = codes[i].toString();
-                try (Cursor result = executeQuery("Supersession", null, null,
+                try (ResultSetCursor result = executeQuery("Supersession", null, null,
                         "SELECT OBJECT_TABLE_NAME, SUPERSEDED_BY" +
                         " FROM [Supersession]" +
                         " WHERE OBJECT_CODE = ?" +
                         " ORDER BY SUPERSESSION_YEAR DESC", code))
                 {
-                    while (result.moveToNext()) {
+                    while (result.next()) {
                         if (tableMatches(table, result.getString(1))) {
                             final String replacement = result.getString(2);
                             if (replacement != null) {
@@ -3485,11 +3439,7 @@ next:               while (r.moveToNext()) {
          * used in Android branch.
          */
 
-        try {
-            connection.close();
-        } catch (SQLException e) {
-            exception = e;
-        }
+        connection.close();
         if (exception != null) {
             throw new FactoryException(exception);
         }

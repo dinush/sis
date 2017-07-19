@@ -16,6 +16,7 @@
  */
 package org.apache.sis.metadata.sql;
 
+import java.sql.SQLException;
 import java.util.Map;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
@@ -35,6 +36,7 @@ import java.lang.reflect.Array;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 
+import org.apache.sis.internal.metadata.sql.ResultSetCursor;
 import org.opengis.annotation.UML;
 import org.opengis.util.CodeList;
 import org.apache.sis.metadata.MetadataStandard;
@@ -67,7 +69,6 @@ import org.apache.sis.internal.geoapi.evolution.Interim;
 import android.database.sqlite.SQLiteDatabase;
 import android.content.Context;
 import android.database.Cursor;
-import android.database.SQLException;
 
 
 /**
@@ -645,9 +646,9 @@ public class MetadataSource implements AutoCloseable {
          * will be logged.
          */
         String identifier = null;
-        try (Cursor cursor = dataSource.rawQuery(helper.toString(), null)) {
-            while (cursor.moveToNext()) {
-                final String candidate = cursor.getString(1);
+        try (ResultSetCursor rs = new ResultSetCursor(dataSource.rawQuery(helper.toString(), null))) {
+            while (rs.next()) {
+                final String candidate = rs.getString(1);
                 if (candidate != null) {
                     if (identifier == null) {
                         identifier = candidate;
@@ -685,8 +686,8 @@ public class MetadataSource implements AutoCloseable {
              * want because if we do not specify a schema in a SELECT statement, then the actual schema used depends
              * on the search path specified in the database environment variables.
              */
-            try (Cursor cursor = dataSource.query(table, null, null, null, null, null, null)) {
-                for (String column : cursor.getColumnNames()) {
+            try (ResultSetCursor rs = new ResultSetCursor(dataSource.query(table, null, null, null, null, null, null))) {
+                for (String column : rs.getColumnNames()) {
                     if (!columns.add(column)) {
                         // Paranoiac check, but should never happen.
                         throw new SQLException(table);

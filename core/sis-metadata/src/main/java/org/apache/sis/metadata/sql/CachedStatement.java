@@ -16,25 +16,25 @@
  */
 package org.apache.sis.metadata.sql;
 
+import java.sql.SQLException;
 import java.util.Locale;
 import java.util.logging.Level;
 import java.util.logging.LogRecord;
 
+import org.apache.sis.internal.metadata.sql.ResultSetCursor;
 import org.apache.sis.util.resources.Errors;
 import org.apache.sis.util.logging.WarningListeners;
 import org.apache.sis.internal.system.Loggers;
 
 // Branch-dependent imports
-import android.database.Cursor;
-import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
 
 
 /**
  * The result of a query for metadata attributes. This object {@linkplain String stores a statement}
  * only once for a given table, until a certain period of inactivity is elapsed. When a particular record in the
- * table is fetched, the {@link Cursor} is automatically constructed. If many attributes are fetched consecutively
- * for the same record, then the same {@link Cursor} is reused.
+ * table is fetched, the {@link ResultSetCursor} is automatically constructed. If many attributes are fetched consecutively
+ * for the same record, then the same {@link ResultSetCursor} is reused.
  *
  * <div class="section"><b>Synchronization</b>:
  * This class is <strong>not</strong> thread-safe. Callers must perform their own synchronization in such a way
@@ -79,7 +79,7 @@ final class CachedStatement implements AutoCloseable {
      * The results of last call to {@link SQLiteDatabase#rawQuery(String, String[])}()},
      * or {@code null} if not yet determined.
      */
-    private Cursor results;
+    private ResultSetCursor results;
 
     /**
      * The expiration time of this result, in nanoseconds as given by {@link System#nanoTime()}.
@@ -121,44 +121,29 @@ final class CachedStatement implements AutoCloseable {
         if (!id.equals(identifier)) {
             closeResultSet();
         }
-        Cursor r = results;
+        ResultSetCursor r = results;
         if (r == null) {
-            r = database.rawQuery(statement, new String[]{id});
-            if (!r.moveToNext()) {
+            r = new ResultSetCursor(database.rawQuery(statement, new String[]{id}));
+            if (!r.next()) {
                 r.close();
                 throw new MetadataStoreException(Errors.format(Errors.Keys.RecordNotFound_2, statement, id));
             }
             results = r;
             identifier = id;
         }
-        return objectFromResult(r.getColumnIndexOrThrow(attribute));
+        return r.getObject(attribute);
     }
 
     /**
-     * Returns the value of the column in the given id as {@linkplain Object}.
-     * @param id    ID of the column
-     * @return      value as {@linkplain Object}
-     */
-    private Object objectFromResult(int id) {
-        switch (results.getType(id)) {
-            case Cursor.FIELD_TYPE_INTEGER: return results.getInt(id);
-            case Cursor.FIELD_TYPE_FLOAT:   return results.getFloat(id);
-            case Cursor.FIELD_TYPE_STRING:  return results.getString(id);
-            case Cursor.FIELD_TYPE_BLOB:    return results.getBlob(id);
-            default:                        return null;
-        }
-    }
-
-    /**
-     * Closes the current {@link Cursor}. Before doing so, we make an opportunist check for duplicated values
+     * Closes the current {@link ResultSetCursor}. Before doing so, we make an opportunist check for duplicated values
      * in the table. If a duplicate is found, a warning is logged. The log message pretends to be emitted by the
      * interface constructor, which does not exist. But this is the closest we can get from a public API.
      */
     private void closeResultSet() throws SQLException {
-        final Cursor r = results;
+        final ResultSetCursor r = results;
         results = null;               // Make sure that this field is cleared even if an exception occurs below.
         if (r != null) {
-            final boolean hasNext = r.moveToNext();
+            final boolean hasNext = r.next();
             r.close();
             if (hasNext) {
                 warning(type, "<init>", Errors.getResources((Locale) null).getLogRecord(

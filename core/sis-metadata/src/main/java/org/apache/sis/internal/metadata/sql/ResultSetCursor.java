@@ -293,4 +293,12 @@ public class ResultSetCursor extends AbstractResultSet {
     public String[] getColumnNames() {
         return cursor.getColumnNames();
     }
+
+    public String getColumnName(int i) {
+        return cursor.getColumnName(i);
+    }
+
+    public int getColumnCount() {
+        return cursor.getColumnCount();
+    }
 }

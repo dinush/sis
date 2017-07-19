@@ -16,9 +16,9 @@
  */
 package org.apache.sis.referencing.factory.sql;
 
-import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import org.apache.sis.internal.jdk8.JDK8;
+import org.apache.sis.internal.metadata.sql.ResultSetCursor;
 import org.apache.sis.util.ArgumentChecks;
 import org.apache.sis.util.CharSequences;
 import org.apache.sis.util.resources.Errors;
@@ -258,15 +258,15 @@ public class SQLTranslator {
             if (toUpperCase && i != MIXED_CASE) {
                 table = table.toUpperCase(Locale.US);
             }
-            try (Cursor cursor = database.query("sqlite_master", null, "name=? AND type=?", new String[]{table, "table"}, null, null, null)){
-                if (cursor.moveToNext()) {
+            try (ResultSetCursor result = new ResultSetCursor(database.query("sqlite_master", null, "name=? AND type=?", new String[]{table, "table"}, null, null, null))){
+                if (result.next()) {
                     isTableFound    = true;
                     isPrefixed      = table.startsWith(TABLE_PREFIX);
                     quoteTableNames = (i == MIXED_CASE);
-                    schema          = "";
                     /**
                      * SQLite does not support the following
                      */
+                    schema          = "";
                     catalog         = null;
                     break;
                 }
@@ -284,8 +284,8 @@ public class SQLTranslator {
              * This column has been renamed "coord_axis_order" in DLL scripts.
              * We need to check which name our current database uses.
              */
-            try (Cursor cursor = database.query("Coordinate Axis", new String[]{"ORDER"}, null, null, null, null, null)) {
-                translateColumns = cursor.getColumnCount() > 0;
+            try (ResultSetCursor result = new ResultSetCursor(database.query("Coordinate Axis", new String[]{"ORDER"}, null, null, null, null, null))) {
+                translateColumns = result.getColumnCount() > 0;
             }
         } else {
             accessToAnsi.put("Coordinate_Operation", "coordoperation");
@@ -294,10 +294,7 @@ public class SQLTranslator {
         if (translateColumns) {
             accessToAnsi.put("ORDER", "coord_axis_order");
         }
-        /*
-         * SQLite does not have a boolean type
-         */
-        useBoolean = false;
+        useBoolean = true;
     };
 
     /**

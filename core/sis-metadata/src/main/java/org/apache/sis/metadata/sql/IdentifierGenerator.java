@@ -16,10 +16,11 @@
  */
 package org.apache.sis.metadata.sql;
 
-import android.database.Cursor;
-import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
+import org.apache.sis.internal.metadata.sql.ResultSetCursor;
 import org.apache.sis.internal.metadata.sql.SQLBuilder;
+
+import java.sql.SQLException;
 
 
 /**
@@ -120,9 +121,9 @@ final class IdentifierGenerator implements AutoCloseable {
      * @throws SQLException if an error occurred while searching for an identifier.
      */
     final String identifier(String proposal) throws SQLException {
-        try (Cursor cursor = database.rawQuery(statement, new String[]{buffer.clear().appendEscaped(proposal).append('%').toString()})) {
-            if (cursor.moveToNext()) {
-                String current = cursor.getString(1);
+        try (ResultSetCursor rs = new ResultSetCursor(database.rawQuery(statement, new String[]{buffer.clear().appendEscaped(proposal).append('%').toString()}))) {
+            if (rs.next()) {
+                String current = rs.getString(1);
                 if (current.equals(proposal)) {
                     /*
                      * The proposed identifier is already used. If there is no other identifiers,
@@ -133,8 +134,8 @@ final class IdentifierGenerator implements AutoCloseable {
                     freeSequenceNumber    = 0;
                     maximalSequenceNumber = 0;
                     int expected = 0;
-searchValidRecord:  while (cursor.moveToNext()) {
-                        current = cursor.getString(1);
+searchValidRecord:  while (rs.next()) {
+                        current = rs.getString(1);
                         assert current.startsWith(proposal) : current;
                         while (current.length() > parseAt) {
                             int c = current.codePointBefore(parseAt);
@@ -148,7 +149,7 @@ searchValidRecord:  while (cursor.moveToNext()) {
                             if (c < '1') continue searchValidRecord;
                             if (c > '9') break searchValidRecord;
                             final String prefix = current.substring(0, parseAt);
-                            current = search(cursor, current, prefix, ++expected);
+                            current = search(rs, current, prefix, ++expected);
                             if (current == null) {
                                 break searchValidRecord;
                             }
@@ -169,7 +170,7 @@ searchValidRecord:  while (cursor.moveToNext()) {
      * Searches for an available identifier, assuming that the elements in the given
      * {@code ResultSet} are sorted in alphabetical (not numerical) order.
      *
-     * @param cursor    the cursor from which to get next records. Its cursor position is the
+     * @param rs        the result set from which to get next records. Its cursor position is the
      *                  <strong>second</strong> record to inspect (i.e. a record has already been
      *                  extracted before the call to this method).
      * @param current   the ID of the record which has been extracted before the call to this method.
@@ -180,7 +181,7 @@ searchValidRecord:  while (cursor.moveToNext()) {
      *                  or {@code null} if we should stop the search.
      * @throws SQLException if an error occurred while querying the database.
      */
-    private String search(final Cursor cursor, String current, final String prefix, int expected)
+    private String search(final ResultSetCursor rs, String current, final String prefix, int expected)
             throws SQLException
     {
         /*
@@ -200,8 +201,8 @@ searchValidRecord:  while (cursor.moveToNext()) {
                  * encounter a non-compliant identifier, just ignore it. There is no risk of
                  * key collision since we are not going to generate a non-compliant ID.
                  */
-                if (cursor.moveToNext()) {
-                    current = cursor.getString(1);
+                if (rs.next()) {
+                    current = rs.getString(1);
                     continue;
                 }
                 return null;
@@ -227,7 +228,7 @@ searchValidRecord:  while (cursor.moveToNext()) {
             if (n > maximalSequenceNumber) {
                 maximalSequenceNumber = n;
             }
-            if (!cursor.moveToNext()) {
+            if (!rs.next()) {
                 return null;
             }
             /*
@@ -236,9 +237,9 @@ searchValidRecord:  while (cursor.moveToNext()) {
              * will skip "proposal-10", "proposal-11", etc. until it reaches "proposal-2".
              */
             final String next = current.substring(0, prefix.length() + 1);
-            current = cursor.getString(1);
+            current = rs.getString(1);
             if (current.startsWith(next)) {
-                current = search(cursor, current, next, n*10);
+                current = search(rs, current, next, n*10);
                 if (current == null) {
                     return null;
                 }
