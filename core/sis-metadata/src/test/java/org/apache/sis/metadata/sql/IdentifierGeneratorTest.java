@@ -17,8 +17,8 @@
 package org.apache.sis.metadata.sql;
 
 import android.content.ContentValues;
-import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
+import android.support.test.InstrumentationRegistry;
 import org.apache.sis.internal.metadata.sql.SQLBuilder;
 import org.apache.sis.internal.metadata.sql.TestDatabase;
 import org.apache.sis.metadata.MetadataStandard;
@@ -59,8 +59,8 @@ public final strictfp class IdentifierGeneratorTest extends TestCase {
      * @throws Exception if an error occurred while reading or writing in the temporary database.
      */
     @Test
-    public void testSequence(final Context context) throws Exception {
-        db = TestDatabase.create(context);
+    public void testSequence() throws Exception {
+        db = TestDatabase.create(InstrumentationRegistry.getContext());
         try {
             final MetadataSource source = new MetadataSource(MetadataStandard.ISO_19115, db, null, null);
             synchronized (source) {

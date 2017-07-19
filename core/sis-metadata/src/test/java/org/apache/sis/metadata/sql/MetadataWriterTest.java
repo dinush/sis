@@ -20,7 +20,6 @@ import java.util.Collections;
 
 import android.database.sqlite.SQLiteDatabase;
 import android.support.test.InstrumentationRegistry;
-import org.postgresql.ds.PGSimpleDataSource;
 import org.opengis.metadata.citation.Citation;
 import org.opengis.metadata.citation.PresentationForm;
 import org.opengis.metadata.citation.OnLineFunction;
