@@ -188,6 +188,9 @@ public class ScriptRunner implements AutoCloseable {
         if (!SQLiteConfiguration.isCommentSupported) {
             addStatementToSkip("COMMENT\\s+ON\\s+.*");
         }
+        if (!SQLiteConfiguration.isSchemaSupported) {
+            addStatementToSkip("CREATE\\s+SCHEMA\\s+.*");
+        }
     }
 
     /**
@@ -534,7 +537,7 @@ parseLine:  while (pos < length) {
      *       then this method skips {@code "INSERT INTO"} statements but executes all other.</li>
      *   <li>Otherwise this method executes the given statement with the following modification:
      *       if the statement is an {@code "INSERT INTO"} with many values, then this method may break
-     *       that statement into many {@code "INSERT INTO"} where each statements does not have move
+     *       that statement into many {@code "INSERT INTO"} where each statements does not have more
      *       than {@code maxRowsPerInsert} rows.</li>
      * </ul>
      *
