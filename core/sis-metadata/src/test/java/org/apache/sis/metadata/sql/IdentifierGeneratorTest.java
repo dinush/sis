@@ -95,7 +95,7 @@ public final strictfp class IdentifierGeneratorTest extends TestCase {
         final String identifier = generator.identifier(prefix);
         ContentValues values = new ContentValues(1);
         values.put("ID", identifier);
-        assertEquals(1, db.insert(TABLE, null, values));
+        assertNotEquals(-1, db.insert(TABLE, null, values));
         return identifier;
     }
 
@@ -117,11 +117,11 @@ public final strictfp class IdentifierGeneratorTest extends TestCase {
      * Tries to remove a few pre-selected record, then add them again.
      */
     private void removeAndAddRecords(final String prefix) throws SQLException {
-        assertEquals(5, db.delete(TABLE, "ID='?' OR " +
-                "ID='?' OR " +
-                "ID='?' OR " +
-                "ID='?' OR " +
-                "ID='?'", new String[]{
+        assertEquals(5, db.delete(TABLE, "ID=? OR " +
+                "ID=? OR " +
+                "ID=? OR " +
+                "ID=? OR " +
+                "ID=?", new String[]{
                 prefix + IdentifierGenerator.SEPARATOR +   "4",
                 prefix + IdentifierGenerator.SEPARATOR +   "12",
                 prefix + IdentifierGenerator.SEPARATOR +   "32",
