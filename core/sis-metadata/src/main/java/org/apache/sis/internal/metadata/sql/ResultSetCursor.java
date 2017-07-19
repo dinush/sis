@@ -15,6 +15,11 @@ public class ResultSetCursor extends AbstractResultSet {
      */
     private final Cursor cursor;
 
+    /**
+     * For {@link java.sql.ResultSet#wasNull()} implementation
+     */
+    private boolean wasNull = true;
+
     public ResultSetCursor(Cursor cursor) {
         this.cursor = cursor;
     }
@@ -30,127 +35,262 @@ public class ResultSetCursor extends AbstractResultSet {
     }
 
     @Override
-    public String getString(int i) throws SQLException {
-        return cursor.getString(i);
+    public String getString(int i) {
+        String ret = null;
+        try {
+            ret = cursor.getString(i);
+            wasNull = false;
+        } catch (Exception e) {
+            wasNull = true;
+        }
+        return ret;
     }
 
     @Override
-    public boolean getBoolean(int i) throws SQLException {
-        return cursor.getInt(i) == 1;
+    public boolean getBoolean(int i) {
+        Integer val = null;
+        try {
+            val = cursor.getInt(i);
+            wasNull = false;
+        } catch (Exception e) {
+            wasNull = true;
+        }
+        return val == 1;
     }
 
     @Override
-    public int getInt(int i) throws SQLException {
-        return cursor.getInt(i);
+    public int getInt(int i) {
+        Integer ret = null;
+        try {
+            ret = cursor.getInt(i);
+            wasNull = false;
+        } catch (Exception e) {
+            wasNull = true;
+        }
+        return ret;
     }
 
     @Override
-    public long getLong(int i) throws SQLException {
-        return cursor.getLong(i);
+    public long getLong(int i) {
+        Long ret = null;
+        try {
+            ret = cursor.getLong(i);
+            wasNull = false;
+        } catch (Exception e) {
+            wasNull = true;
+        }
+        return ret;
     }
 
     @Override
-    public float getFloat(int i) throws SQLException {
-        return cursor.getFloat(i);
+    public float getFloat(int i) {
+        Float ret = null;
+        try {
+            ret = cursor.getFloat(i);
+            wasNull = false;
+        } catch (Exception e) {
+            wasNull = true;
+        }
+        return ret;
     }
 
     @Override
-    public double getDouble(int i) throws SQLException {
-        return cursor.getDouble(i);
+    public double getDouble(int i) {
+        Double ret = null;
+        try {
+            ret = cursor.getDouble(i);
+            wasNull = false;
+        } catch (Exception e) {
+            wasNull = true;
+        }
+        return ret;
     }
 
     @Override
-    public byte[] getBytes(int i) throws SQLException {
-        return cursor.getBlob(i);
+    public byte[] getBytes(int i) {
+        byte[] ret = null;
+        try {
+            ret = cursor.getBlob(i);
+            wasNull = false;
+        } catch (Exception e) {
+            wasNull = true;
+        }
+        return ret;
     }
 
     @Override
-    public Date getDate(int i) throws SQLException {
-        return new Date(cursor.getInt(i));
+    public Date getDate(int i) {
+        Integer timestamp = null;
+        try {
+            timestamp = cursor.getInt(i);
+            wasNull = false;
+        } catch (Exception e) {
+            wasNull = true;
+        }
+        return new Date(timestamp);
     }
 
     @Override
-    public String getString(String s) throws SQLException {
-        return cursor.getString(cursor.getColumnIndex(s));
+    public String getString(String s) {
+        String ret = null;
+        try {
+            ret = cursor.getString(cursor.getColumnIndex(s));
+            wasNull = false;
+        } catch (Exception e) {
+            wasNull = true;
+        }
+        return ret;
     }
 
     @Override
-    public boolean getBoolean(String s) throws SQLException {
-        return cursor.getInt(cursor.getColumnIndex(s)) == 1;
+    public boolean getBoolean(String s) {
+        Integer i = null;
+        try {
+            i = cursor.getInt(cursor.getColumnIndex(s));
+            wasNull = false;
+        } catch (Exception e) {
+            wasNull = true;
+        }
+        return i == 1;
     }
 
     @Override
-    public int getInt(String s) throws SQLException {
-        return cursor.getInt(cursor.getColumnIndex(s));
+    public int getInt(String s) {
+        Integer ret = null;
+        try {
+            ret = cursor.getInt(cursor.getColumnIndex(s));
+            wasNull = false;
+        } catch (Exception e) {
+            wasNull = true;
+        }
+        return ret;
     }
 
     @Override
-    public long getLong(String s) throws SQLException {
-        return cursor.getLong(cursor.getColumnIndex(s));
+    public long getLong(String s) {
+        Long ret = null;
+        try {
+            ret = cursor.getLong(cursor.getColumnIndex(s));
+            wasNull = false;
+        } catch (Exception e) {
+            wasNull = true;
+        }
+        return ret;
     }
 
     @Override
-    public float getFloat(String s) throws SQLException {
-        return cursor.getFloat(cursor.getColumnIndex(s));
+    public float getFloat(String s) {
+        Float ret = null;
+        try {
+            ret = cursor.getFloat(cursor.getColumnIndex(s));
+            wasNull = false;
+        } catch (Exception e) {
+            wasNull = true;
+        }
+        return ret;
     }
 
     @Override
-    public double getDouble(String s) throws SQLException {
-        return cursor.getDouble(cursor.getColumnIndex(s));
+    public double getDouble(String s) {
+        Double ret = null;
+        try {
+            ret = cursor.getDouble(cursor.getColumnIndex(s));
+            wasNull = false;
+        } catch (Exception e) {
+            wasNull = true;
+        }
+        return ret;
     }
 
     @Override
-    public byte[] getBytes(String s) throws SQLException {
-        return cursor.getBlob(cursor.getColumnIndex(s));
+    public byte[] getBytes(String s) {
+        byte[] ret = null;
+        try {
+            ret = cursor.getBlob(cursor.getColumnIndex(s));
+            wasNull = false;
+        } catch (Exception e) {
+            wasNull = true;
+        }
+        return ret;
     }
 
     @Override
-    public Date getDate(String s) throws SQLException {
-        return new Date(cursor.getInt(cursor.getColumnIndex(s)));
+    public Date getDate(String s) {
+        Integer timestamp = null;
+        try {
+            timestamp = cursor.getInt(cursor.getColumnIndex(s));
+            wasNull = false;
+        } catch (Exception e) {
+            wasNull = true;
+        }
+        return new Date(timestamp);
     }
 
     @Override
-    public Object getObject(int i) throws SQLException {
-        return cursor.getBlob(i);
+    public Object getObject(int i) {
+        Object ret = null;
+        try {
+            ret = cursor.getBlob(i);
+            wasNull = false;
+        } catch (Exception e) {
+            wasNull = true;
+        }
+        return ret;
     }
 
     @Override
-    public Object getObject(String s) throws SQLException {
-        return cursor.getBlob(cursor.getColumnIndex(s));
+    public Object getObject(String s) {
+        Object ret = null;
+        try {
+            ret = cursor.getBlob(cursor.getColumnIndex(s));
+            wasNull = false;
+        } catch (Exception e) {
+            wasNull = true;
+        }
+        return ret;
     }
 
     @Override
-    public int findColumn(String s) throws SQLException {
+    public int findColumn(String s) {
         return cursor.getColumnIndex(s);
     }
 
     @Override
-    public boolean isFirst() throws SQLException {
+    public boolean isFirst() {
         return cursor.isFirst();
     }
 
     @Override
-    public boolean isLast() throws SQLException {
+    public boolean isLast() {
         return cursor.isLast();
     }
 
     @Override
-    public boolean first() throws SQLException {
+    public boolean first() {
         return cursor.moveToFirst();
     }
 
     @Override
-    public boolean last() throws SQLException {
+    public boolean last() {
         return cursor.moveToLast();
     }
 
     @Override
-    public boolean previous() throws SQLException {
+    public boolean previous() {
         return cursor.moveToPrevious();
     }
 
     @Override
-    public boolean isClosed() throws SQLException {
+    public boolean isClosed() {
         return cursor.isClosed();
+    }
+
+    @Override
+    public boolean wasNull() {
+        return wasNull;
+    }
+
+    public String[] getColumnNames() {
+        return cursor.getColumnNames();
     }
 }
