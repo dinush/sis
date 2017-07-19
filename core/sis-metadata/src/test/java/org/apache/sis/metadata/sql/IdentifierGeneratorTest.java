@@ -18,13 +18,13 @@ package org.apache.sis.metadata.sql;
 
 import android.content.ContentValues;
 import android.content.Context;
-import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
 import org.apache.sis.internal.metadata.sql.SQLBuilder;
 import org.apache.sis.internal.metadata.sql.TestDatabase;
 import org.apache.sis.metadata.MetadataStandard;
 import org.apache.sis.test.TestCase;
 import org.junit.Test;
+import java.sql.SQLException;
 
 import static org.junit.Assert.*;
 

@@ -229,25 +229,14 @@ public final class ServicesForUtility extends MetadataServices {
      * @return the information, or {@code null} if none.
      */
     @Override
-    public String getInformation(final Context context, final String key, final Locale locale) {
+    public String getInformation(final String key, final Locale locale) {
         switch (key) {
             case "DataSource": {
-                String server = null, database = null;
-                final SQLiteDatabase db = Initializer.getDataSource(context);
-                if (db != null) {
-                    final Class<?> type = db.getClass();
-                    database = db.getPath() + " version " + db.getVersion();
-                    server   = "SQLite on Android";
-                }
-                if (database != null) {
-                    database = "//" + server + '/' + database;
-                    return database;
-                }
-                return null;
+                return "SQLite on Android";
             }
             // More cases may be added in future SIS versions.
         }
-        return ReferencingServices.getInstance().getInformation(context, key, locale);
+        return ReferencingServices.getInstance().getInformation(key, locale);
     }
 
     /**

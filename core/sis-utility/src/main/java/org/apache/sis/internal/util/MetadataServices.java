@@ -25,9 +25,6 @@ import org.apache.sis.internal.simple.CitationConstant;
 import org.apache.sis.internal.system.Modules;
 import org.apache.sis.internal.system.OptionalDependency;
 
-// Branch-dependent imports
-import android.content.Context;
-
 /**
  * Provides access to services defined in the {@code "sis-metadata"} module.
  * This class searches for the {@link org.apache.sis.internal.metadata.ServicesForUtility}
@@ -135,7 +132,7 @@ public class MetadataServices extends OptionalDependency {
      *
      * @see org.apache.sis.internal.metadata.ReferencingServices#getInformation(String, Locale)
      */
-    public String getInformation(Context context, String key, Locale locale) {
+    public String getInformation(String key, Locale locale) {
         return null;
     }
 

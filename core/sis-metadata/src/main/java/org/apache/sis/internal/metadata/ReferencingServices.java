@@ -769,7 +769,7 @@ public class ReferencingServices extends OptionalDependency {
      *
      * @since 0.7
      */
-    public String getInformation(Context context, String key, Locale locale) {
+    public String getInformation(String key, Locale locale) {
         return null;
     }
 }

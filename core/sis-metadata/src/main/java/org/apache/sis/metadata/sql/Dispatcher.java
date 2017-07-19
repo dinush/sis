@@ -18,6 +18,7 @@ package org.apache.sis.metadata.sql;
 
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
+import java.sql.SQLException;
 import java.util.Collection;
 import java.util.Map;
 import org.apache.sis.util.Classes;
@@ -32,7 +33,6 @@ import org.apache.sis.internal.metadata.Dependencies;
 
 // Branch-dependent imports
 import org.apache.sis.internal.jdk8.JDK8;
-import android.database.SQLException;
 
 
 /**
