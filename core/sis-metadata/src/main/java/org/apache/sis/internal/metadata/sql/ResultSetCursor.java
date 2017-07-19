@@ -38,7 +38,7 @@ public class ResultSetCursor extends AbstractResultSet {
     public String getString(int i) {
         String ret = null;
         try {
-            ret = cursor.getString(i);
+            ret = cursor.getString(--i);
             wasNull = false;
         } catch (Exception e) {
             wasNull = true;
@@ -50,7 +50,7 @@ public class ResultSetCursor extends AbstractResultSet {
     public boolean getBoolean(int i) {
         Integer val = null;
         try {
-            val = cursor.getInt(i);
+            val = cursor.getInt(--i);
             wasNull = false;
         } catch (Exception e) {
             wasNull = true;
@@ -62,7 +62,7 @@ public class ResultSetCursor extends AbstractResultSet {
     public int getInt(int i) {
         Integer ret = null;
         try {
-            ret = cursor.getInt(i);
+            ret = cursor.getInt(--i);
             wasNull = false;
         } catch (Exception e) {
             wasNull = true;
@@ -74,7 +74,7 @@ public class ResultSetCursor extends AbstractResultSet {
     public long getLong(int i) {
         Long ret = null;
         try {
-            ret = cursor.getLong(i);
+            ret = cursor.getLong(--i);
             wasNull = false;
         } catch (Exception e) {
             wasNull = true;
@@ -86,7 +86,7 @@ public class ResultSetCursor extends AbstractResultSet {
     public float getFloat(int i) {
         Float ret = null;
         try {
-            ret = cursor.getFloat(i);
+            ret = cursor.getFloat(--i);
             wasNull = false;
         } catch (Exception e) {
             wasNull = true;
@@ -98,7 +98,7 @@ public class ResultSetCursor extends AbstractResultSet {
     public double getDouble(int i) {
         Double ret = null;
         try {
-            ret = cursor.getDouble(i);
+            ret = cursor.getDouble(--i);
             wasNull = false;
         } catch (Exception e) {
             wasNull = true;
@@ -110,7 +110,7 @@ public class ResultSetCursor extends AbstractResultSet {
     public byte[] getBytes(int i) {
         byte[] ret = null;
         try {
-            ret = cursor.getBlob(i);
+            ret = cursor.getBlob(--i);
             wasNull = false;
         } catch (Exception e) {
             wasNull = true;
@@ -122,7 +122,7 @@ public class ResultSetCursor extends AbstractResultSet {
     public Date getDate(int i) {
         Integer timestamp = null;
         try {
-            timestamp = cursor.getInt(i);
+            timestamp = cursor.getInt(--i);
             wasNull = false;
         } catch (Exception e) {
             wasNull = true;
@@ -230,7 +230,7 @@ public class ResultSetCursor extends AbstractResultSet {
     public Object getObject(int i) {
         Object ret = null;
         try {
-            ret = cursor.getBlob(i);
+            ret = cursor.getBlob(--i);
             wasNull = false;
         } catch (Exception e) {
             wasNull = true;
@@ -295,7 +295,7 @@ public class ResultSetCursor extends AbstractResultSet {
     }
 
     public String getColumnName(int i) {
-        return cursor.getColumnName(i);
+        return cursor.getColumnName(--i);
     }
 
     public int getColumnCount() {
