@@ -16,6 +16,7 @@
  */
 package org.apache.sis.referencing.factory.sql;
 
+import java.sql.SQLException;
 import java.util.*;
 import java.io.IOException;
 import java.util.concurrent.TimeUnit;
@@ -40,7 +41,6 @@ import static org.apache.sis.internal.util.Constants.EPSG;
 
 // Branch-dependent imports
 import org.apache.sis.internal.jdk8.BiFunction;
-import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
 
 
@@ -87,7 +87,7 @@ final class EPSGInstaller extends ScriptRunner implements Installer {
     /**
      * Zero argument constructor for ServiceLoader
      */
-    public EPSGInstaller() {
+    public EPSGInstaller() throws SQLException {
         this(null);
     }
 
@@ -244,7 +244,7 @@ final class EPSGInstaller extends ScriptRunner implements Installer {
      * @throws IOException  if an error occurred while reading an input.
      * @throws SQLException if an error occurred while executing a SQL statement.
      */
-    public void run(InstallationResources scriptProvider, final Locale locale) throws SQLException, IOException {
+    public void run(InstallationResources scriptProvider, final Locale locale) throws IOException, SQLException {
         long time = System.nanoTime();
         InstallationScriptProvider.log(Messages.getResources(locale).getLogRecord(Level.INFO,
                 Messages.Keys.CreatingSchema_2, EPSG, "SQLite"));

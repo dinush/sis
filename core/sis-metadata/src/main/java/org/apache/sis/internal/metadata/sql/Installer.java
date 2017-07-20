@@ -1,10 +1,10 @@
 package org.apache.sis.internal.metadata.sql;
 
-import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
 import org.apache.sis.setup.InstallationResources;
 
 import java.io.IOException;
+import java.sql.SQLException;
 import java.util.Locale;
 
 /**

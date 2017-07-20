@@ -17,6 +17,7 @@
 package org.apache.sis.metadata.sql;
 
 import java.io.IOException;
+import java.sql.SQLException;
 
 import org.apache.sis.internal.metadata.sql.SQLiteConfiguration;
 import org.apache.sis.internal.metadata.sql.ScriptRunner;
@@ -25,7 +26,6 @@ import org.apache.sis.util.StringBuilders;
 
 // Branch dependent imports
 import android.database.sqlite.SQLiteDatabase;
-import android.database.SQLException;
 
 /**
  * Executes the installation scripts for the "metadata" schema in the "SpatialMetadata" database.
@@ -60,7 +60,7 @@ public final class Installer extends ScriptRunner {
      *       "CREATE TABLE" statement by usage of {@code MetadataWriter}.
      */
     @Override
-    protected int execute(final StringBuilder sql) throws SQLException, IOException {
+    protected int execute(final StringBuilder sql) throws IOException, SQLException {
         if (!SQLiteConfiguration.isEnumTypeSupported && CharSequences.startsWith(sql, "CREATE TABLE", true)) {
             StringBuilders.replace(sql, "metadata.\"CI_RoleCode\"", "VARCHAR(25)");
             StringBuilders.replace(sql, "metadata.\"CI_DateTypeCode\"", "VARCHAR(25)");

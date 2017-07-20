@@ -16,6 +16,7 @@
  */
 package org.apache.sis.referencing.factory.sql;
 
+import java.sql.SQLException;
 import java.util.Collections;
 import java.util.Locale;
 import java.util.Map;
@@ -24,7 +25,6 @@ import java.util.concurrent.TimeUnit;
 import java.io.IOException;
 
 import android.content.Context;
-import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
 import org.opengis.util.NameFactory;
 import org.opengis.util.FactoryException;
@@ -378,7 +378,7 @@ public class EPSGFactory extends ConcurrentAuthorityFactory<EPSGDataAccess> impl
                 } finally {
                     connection.endTransaction();
                 }
-            } catch (IOException | SQLException e) {
+            } catch (IOException e) {
                 installer.logFailure(locale, e);
                 throw e;
             }

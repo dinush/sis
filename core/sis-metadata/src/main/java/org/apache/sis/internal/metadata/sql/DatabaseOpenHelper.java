@@ -22,6 +22,7 @@ import android.database.sqlite.SQLiteOpenHelper;
 import org.apache.sis.internal.system.DefaultFactories;
 
 import java.io.IOException;
+import java.sql.SQLException;
 import java.util.Locale;
 import java.util.NoSuchElementException;
 import java.util.ServiceLoader;
@@ -58,7 +59,7 @@ public class DatabaseOpenHelper extends SQLiteOpenHelper {
             installer.setSchema(null);
             installer.run(null, Locale.getDefault());
             sqLiteDatabase.setTransactionSuccessful();
-        } catch (NoSuchElementException | IOException e) {
+        } catch (NoSuchElementException | IOException | SQLException e) {
             e.printStackTrace();
         } finally {
             sqLiteDatabase.endTransaction();
@@ -70,7 +71,7 @@ public class DatabaseOpenHelper extends SQLiteOpenHelper {
         org.apache.sis.metadata.sql.Installer metaInstaller = new org.apache.sis.metadata.sql.Installer(sqLiteDatabase);
         try {
             metaInstaller.run();
-        } catch (IOException e) {
+        } catch (IOException | SQLException e) {
             e.printStackTrace();
         }
     }
