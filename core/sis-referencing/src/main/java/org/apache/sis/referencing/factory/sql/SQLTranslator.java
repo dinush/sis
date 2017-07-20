@@ -19,11 +19,11 @@ package org.apache.sis.referencing.factory.sql;
 import android.database.sqlite.SQLiteDatabase;
 import org.apache.sis.internal.jdk8.JDK8;
 import org.apache.sis.internal.metadata.sql.ResultSetCursor;
+import org.apache.sis.internal.metadata.sql.SQLiteConfiguration;
 import org.apache.sis.util.ArgumentChecks;
 import org.apache.sis.util.CharSequences;
 import org.apache.sis.util.resources.Errors;
 
-import java.sql.DatabaseMetaData;
 import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Locale;
@@ -194,7 +194,7 @@ public class SQLTranslator {
 
     /**
      * The characters used for quoting identifiers, or a whitespace if none.
-     * This information is provided by {@link DatabaseMetaData#getIdentifierQuoteString()}.
+     * This information is provided by {@link org.apache.sis.internal.metadata.sql.SQLiteConfiguration#IDENTIFIER_QUOTE}.
      */
     private final String quote;
 
@@ -231,7 +231,7 @@ public class SQLTranslator {
      */
     public SQLTranslator(final SQLiteDatabase database, final String catalog, final String schema) throws SQLException {
         ArgumentChecks.ensureNonNull("md", database);
-        quote = "\"";
+        quote = String.valueOf(SQLiteConfiguration.IDENTIFIER_QUOTE);
         accessToAnsi = new HashMap<>(4);
         this.catalog = catalog;
         this.schema  = schema;
