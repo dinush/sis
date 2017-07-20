@@ -17,7 +17,6 @@
 package org.apache.sis.geometry;
 
 import java.util.Objects;
-import java.awt.geom.Rectangle2D;
 import org.opengis.geometry.Envelope;
 import org.opengis.geometry.DirectPosition;
 import org.opengis.geometry.MismatchedDimensionException;
@@ -472,7 +471,6 @@ public class Envelope2D extends Rectangle2D.Double implements Envelope, Emptiabl
      *
      * @return the minimal ordinate value for dimension 0.
      */
-    @Override
     public double getMinX() {
         return getMinimum(0);
     }
@@ -485,7 +483,6 @@ public class Envelope2D extends Rectangle2D.Double implements Envelope, Emptiabl
      *
      * @return the minimal ordinate value for dimension 1.
      */
-    @Override
     public double getMinY() {
         return getMinimum(1);
     }
@@ -498,7 +495,6 @@ public class Envelope2D extends Rectangle2D.Double implements Envelope, Emptiabl
      *
      * @return the maximal ordinate value for dimension 0.
      */
-    @Override
     public double getMaxX() {
         return getMaximum(0);
     }
@@ -511,7 +507,6 @@ public class Envelope2D extends Rectangle2D.Double implements Envelope, Emptiabl
      *
      * @return the maximal ordinate value for dimension 1.
      */
-    @Override
     public double getMaxY() {
         return getMaximum(1);
     }
@@ -524,7 +519,6 @@ public class Envelope2D extends Rectangle2D.Double implements Envelope, Emptiabl
      *
      * @return the median ordinate value for dimension 0.
      */
-    @Override
     public double getCenterX() {
         return getMedian(0);
     }
@@ -537,7 +531,6 @@ public class Envelope2D extends Rectangle2D.Double implements Envelope, Emptiabl
      *
      * @return the median ordinate value for dimension 1.
      */
-    @Override
     public double getCenterY() {
         return getMedian(1);
     }
@@ -699,7 +692,6 @@ public class Envelope2D extends Rectangle2D.Double implements Envelope, Emptiabl
      * @return {@code true} if the specified coordinate is inside the boundary of this envelope;
      *         {@code false} otherwise.
      */
-    @Override
     public boolean contains(final double px, final double py) {
         boolean c1 = (px >= x);
         boolean c2 = (px <= x + width);
@@ -864,7 +856,6 @@ public class Envelope2D extends Rectangle2D.Double implements Envelope, Emptiabl
      * @param  rect  the rectangle to be intersected with this envelope.
      * @return the intersection of the given rectangle with this envelope.
      */
-    @Override
     public Envelope2D createIntersection(final Rectangle2D rect) {
         final Envelope2D env = (rect instanceof Envelope2D) ? (Envelope2D) rect : null;
         final Envelope2D inter = new Envelope2D(crs, NaN, NaN, NaN, NaN);
@@ -930,7 +921,6 @@ public class Envelope2D extends Rectangle2D.Double implements Envelope, Emptiabl
      * @param  rect  the rectangle to add to this envelope.
      * @return the union of the given rectangle with this envelope.
      */
-    @Override
     public Envelope2D createUnion(final Rectangle2D rect) {
         final Envelope2D union = clone();
         union.add(rect);
@@ -950,7 +940,6 @@ public class Envelope2D extends Rectangle2D.Double implements Envelope, Emptiabl
      *
      * @param  rect  the rectangle to add to this envelope.
      */
-    @Override
     public void add(final Rectangle2D rect) {
         final Envelope2D env = (rect instanceof Envelope2D) ? (Envelope2D) rect : null;
         for (int i=0; i!=DIMENSION; i++) {
@@ -1047,7 +1036,6 @@ public class Envelope2D extends Rectangle2D.Double implements Envelope, Emptiabl
      * @param  px  the first ordinate of the point to add.
      * @param  py  the second ordinate of the point to add.
      */
-    @Override
     public void add(final double px, final double py) {
         double off = px - x;
         if (!isNegative(width)) {                           // Standard case, or NaN.
