@@ -41,6 +41,7 @@ Branch Specific Dependencies
 ============================
 javax.xml.bind:jaxb-api
 javax.xml.stream:stax-api
+javax.xml:jaxp-api
 javax.activation:activation
 com.sun.xml.bind:jaxb-core
 com.sun.xml.bind:jaxb-impl
