@@ -33,6 +33,30 @@ public class Rectangle2D {
         return height;
     }
 
+    public double getMinX() {
+        return getX();
+    }
+
+    public double getMinY() {
+        return getY();
+    }
+
+    public double getMaxX() {
+        return getX() + getWidth();
+    }
+
+    public double getMaxY() {
+        return getY() + getHeight();
+    }
+
+    public double getCenterX() {
+        return getX() + getWidth() / 2.0;
+    }
+
+    public double getCenterY() {
+        return getY() + getHeight() / 2.0;
+    }
+
     /**
      * Sets this rectangle to the given rectangle.
      * @param rect  the rectangle to copy coordinates from.
@@ -45,14 +69,14 @@ public class Rectangle2D {
     }
 
     /**
-     * Tests if a specified coordinate is inside the boundary of this envelope. If it least one
+     * Tests if a specified coordinate is inside the boundary of this rectangle. If it least one
      * of the given ordinate value is {@link java.lang.Double#NaN NaN}, then this method returns
      * {@code false}.
      * @param x         the <var>x</var> ordinate of the lower corner of the rectangle to test for inclusion.
      * @param y         the <var>y</var> ordinate of the lower corner of the rectangle to test for inclusion.
      * @param width     the width of the rectangle to test for inclusion. May be negative if the rectangle spans the anti-meridian.
      * @param height    the height of the rectangle to test for inclusion. May be negative.
-     * @return          {@code true} if this envelope completely encloses the specified one.
+     * @return          {@code true} if this rectangle completely encloses the specified one.
      */
     public boolean contains(double x, double y, double width, double height) {
         if (java.lang.Double.isNaN(x) || java.lang.Double.isNaN(y) ||
@@ -65,25 +89,44 @@ public class Rectangle2D {
     }
 
     /**
-     * Tests if a specified coordinate is inside the boundary of this envelope. If it least one
+     * Tests if a specified coordinate is inside the boundary of this rectangle.
+     * @param x the <var>x</var> ordinate of the point
+     * @param y the <var>y</var> ordinate of the point
+     * @return  {@code true} if this point inside the rectangle
+     */
+    public boolean contains(double x, double y) {
+        return x >= this.x && y >= this.y && x < this.x + this.width && y < this.y + this.height;
+    }
+
+    /**
+     * Tests if a specified coordinate is inside the boundary of this rectangle.
+     * @param p the point to test for
+     * @return  {@code true} if this point inside the rectangle
+     */
+    public boolean contains(Point2D p) {
+        return contains(p.getX(), p.getY());
+    }
+
+    /**
+     * Tests if a specified coordinate is inside the boundary of this rectangle. If it least one
      * of the given ordinate value is {@link java.lang.Double#NaN NaN}, then this method returns
      * {@code false}.
      * @param rect  the rectangle to test for intersection.
-     * @return      {@code true} if this envelope completely encloses the specified one.
+     * @return      {@code true} if this rectangle completely encloses the specified one.
      */
     public boolean contains(Rectangle2D rect) {
         return contains(rect.getX(), rect.getY(), rect.getWidth(), rect.getHeight());
     }
 
     /**
-     * Returns {@code true} if this envelope intersects the specified envelope. If this envelope
+     * Returns {@code true} if this rectangle intersects the specified rectangle. If this rectangle
      * or the given rectangle have at least one {@link java.lang.Double#NaN NaN} value, then this
      * method returns {@code false}.
      * @param x         the <var>x</var> ordinate of the lower corner of the rectangle to test for inclusion.
      * @param y         the <var>y</var> ordinate of the lower corner of the rectangle to test for inclusion.
      * @param width     the width of the rectangle to test for inclusion. May be negative if the rectangle spans the anti-meridian.
      * @param height    the height of the rectangle to test for inclusion. May be negative.
-     * @return          {@code true} if this envelope intersects the specified rectangle.
+     * @return          {@code true} if this rectangle intersects the specified rectangle.
      */
     public boolean intersects(double x, double y, double width, double height) {
         if (java.lang.Double.isNaN(x) || java.lang.Double.isNaN(y) ||
@@ -95,11 +138,11 @@ public class Rectangle2D {
     }
 
     /**
-     * Returns {@code true} if this envelope intersects the specified envelope. If this envelope
+     * Returns {@code true} if this rectangle intersects the specified rectangle. If this rectangle
      * or the given rectangle have at least one {@link java.lang.Double#NaN NaN} value, then this
      * method returns {@code false}.
      * @param rect  the rectangle to test for intersection.
-     * @return      {@code true} if this envelope intersects the specified rectangle.
+     * @return      {@code true} if this rectangle intersects the specified rectangle.
      */
     public boolean intersects(Rectangle2D rect) {
         return intersects(rect.getX(), rect.getY(), rect.getWidth(), rect.getHeight());
