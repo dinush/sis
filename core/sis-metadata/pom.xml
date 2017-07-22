@@ -37,7 +37,7 @@
        =========================================================== -->
   <groupId>org.apache.sis.core</groupId>
   <artifactId>sis-metadata</artifactId>
-  <packaging>jar</packaging>
+  <packaging>aar</packaging>
   <name>Apache SIS metadata</name>
   <description>
   <!-- Left alignment because this description will be copied in META-INF/MANIFEST.MF
@@ -122,6 +122,10 @@ Implementations of metadata derived from ISO 19115. This module provides both an
           </compilerArgs>
         </configuration>
       </plugin>
+      <plugin>
+        <groupId>com.simpligility.maven.plugins</groupId>
+        <artifactId>android-maven-plugin</artifactId>
+      </plugin>
     </plugins>
   </build>
 
@@ -134,6 +138,8 @@ Implementations of metadata derived from ISO 19115. This module provides both an
       <groupId>org.apache.sis.core</groupId>
       <artifactId>sis-utility</artifactId>
       <version>${project.version}</version>
+      <scope>provided</scope>
+      <type>aar</type>
     </dependency>
 
     <dependency>
@@ -146,8 +152,11 @@ Implementations of metadata derived from ISO 19115. This module provides both an
       <scope>provided</scope>
     </dependency>
     <dependency>
-      <groupId>com.google.android</groupId>
-      <artifactId>support-v4</artifactId>
+      <groupId>com.android.support.test</groupId>
+      <artifactId>runner</artifactId>
+      <version>0.5</version>
+      <scope>compile</scope>
+      <type>aar</type>
     </dependency>
 
     <!-- Test dependencies -->

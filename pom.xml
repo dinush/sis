@@ -646,6 +646,17 @@ Apache SIS is a free software, Java language library for developing geospatial a
           </compilerArgs>
         </configuration>
       </plugin>
+      <plugin>
+        <groupId>com.simpligility.maven.plugins</groupId>
+        <artifactId>android-maven-plugin</artifactId>
+        <version>4.5.0</version>
+        <extensions>true</extensions>
+        <configuration>
+          <sdk>
+            <platform>26</platform>
+          </sdk>
+        </configuration>
+      </plugin>
 
       <!-- Execute test suites instead of individual test cases. -->
       <plugin>
@@ -653,6 +664,7 @@ Apache SIS is a free software, Java language library for developing geospatial a
         <artifactId>maven-surefire-plugin</artifactId>
         <version>2.20</version>
         <configuration>
+          <skip>true</skip>
           <includes>
             <include>**/*TestSuite.java</include>
           </includes>
@@ -968,15 +980,24 @@ Apache SIS is a free software, Java language library for developing geospatial a
     </pluginRepository>
   </pluginRepositories>
 
-  <!-- Temporary repository for GeoAPI 3.0.1-RC1.
-       Shall be removed after GeoAPI release. -->
+
   <repositories>
+    <!-- Temporary repository for GeoAPI 3.0.1-RC1.
+       Shall be removed after GeoAPI release. -->
     <repository>
       <id>geotoolkit</id>
       <name>Geotoolkit.org repository</name>
       <url>http://maven.geotoolkit.org</url>
     </repository>
+
+    <!--Android support repository-->
+    <repository>
+      <id>maven-google</id>
+      <name>Google's Maven repository</name>
+      <url>https://maven.google.com</url>
+    </repository>
   </repositories>
+
 
 
   <!-- ==============================================================

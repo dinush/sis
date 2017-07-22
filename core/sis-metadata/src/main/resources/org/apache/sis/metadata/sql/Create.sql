@@ -59,7 +59,7 @@ CREATE TABLE "CI_Party" (
 
 CREATE TABLE "CI_Responsibility" (
   ID      VARCHAR(15) NOT NULL PRIMARY KEY,
-  "role"  metadata."CI_RoleCode",
+  "role"  "CI_RoleCode",
   "party" VARCHAR(15) REFERENCES "CI_Party" (ID) ON UPDATE RESTRICT ON DELETE RESTRICT);
 
 CREATE TABLE "CI_Date" (

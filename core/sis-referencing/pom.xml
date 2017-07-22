@@ -33,7 +33,7 @@
 
   <groupId>org.apache.sis.core</groupId>
   <artifactId>sis-referencing</artifactId>
-  <packaging>jar</packaging>
+  <packaging>aar</packaging>
   <name>Apache SIS referencing</name>
   <description>
   <!-- Left alignment because this description will be copied in META-INF/MANIFEST.MF
@@ -103,6 +103,10 @@ Implementations of Coordinate Reference Systems (CRS),
           </compilerArgs>
         </configuration>
       </plugin>
+      <plugin>
+        <groupId>com.simpligility.maven.plugins</groupId>
+        <artifactId>android-maven-plugin</artifactId>
+      </plugin>
     </plugins>
   </build>
 
@@ -115,11 +119,20 @@ Implementations of Coordinate Reference Systems (CRS),
       <groupId>org.apache.sis.core</groupId>
       <artifactId>sis-utility</artifactId>
       <version>${project.version}</version>
+      <scope>provided</scope>
+      <type>aar</type>
     </dependency>
     <dependency>
       <groupId>org.apache.sis.core</groupId>
       <artifactId>sis-metadata</artifactId>
       <version>${project.version}</version>
+      <scope>provided</scope>
+      <type>aar</type>
+    </dependency>
+
+    <dependency>
+      <groupId>com.google.android</groupId>
+      <artifactId>android</artifactId>
     </dependency>
 
     <!-- Test dependencies -->
