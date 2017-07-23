@@ -36,7 +36,6 @@ import java.lang.reflect.Array;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 
-import org.apache.sis.internal.metadata.sql.ResultSetCursor;
 import org.opengis.annotation.UML;
 import org.opengis.util.CodeList;
 import org.apache.sis.metadata.MetadataStandard;
@@ -66,6 +65,7 @@ import org.apache.sis.util.iso.Types;
 // Branch-dependent imports
 import org.apache.sis.internal.jdk8.JDK8;
 import org.apache.sis.internal.geoapi.evolution.Interim;
+import org.apache.sis.internal.metadata.sql.ResultSetCursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.content.Context;
 import android.database.Cursor;
@@ -693,6 +693,8 @@ public class MetadataSource implements AutoCloseable {
                         throw new SQLException(table);
                     }
                 }
+            } catch (android.database.sqlite.SQLiteException e) {
+                // Do nothing
             }
             tableColumns.put(table, columns);
         }
@@ -705,7 +707,7 @@ public class MetadataSource implements AutoCloseable {
      * @return      {@code true} if table exists. {@code false} otherwise.
      */
     final boolean isTableExists(final String table) {
-        Cursor cursor = dataSource.query("sqlite_master", null, "type='?' AND name='?'",
+        Cursor cursor = dataSource.query("sqlite_master", null, "type=? AND name=?",
                 new String[]{"table", table}, null, null, null);
         boolean ret = cursor.moveToNext();
         cursor.close();
