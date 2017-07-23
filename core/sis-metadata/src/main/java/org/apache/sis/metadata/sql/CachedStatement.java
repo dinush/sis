@@ -131,7 +131,7 @@ final class CachedStatement implements AutoCloseable {
             results = r;
             identifier = id;
         }
-        return r.getObject(attribute);
+        return r.getString(attribute);
     }
 
     /**
