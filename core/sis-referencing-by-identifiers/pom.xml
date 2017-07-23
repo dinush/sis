@@ -33,7 +33,7 @@
 
   <groupId>org.apache.sis.core</groupId>
   <artifactId>sis-referencing-by-identifiers</artifactId>
-  <packaging>jar</packaging>
+  <packaging>aar</packaging>
   <name>Apache SIS referencing by geographic identifiers</name>
   <description>
   <!-- Left alignment because this description will be copied in META-INF/MANIFEST.MF
@@ -92,6 +92,10 @@ Implementations of Spatial Reference Systems using Geographic Identifiers
           </compilerArgs>
         </configuration>
       </plugin>
+      <plugin>
+        <groupId>com.simpligility.maven.plugins</groupId>
+        <artifactId>android-maven-plugin</artifactId>
+      </plugin>
     </plugins>
   </build>
 
@@ -104,16 +108,22 @@ Implementations of Spatial Reference Systems using Geographic Identifiers
       <groupId>org.apache.sis.core</groupId>
       <artifactId>sis-utility</artifactId>
       <version>${project.version}</version>
+      <scope>provided</scope>
+      <type>aar</type>
     </dependency>
     <dependency>
       <groupId>org.apache.sis.core</groupId>
       <artifactId>sis-metadata</artifactId>
       <version>${project.version}</version>
+      <scope>provided</scope>
+      <type>aar</type>
     </dependency>
     <dependency>
       <groupId>org.apache.sis.core</groupId>
       <artifactId>sis-referencing</artifactId>
       <version>${project.version}</version>
+      <scope>provided</scope>
+      <type>aar</type>
     </dependency>
 
     <!-- Test dependencies -->
