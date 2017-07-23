@@ -1063,6 +1063,25 @@ public class Envelope2D extends Rectangle2D.Double implements Envelope, Emptiabl
     }
 
     /**
+     * Adds a point to this rectangle. The resulting rectangle is the smallest rectangle that
+     * contains both the original rectangle and the specified point.
+     * <p>
+     * After adding a point, a call to {@link #contains(double, double)} with the added point
+     * as an argument will return {@code true}, except if one of the point ordinates was
+     * {@link java.lang.Double#NaN} in which case the corresponding ordinate has been ignored.
+     *
+     * <div class="section">Spanning the anti-meridian of a Geographic CRS</div>
+     * This method supports anti-meridian spanning in the same way than
+     * {@link GeneralEnvelope#add(DirectPosition)}.
+     *
+     * @param  point  the point to add.
+     */
+    public void add(final Point2D point) {
+        add(point.getX(), point.getY());
+        return;
+    }
+
+    /**
      * Compares the specified object with this envelope for equality. If the given object is not
      * an instance of {@code Envelope2D}, then the two objects are compared as plain rectangles,
      * i.e. the {@linkplain #getCoordinateReferenceSystem() coordinate reference system} of this

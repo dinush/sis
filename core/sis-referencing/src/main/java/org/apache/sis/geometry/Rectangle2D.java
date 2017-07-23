@@ -6,6 +6,32 @@ package org.apache.sis.geometry;
  */
 public class Rectangle2D {
 
+    /**
+     * The bitmask that indicates that a point lies to the left of
+     * this <code>Rectangle2D</code>.
+     */
+    public static final int OUT_LEFT = 1;
+    /**
+     * The bitmask that indicates that a point lies above
+     * this <code>Rectangle2D</code>.
+     * @since 1.2
+     */
+    public static final int OUT_TOP = 2;
+
+    /**
+     * The bitmask that indicates that a point lies to the right of
+     * this <code>Rectangle2D</code>.
+     * @since 1.2
+     */
+    public static final int OUT_RIGHT = 4;
+
+    /**
+     * The bitmask that indicates that a point lies below
+     * this <code>Rectangle2D</code>.
+     * @since 1.2
+     */
+    public static final int OUT_BOTTOM = 8;
+
     public double x, y, width, height;
 
     public Rectangle2D() {}
@@ -58,6 +84,43 @@ public class Rectangle2D {
     }
 
     /**
+     * Determines whether this rectangle is empty.
+     * @return {@code true} if this rectangle is empty; {@code false} otherwise.
+     */
+    public boolean isEmpty() {
+        return (this.width <= 0.0f) || (this.height <= 0.0f);
+    }
+
+    /**
+     * Adds a point, specified by the {@code newx} and {@code newy}, to this
+     * {@code Rectangle2D}.  The resulting {@code Rectangle2D}
+     * is the smallest {@code Rectangle2D} that
+     * contains both the original {@code Rectangle2D} and the
+     * specified point.
+     * @param newx  newx the X coordinate of the new point
+     * @param newy  newy the Y coordinate of the new point
+     */
+    public void add(double newx, double newy) {
+        double x1 = Math.min(getMinX(), newx);
+        double x2 = Math.max(getMaxX(), newx);
+        double y1 = Math.min(getMinY(), newy);
+        double y2 = Math.max(getMaxY(), newy);
+        setRect(x1, y1, x2 - x1, y2 - y1);
+    }
+
+    /**
+     * Adds a point, specified by the {@code p}, to this
+     * {@code Rectangle2D}.  The resulting {@code Rectangle2D}
+     * is the smallest {@code Rectangle2D} that
+     * contains both the original {@code Rectangle2D} and the
+     * specified point.
+     * @param p new point to add.
+     */
+    public void add(Point2D p) {
+        add(p.getX(), p.getY());
+    }
+
+    /**
      * Sets this rectangle to the given rectangle.
      * @param rect  the rectangle to copy coordinates from.
      */
@@ -69,11 +132,44 @@ public class Rectangle2D {
     }
 
     /**
+     * Sets this rectangle to the given coordinates.
+     * @param x         the x coordinate.
+     * @param y         the y coordinate.
+     * @param width     the width.
+     * @param height    the height.
+     */
+    public void setRect(double x, double y, double width, double height) {
+        this.x      = x;
+        this.y      = y;
+        this.width  = width;
+        this.height = height;
+    }
+
+    /**
+     * Sets the coordinates of this rectangle to the specified values
+     * @param x         the <var>x</var> ordinate of the lower left corner of the rectangle
+     * @param y         the <var>y</var> ordinate of the lower left corner of the rectangle
+     * @param width     the width of the rectangle
+     * @param height    the height of the rectangle
+     */
+    public void setFrame(double x, double y, double width, double height) {
+        setRect(x, y, width, height);
+    }
+
+    /**
+     * Sets the framing rectangle to the given rectangle.
+     * @param rect  rectangle to get the values from
+     */
+    public void setFrame(Rectangle2D rect) {
+        setRect(rect.getX(), rect.getY(), rect.getWidth(), rect.getHeight());
+    }
+
+    /**
      * Tests if a specified coordinate is inside the boundary of this rectangle. If it least one
      * of the given ordinate value is {@link java.lang.Double#NaN NaN}, then this method returns
      * {@code false}.
-     * @param x         the <var>x</var> ordinate of the lower corner of the rectangle to test for inclusion.
-     * @param y         the <var>y</var> ordinate of the lower corner of the rectangle to test for inclusion.
+     * @param x         the <var>x</var> ordinate of the lower left corner of the rectangle to test for inclusion.
+     * @param y         the <var>y</var> ordinate of the lower left corner of the rectangle to test for inclusion.
      * @param width     the width of the rectangle to test for inclusion. May be negative if the rectangle spans the anti-meridian.
      * @param height    the height of the rectangle to test for inclusion. May be negative.
      * @return          {@code true} if this rectangle completely encloses the specified one.
