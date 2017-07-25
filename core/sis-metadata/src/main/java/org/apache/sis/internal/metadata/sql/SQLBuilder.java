@@ -210,14 +210,12 @@ public class SQLBuilder {
      * @param  table      the table to alter with the new column.
      * @param  column     the column to add.
      * @param  type       the column type, or {@code null} for {@code VARCHAR}.
-     * @param  target      the table to reference.
-     * @param  primaryKey  the primary key in the target table.
-     * @param  cascade     {@code true} if updates in primary key should be cascaded.
-     *                     this apply to updates only; delete is always restricted.
+     * @param  maxLength  the maximal length (used for {@code VARCHAR} only).
+     * @param  fkeyStmt   the foreign key reference statement to append
      * @return a SQL statement for creating the column.
      */
     public final String createColumnWithForeignKey(final String table, final String column,
-           final Class<?> type, final String target, final String primaryKey, boolean cascade)
+           final Class<?> type, int maxLength, final String fkeyStmt)
     {
         clear().append("ALTER TABLE ").appendIdentifier(table)
                 .append(" ADD COLUMN ").appendIdentifier(column).append(' ');
@@ -225,11 +223,9 @@ public class SQLBuilder {
         if (sqlType != null) {
             append(sqlType);
         } else {
-            append("TEXT");
+            append("VARCHAR(").append(maxLength).append(") ");
         }
-        append(" REFERENCES ").appendIdentifier(target).append(" (").append(primaryKey)
-                .append(") ON UPDATE ").append(cascade ? "CASCADE" : "RESTRICT")
-                .append(" ON DELETE RESTRICT");
+        append(fkeyStmt);
         return toString();
     }
 
@@ -260,6 +256,34 @@ public class SQLBuilder {
         final String name = buffer.append(table).append('_').append(column).append("_fkey").toString();
         return clear().append("ALTER TABLE ").appendIdentifier(table).append(" ADD CONSTRAINT ")
                 .appendIdentifier(name).append(" FOREIGN KEY(").appendIdentifier(column).append(") REFERENCES ")
+                .appendIdentifier(target).append(" (").append(primaryKey)
+                .append(") ON UPDATE ").append(cascade ? "CASCADE" : "RESTRICT")
+                .append(" ON DELETE RESTRICT").toString();
+    }
+
+    /**
+     * Returns a SQL statement segment for creating foreigner key.
+     * NOTE: The resulting SQL statement is not stand alone statement, it must be append
+     * to the column creation statement.
+     * The returned statement is of the form:
+     *
+     * {@preformat sql
+     *   REFERENCES "target" (primaryKey) ON UPDATE CASCADE ON DELETE RESTRICT
+     * }
+     *
+     * Note that the primary key is <strong>not</strong> quoted on intend.
+     * If quoted are desired, then they must be added explicitly before to call this method.
+     *
+     * @param target        the table to reference.
+     * @param primaryKey    the primary key in the target table.
+     * @param cascade       {@code true} if updates in primary key should be cascaded.
+     *                     this apply to updates only; delete is always restricted.
+     * @return
+     */
+    public final String appendForeignKey(final String target, final String primaryKey, boolean cascade)
+    {
+        buffer.setLength(0);
+        return clear().append("REFERENCES ")
                 .appendIdentifier(target).append(" (").append(primaryKey)
                 .append(") ON UPDATE ").append(cascade ? "CASCADE" : "RESTRICT")
                 .append(" ON DELETE RESTRICT").toString();
