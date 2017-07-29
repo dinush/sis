@@ -740,8 +740,7 @@ Apache SIS is a free software, Java language library for developing geospatial a
               <goal>check</goal>
             </goals>
             <configuration>
-              <!--<skip>${skipTests}</skip> &lt;!&ndash; When skipping tests, skip also checkstyle verification. &ndash;&gt;-->
-              <skip>true</skip>
+              <skip>${skipTests}</skip> <!-- When skipping tests, skip also checkstyle verification. -->
               <encoding>${project.build.sourceEncoding}</encoding>
               <consoleOutput>true</consoleOutput>
               <checkstyleRules>
