@@ -1034,8 +1034,6 @@ Apache SIS is a free software, Java language library for developing geospatial a
 
   <!-- Android support repository. -->
   <repositories>
-    <!-- Temporary repository for GeoAPI 3.0.1-RC1.
-       Shall be removed after GeoAPI release. -->
     <repository>
       <id>maven-google</id>
       <name>Google's Maven repository</name>
@@ -1051,13 +1049,6 @@ Apache SIS is a free software, Java language library for developing geospatial a
       <id>geotoolkit</id>
       <name>Geotoolkit.org repository</name>
       <url>http://maven.geotoolkit.org</url>
-    </repository>
-
-    <!--Android support repository-->
-    <repository>
-      <id>maven-google</id>
-      <name>Google's Maven repository</name>
-      <url>https://maven.google.com</url>
     </repository>
   </repositories>
 
