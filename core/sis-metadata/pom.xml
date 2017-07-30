@@ -104,33 +104,6 @@ Implementations of metadata derived from ISO 19115. This module provides both an
 
 
   <!-- ===========================================================
-           Build configuration
-       =========================================================== -->
-  <build>
-    <plugins>
-
-      <plugin>
-        <artifactId>maven-compiler-plugin</artifactId>
-        <version>3.6.1</version>
-        <configuration>
-          <source>1.7</source>
-          <target>1.7</target>
-          <encoding>${project.build.sourceEncoding}</encoding>
-          <useIncrementalCompilation>false</useIncrementalCompilation> <!-- https://jira.codehaus.org/browse/MCOMPILER-209 -->
-          <compilerArgs>
-            <arg>-Xlint:all</arg>
-          </compilerArgs>
-        </configuration>
-      </plugin>
-      <plugin>
-        <groupId>com.simpligility.maven.plugins</groupId>
-        <artifactId>android-maven-plugin</artifactId>
-      </plugin>
-    </plugins>
-  </build>
-
-
-  <!-- ===========================================================
            Dependencies
        =========================================================== -->
   <dependencies>
@@ -142,15 +115,6 @@ Implementations of metadata derived from ISO 19115. This module provides both an
       <type>aar</type>
     </dependency>
 
-    <dependency>
-      <groupId>com.google.android</groupId>
-      <artifactId>android</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>com.google.android</groupId>
-      <artifactId>android-test</artifactId>
-      <scope>provided</scope>
-    </dependency>
     <dependency>
       <groupId>com.android.support.test</groupId>
       <artifactId>runner</artifactId>
