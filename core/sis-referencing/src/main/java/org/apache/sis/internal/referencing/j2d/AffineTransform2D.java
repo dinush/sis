@@ -16,9 +16,9 @@
  */
 package org.apache.sis.internal.referencing.j2d;
 
-import java.awt.Shape;
-import java.awt.geom.Point2D;
-import java.awt.geom.AffineTransform;
+import org.apache.sis.geometry.Point2D;
+import org.apache.sis.geometry.Shape;
+import org.apache.sis.referencing.operation.transform.AffineTransform;
 import org.opengis.geometry.DirectPosition;
 import org.opengis.parameter.ParameterValueGroup;
 import org.opengis.parameter.ParameterDescriptorGroup;
