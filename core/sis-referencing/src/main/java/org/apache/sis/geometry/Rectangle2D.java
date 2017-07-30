@@ -4,7 +4,7 @@ package org.apache.sis.geometry;
  * Rectangle2D impl. This should be used instead of Rectangle2D from {@code java.awt}
  * when working with {@code org.apache.sis.geometry} classes.
  */
-public class Rectangle2D {
+public class Rectangle2D extends RectangularShape {
 
     /**
      * The bitmask that indicates that a point lies to the left of
