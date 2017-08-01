@@ -1,5 +1,7 @@
 package org.apache.sis.geometry;
 
+import org.apache.sis.internal.referencing.j2d.IllegalPathStateException;
+
 /**
  * Replacement class for {@code sun.awt.geom.Curve}
  */
