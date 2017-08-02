@@ -18,7 +18,7 @@ package org.apache.sis.internal.referencing.j2d;
 
 import java.util.Arrays;
 import java.io.Serializable;
-import java.awt.geom.AffineTransform;
+
 import org.opengis.referencing.operation.Matrix;
 import org.apache.sis.internal.referencing.Resources;
 import org.apache.sis.internal.referencing.ExtendedPrecisionMatrix;

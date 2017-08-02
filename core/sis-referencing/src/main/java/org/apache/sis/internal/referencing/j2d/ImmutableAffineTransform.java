@@ -16,8 +16,6 @@
  */
 package org.apache.sis.internal.referencing.j2d;
 
-import java.awt.geom.AffineTransform;
-import java.awt.geom.NoninvertibleTransformException;
 import org.apache.sis.internal.referencing.Resources;
 
 
@@ -113,42 +111,6 @@ public class ImmutableAffineTransform extends AffineTransform {
     }
 
     /**
-     * Checks for {@linkplain #checkPermission() permission} before rotating this transform.
-     */
-    @Override
-    public final void rotate(double vecx, double vecy) {
-        checkPermission();
-        super.rotate(vecx, vecy);
-    }
-
-    /**
-     * Checks for {@linkplain #checkPermission() permission} before rotating this transform.
-     */
-    @Override
-    public final void rotate(double vecx, double vecy, double anchorx, double anchory) {
-        checkPermission();
-        super.rotate(vecx, vecy, anchorx, anchory);
-    }
-
-    /**
-     * Checks for {@linkplain #checkPermission() permission} before rotating this transform.
-     */
-    @Override
-    public final void quadrantRotate(int numquadrants) {
-        checkPermission();
-        super.quadrantRotate(numquadrants);
-    }
-
-    /**
-     * Checks for {@linkplain #checkPermission() permission} before rotating this transform.
-     */
-    @Override
-    public final void quadrantRotate(int numquadrants, double anchorx, double anchory) {
-        checkPermission();
-        super.quadrantRotate(numquadrants, anchorx, anchory);
-    }
-
-    /**
      * Checks for {@linkplain #checkPermission() permission} before scaling this transform.
      */
     @Override
@@ -206,42 +168,6 @@ public class ImmutableAffineTransform extends AffineTransform {
      * Checks for {@linkplain #checkPermission() permission} before setting this transform.
      */
     @Override
-    public final void setToRotation(double vecx, double vecy) {
-        checkPermission();
-        super.setToRotation(vecx, vecy);
-    }
-
-    /**
-     * Checks for {@linkplain #checkPermission() permission} before setting this transform.
-     */
-    @Override
-    public final void setToRotation(double vecx, double vecy, double anchorx, double anchory) {
-        checkPermission();
-        super.setToRotation(vecx, vecy, anchorx, anchory);
-    }
-
-    /**
-     * Checks for {@linkplain #checkPermission() permission} before setting this transform.
-     */
-    @Override
-    public final void setToQuadrantRotation(int numquadrants) {
-        checkPermission();
-        super.setToQuadrantRotation(numquadrants);
-    }
-
-    /**
-     * Checks for {@linkplain #checkPermission() permission} before setting this transform.
-     */
-    @Override
-    public final void setToQuadrantRotation(int numquadrants, double anchorx, double anchory) {
-        checkPermission();
-        super.setToQuadrantRotation(numquadrants, anchorx, anchory);
-    }
-
-    /**
-     * Checks for {@linkplain #checkPermission() permission} before setting this transform.
-     */
-    @Override
     public final void setToScale(double sx, double sy) {
         checkPermission();
         super.setToScale(sx, sy);
@@ -292,16 +218,5 @@ public class ImmutableAffineTransform extends AffineTransform {
     public final void preConcatenate(AffineTransform Tx) {
         checkPermission();
         super.preConcatenate(Tx);
-    }
-
-    /**
-     * Checks for {@linkplain #checkPermission() permission} before inverting this transform.
-     *
-     * @throws java.awt.geom.NoninvertibleTransformException if the matrix can not be inverted.
-     */
-    @Override
-    public final void invert() throws NoninvertibleTransformException {
-        checkPermission();
-        super.invert();
     }
 }
