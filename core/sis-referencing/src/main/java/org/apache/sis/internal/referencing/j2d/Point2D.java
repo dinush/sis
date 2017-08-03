@@ -1,4 +1,4 @@
-package org.apache.sis.geometry;
+package org.apache.sis.internal.referencing.j2d;
 
 /**
  * Point2D impl. This should be used instead of Point2D from {@code java.awt}
@@ -117,35 +117,65 @@ public abstract class Point2D {
      */
     public static class Float extends Point2D {
 
-        public float x, y;
+        /**
+         * The x coordinate.
+         */
+        public float x;
 
-        public Float() { }
+        /**
+         * The y coordinate.
+         */
+        public float y;
 
+        /**
+         * Instantiates a new float-valued Point2D with its data set to zero.
+         */
+        public Float() {
+        }
+
+        /**
+         * Instantiates a new float-valued Point2D with the specified
+         * coordinates.
+         *
+         * @param x the x coordinate.
+         * @param y the y coordinate.
+         */
         public Float(float x, float y) {
             this.x = x;
             this.y = y;
         }
 
+        @Override
         public double getX() {
-            return (double) x;
+            return x;
         }
 
+        @Override
         public double getY() {
-            return (double) y;
+            return y;
         }
 
-        public void setLocation(double x, double y) {
-            this.x = (float) x;
-            this.y = (float) y;
-        }
-
+        /**
+         * Sets the point's coordinates.
+         *
+         * @param x the x coordinate.
+         * @param y the y coordinate.
+         */
         public void setLocation(float x, float y) {
             this.x = x;
             this.y = y;
         }
 
+        @Override
+        public void setLocation(double x, double y) {
+            this.x = (float)x;
+            this.y = (float)y;
+        }
+
+        @Override
         public String toString() {
-            return "Point2D.Float[" + x + ", " + y + "]";
+            return getClass().getName() + "[x=" + x + ",y=" + y + "]";
         }
     }
+
 }
