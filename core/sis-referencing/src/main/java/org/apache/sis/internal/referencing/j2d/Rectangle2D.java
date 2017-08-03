@@ -1,7 +1,6 @@
-package org.apache.sis.geometry;
+package org.apache.sis.internal.referencing.j2d;
 
-import org.apache.sis.internal.referencing.j2d.Point2D;
-import org.apache.sis.internal.referencing.j2d.RectangularShape;
+import java.util.NoSuchElementException;
 
 /**
  * Rectangle2D impl. This should be used instead of Rectangle2D from {@code java.awt}
@@ -75,6 +74,41 @@ public abstract class Rectangle2D extends RectangularShape {
      */
     public void add(Point2D p) {
         add(p.getX(), p.getY());
+    }
+
+    /**
+     * Determines whether any part of the line segment between (and including)
+     * the two given points touches any part of the rectangle, including its
+     * boundary.
+     * @param x1 the x coordinate of one of the points that determines the line
+     *            segment to test.
+     * @param y1 the y coordinate of one of the points that determines the line
+     *            segment to test.
+     * @param x2 the x coordinate of one of the points that determines the line
+     *            segment to test.
+     * @param y2 the y coordinate of one of the points that determines the line
+     *            segment to test.
+     * @return true, if at least one point of the line segment between the two
+     *         points matches any point of the interior of the rectangle or the
+     *         rectangle's boundary.
+     */
+    public boolean intersectsLine(double x1, double y1, double x2, double y2) {
+        double rx1 = getX();
+        double ry1 = getY();
+        double rx2 = rx1 + getWidth();
+        double ry2 = ry1 + getHeight();
+        return (rx1 <= x1 && x1 <= rx2 && ry1 <= y1 && y1 <= ry2)
+                || (rx1 <= x2 && x2 <= rx2 && ry1 <= y2 && y2 <= ry2)
+                || Line2D.linesIntersect(rx1, ry1, rx2, ry2, x1, y1, x2, y2)
+                || Line2D.linesIntersect(rx2, ry1, rx1, ry2, x1, y1, x2, y2);
+    }
+
+    public Rectangle2D getBounds2D() {
+        return (Rectangle2D)clone();
+    }
+
+    public PathIterator getPathIterator(AffineTransform t) {
+        return new Iterator(this, t);
     }
 
     /**
@@ -426,5 +460,153 @@ public abstract class Rectangle2D extends RectangularShape {
         public boolean intersects(Rectangle2D rect) {
             return intersects(rect.getX(), rect.getY(), rect.getWidth(), rect.getHeight());
         }
+    }
+
+    /**
+     * The Class Iterator provides access to the coordinates of the
+     * Rectangle2D's boundary modified by an AffineTransform.
+     */
+    class Iterator implements PathIterator {
+
+        /**
+         * The x coordinate of the rectangle's upper left corner.
+         */
+        double x;
+
+        /**
+         * The y coordinate of the rectangle's upper left corner.
+         */
+        double y;
+
+        /**
+         * The width of the rectangle.
+         */
+        double width;
+
+        /**
+         * The height of the rectangle.
+         */
+        double height;
+
+        /**
+         * The AffineTransform that is used to modify the coordinates that are
+         * returned by the path iterator.
+         */
+        AffineTransform t;
+
+        /**
+         * The current segment index.
+         */
+        int index;
+
+        /**
+         * Constructs a new Rectangle2D.Iterator for given rectangle and
+         * transformation.
+         *
+         * @param r the source Rectangle2D object.
+         * @param at the AffineTransform object to apply to the coordinates
+         *            before returning them.
+         */
+        Iterator(Rectangle2D r, AffineTransform at) {
+            this.x = r.getX();
+            this.y = r.getY();
+            this.width = r.getWidth();
+            this.height = r.getHeight();
+            this.t = at;
+            if (width < 0.0 || height < 0.0) {
+                index = 6;
+            }
+        }
+
+        public int getWindingRule() {
+            return WIND_NON_ZERO;
+        }
+
+        public boolean isDone() {
+            return index > 5;
+        }
+
+        public void next() {
+            index++;
+        }
+
+        public int currentSegment(double[] coords) {
+            if (isDone()) {
+                throw new NoSuchElementException();
+            }
+            if (index == 5) {
+                return SEG_CLOSE;
+            }
+            int type;
+            if (index == 0) {
+                type = SEG_MOVETO;
+                coords[0] = x;
+                coords[1] = y;
+            } else {
+                type = SEG_LINETO;
+                switch (index) {
+                    case 1:
+                        coords[0] = x + width;
+                        coords[1] = y;
+                        break;
+                    case 2:
+                        coords[0] = x + width;
+                        coords[1] = y + height;
+                        break;
+                    case 3:
+                        coords[0] = x;
+                        coords[1] = y + height;
+                        break;
+                    case 4:
+                        coords[0] = x;
+                        coords[1] = y;
+                        break;
+                }
+            }
+            if (t != null) {
+                t.transform(coords, 0, coords, 0, 1);
+            }
+            return type;
+        }
+
+        public int currentSegment(float[] coords) {
+            if (isDone()) {
+                throw new NoSuchElementException();
+            }
+            if (index == 5) {
+                return SEG_CLOSE;
+            }
+            int type;
+            if (index == 0) {
+                coords[0] = (float)x;
+                coords[1] = (float)y;
+                type = SEG_MOVETO;
+            } else {
+                type = SEG_LINETO;
+                switch (index) {
+                    case 1:
+                        coords[0] = (float)(x + width);
+                        coords[1] = (float)y;
+                        break;
+                    case 2:
+                        coords[0] = (float)(x + width);
+                        coords[1] = (float)(y + height);
+                        break;
+                    case 3:
+                        coords[0] = (float)x;
+                        coords[1] = (float)(y + height);
+                        break;
+                    case 4:
+                        coords[0] = (float)x;
+                        coords[1] = (float)y;
+                        break;
+                }
+            }
+            if (t != null) {
+                t.transform(coords, 0, coords, 0, 1);
+            }
+            return type;
+        }
+
     }
 }
