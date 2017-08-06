@@ -9,6 +9,15 @@ public class Rectangle extends Rectangle2D {
 
     RectF rectF = new RectF();
 
+    public Rectangle(int x, int y, int width, int height) {
+        rectF.set(x, y, x+width, y-height);
+    }
+
+    @Override
+    public boolean isEmpty() {
+        return rectF.isEmpty();
+    }
+
     @Override
     public void setRect(double x, double y, double width, double height) {
         rectF.set((float) x, (float) y, (float) (x + width), (float) (y - height));

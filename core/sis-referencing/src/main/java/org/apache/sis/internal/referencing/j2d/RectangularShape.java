@@ -11,6 +11,8 @@ public abstract class RectangularShape implements Shape {
     protected RectangularShape() {
     }
 
+    public abstract boolean isEmpty();
+
     /**
      * Gets the x coordinate of the upper left corner of the rectangle.
      *
@@ -38,14 +40,6 @@ public abstract class RectangularShape implements Shape {
      * @return the height of the rectangle.
      */
     public abstract double getHeight();
-
-    /**
-     * Checks if this is an empty rectangle: one with zero as its width or
-     * height.
-     *
-     * @return true, if the width or height is empty.
-     */
-    public abstract boolean isEmpty();
 
     /**
      * Sets the data for the bounding rectangle in terms of double values.
