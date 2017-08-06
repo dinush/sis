@@ -227,8 +227,8 @@ public class AffineTransform2D extends ImmutableAffineTransform
          */
         final Point2D.Double point = new Point2D.Double(ptSrc.getOrdinate(0), ptSrc.getOrdinate(1));
         super.transform(point, point);
-        ptDst.setOrdinate(0, point.getX());
-        ptDst.setOrdinate(1, point.getY());
+        ptDst.setOrdinate(0, point.x);
+        ptDst.setOrdinate(1, point.y);
         return ptDst;
     }
 

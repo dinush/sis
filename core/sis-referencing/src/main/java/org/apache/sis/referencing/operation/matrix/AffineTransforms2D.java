@@ -20,6 +20,7 @@ import org.apache.sis.internal.referencing.j2d.AffineTransform;
 import org.apache.sis.internal.referencing.j2d.Rectangle2D;
 import org.apache.sis.internal.referencing.j2d.RectangularShape;
 import org.apache.sis.internal.referencing.j2d.Shape;
+import org.apache.sis.internal.referencing.j2d.Path2D;
 import org.apache.sis.internal.referencing.j2d.Area;
 import org.apache.sis.internal.referencing.j2d.Point2D;
 import org.apache.sis.internal.referencing.j2d.NoninvertibleTransformException;
@@ -87,6 +88,81 @@ public final class AffineTransforms2D extends Static {
     }
 
     /**
+     * Transforms the given shape.
+     * This method is similar to {@link AffineTransform#createTransformedShape(Shape)} except that:
+     *
+     * <ul>
+     *   <li>It tries to preserve the shape kind when possible. For example if the given shape
+     *       is an instance of {@link RectangularShape} and the given transform does not involve
+     *       rotation, then the returned shape may be some instance of the same class.</li>
+     *   <li>It tries to recycle the given object if {@code overwrite} is {@code true}.</li>
+     * </ul>
+     *
+     * @param  transform       the affine transform to use.
+     * @param  shape           the shape to transform, or {@code null}.
+     * @param  allowOverwrite  if {@code true}, this method is allowed to overwrite {@code shape} with the
+     *                         transform result. If {@code false}, then {@code shape} is never modified.
+     * @return the transform of the given shape, or {@code null} if the given shape was null.
+     *         May or may not be the same instance than the given shape.
+     *
+     * @see AffineTransform#createTransformedShape(Shape)
+     */
+    public static Shape transform(final AffineTransform transform, Shape shape, boolean allowOverwrite) {
+        ArgumentChecks.ensureNonNull("transform", transform);
+        if (shape == null) {
+            return null;
+        }
+        final int type = transform.getType();
+        if (type == TYPE_IDENTITY) {
+            return shape;
+        }
+        /*
+         * If there is only scale, flip, quadrant rotation or translation,
+         * then we can optimize the transformation of rectangular shapes.
+         */
+        if ((type & (TYPE_GENERAL_ROTATION | TYPE_GENERAL_TRANSFORM)) == 0) {
+            // For a Rectangle input, the output should be a rectangle as well.
+            if (shape instanceof Rectangle2D) {
+                final Rectangle2D rect = (Rectangle2D) shape;
+                return transform(transform, rect, allowOverwrite ? rect : null);
+            }
+            /*
+             * For other rectangular shapes, we restrict to cases without
+             * rotation or flip because we don't know if the shape is symmetric.
+             */
+            if ((type & (TYPE_FLIP | TYPE_MASK_ROTATION)) == 0) {
+                if (shape instanceof RectangularShape) {
+                    RectangularShape rect = (RectangularShape) shape;
+                    if (!allowOverwrite) {
+                        rect = (RectangularShape) rect.clone();
+                    }
+                    final Rectangle2D frame = rect.getFrame();
+                    rect.setFrame(transform(transform, frame, frame));
+                    return rect;
+                }
+            }
+        }
+        if (shape instanceof Path2D) {
+            final Path2D path = (Path2D) shape;
+            if (allowOverwrite) {
+                path.transform(transform);
+            } else {
+                shape = path.createTransformedShape(transform);
+            }
+        } else if (shape instanceof Area) {
+            final Area area = (Area) shape;
+            if (allowOverwrite) {
+                area.transform(transform);
+            } else {
+                shape = area.createTransformedArea(transform);
+            }
+        } else {
+            shape = new Path2D.Double(shape, transform);
+        }
+        return shape;
+    }
+
+    /**
      * Calculates a rectangle which entirely contains the direct transform of {@code bounds}.
      * This operation is equivalent to the following code, except that it can reuse the
      * given {@code dest} rectangle and is potentially more efficient:
@@ -120,13 +196,13 @@ public final class AffineTransforms2D extends Static {
         double ymax = Double.NEGATIVE_INFINITY;
         final Point2D.Double point = new Point2D.Double();
         for (int i=0; i<4; i++) {
-            point.setX((i & 1) == 0 ? bounds.getMinX() : bounds.getMaxX());
-            point.setX((i & 2) == 0 ? bounds.getMinY() : bounds.getMaxY());
+            point.x = (float) ((i & 1) == 0 ? bounds.getMinX() : bounds.getMaxX());
+            point.y = (float) ((i & 2) == 0 ? bounds.getMinY() : bounds.getMaxY());
             transform.transform(point, point);
-            if (point.getX() < xmin) xmin = point.getX();
-            if (point.getX() > xmax) xmax = point.getX();
-            if (point.getX() < ymin) ymin = point.getX();
-            if (point.getX() > ymax) ymax = point.getX();
+            if (point.x < xmin) xmin = point.x;
+            if (point.x > xmax) xmax = point.x;
+            if (point.y < ymin) ymin = point.y;
+            if (point.y > ymax) ymax = point.y;
         }
         if (dest != null) {
             dest.setRect(xmin, ymin, xmax-xmin, ymax-ymin);
@@ -164,13 +240,13 @@ public final class AffineTransforms2D extends Static {
         double ymax = Double.NEGATIVE_INFINITY;
         final Point2D.Double point = new Point2D.Double();
         for (int i=0; i<4; i++) {
-            point.setX((i & 1) == 0 ? bounds.getMinX() : bounds.getMaxX());
-            point.setY((i & 2) == 0 ? bounds.getMinY() : bounds.getMaxY());
+            point.x = (float) ((i & 1) == 0 ? bounds.getMinX() : bounds.getMaxX());
+            point.y = (float) ((i & 2) == 0 ? bounds.getMinY() : bounds.getMaxY());
             transform.inverseTransform(point, point);
-            if (point.getX() < xmin) xmin = point.getX();
-            if (point.getX() > xmax) xmax = point.getX();
-            if (point.getY() < ymin) ymin = point.getY();
-            if (point.getY() > ymax) ymax = point.getY();
+            if (point.x < xmin) xmin = point.x;
+            if (point.x > xmax) xmax = point.x;
+            if (point.y < ymin) ymin = point.y;
+            if (point.y > ymax) ymax = point.y;
         }
         if (dest != null) {
             dest.setRect(xmin, ymin, xmax-xmin, ymax-ymin);
