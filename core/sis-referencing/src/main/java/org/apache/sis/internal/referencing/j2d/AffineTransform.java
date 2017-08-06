@@ -3,7 +3,7 @@ package org.apache.sis.internal.referencing.j2d;
 import android.graphics.Matrix;
 
 /**
- * A {@code java.awt.geom.AffineTransform} like, wrapper class for Android {@link Matrix}.
+ * Wrapper class for Android {@link Matrix}.
  */
 public class AffineTransform extends Matrix {
 
@@ -67,7 +67,7 @@ public class AffineTransform extends Matrix {
      * @param numPts
      */
     public void transform(float[] srcPts, int srcOff, float[] dstPts, int dstOff, int numPts) {
-        super.mapVectors(srcPts, srcOff, dstPts, dstOff, numPts);
+        super.mapPoints(srcPts, srcOff, dstPts, dstOff, numPts);
     }
 
     /**
@@ -214,5 +214,62 @@ public class AffineTransform extends Matrix {
         return matrix[7];
     }
 
-    public boolean
+    /**
+     * Wraps {@link Matrix#mapPoints(float[], float[])}
+     * @param ptSrc
+     * @param ptDst
+     */
+    public void transform(Point2D ptSrc, Point2D ptDst) {
+        if (ptDst == null) {
+            if (ptSrc instanceof Point2D.Double) {
+                ptDst = new Point2D.Double();
+            } else {
+                ptDst = new Point2D.Float();
+            }
+        }
+
+        float[] src = new float[]{(float) ptSrc.getX(), (float) ptSrc.getY()};
+        float[] dst = new float[2];
+        super.mapPoints(dst, src);
+
+        ptDst.setLocation(dst[0], dst[1]);
+    }
+
+    /**
+     * Wraps {@link Matrix#mapPoints(float[], int, float[], int, int)}
+     * @param srcPts
+     * @param srcOff
+     * @param dstPts
+     * @param dstOff
+     * @param numPts
+     */
+    public void transform(double[] srcPts, int srcOff, float[] dstPts, int dstOff, int numPts) {
+        transform(srcPts, srcOff, dstPts, dstOff, numPts);
+    }
+
+    /**
+     * Wraps {@link Matrix#mapPoints(float[], int, float[], int, int)}
+     * @param srcPts
+     * @param srcOff
+     * @param dstPts
+     * @param dstOff
+     * @param numPts
+     */
+    public void transform(float[] srcPts, int srcOff, double[] dstPts, int dstOff, int numPts) {
+        transform(srcPts, srcOff, dstPts, dstOff, numPts);
+    }
+
+    /**
+     * Implementation of {@code java.awt.geom.AffineTransform.deltaTransform(double[], int, double[], int, int)}
+     * TEMPORARY IMPLEMENTATION
+     * @param srcPts
+     * @param srcOff
+     * @param dstPts
+     * @param dstOff
+     * @param numPts
+     */
+    public void deltaTransform(double[] srcPts, int srcOff, double[] dstPts, int dstOff, int numPts) {
+        System.arraycopy(srcPts, srcOff, dstPts, dstOff,
+                numPts * 2);
+    }
 }
