@@ -5,41 +5,47 @@ import android.graphics.PointF;
 /**
  * Android {@link PointF} wrapper class.
  */
-public abstract class Point2D {
-
-    private PointF pointF;
+public abstract class Point2D extends PointF {
 
     public Point2D() {
-        pointF = new PointF();
+        super();
     }
 
     public Point2D(int x, int y) {
-        pointF = new PointF(x, y);
+        super(x, y);
     }
 
     public Point2D(double x, double y) {
-        pointF = new PointF((float) x, (float) y);
+        super((float) x, (float) y);
     }
 
     public Point2D(Point2D p) {
-        pointF = new PointF();
-        pointF.set(p.pointF);
+        super();
+        super.set(p);
     }
 
     public double getX() {
-        return pointF.x;
+        return x;
     }
 
     public double getY() {
-        return pointF.y;
+        return y;
+    }
+
+    public void setX(double x) {
+        super.x = (float) x;
+    }
+
+    public void setY(double y) {
+        super.y = (float) y;
     }
 
     public void setLocation(double x, double y) {
-        pointF.set((float) x, (float) y);
+        super.set((float) x, (float) y);
     }
 
     public void setLocation(int x, int y) {
-        pointF.set(x, y);
+        super.set(x, y);
     }
 
     public static class Double extends Point2D {
