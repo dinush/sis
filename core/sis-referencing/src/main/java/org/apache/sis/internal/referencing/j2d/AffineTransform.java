@@ -59,6 +59,18 @@ public class AffineTransform extends Matrix {
     }
 
     /**
+     * Wrapper for {@link Matrix#mapVectors(float[], int, float[], int, int)}.
+     * @param srcPts
+     * @param srcOff
+     * @param dstPts
+     * @param dstOff
+     * @param numPts
+     */
+    public void transform(float[] srcPts, int srcOff, float[] dstPts, int dstOff, int numPts) {
+        super.mapVectors(srcPts, srcOff, dstPts, dstOff, numPts);
+    }
+
+    /**
      * Wrapper for {@link Matrix#getValues(float[])}.
      * @param matrix
      */
@@ -202,5 +214,5 @@ public class AffineTransform extends Matrix {
         return matrix[7];
     }
 
-
+    public boolean
 }
