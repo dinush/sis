@@ -227,23 +227,9 @@ public class AffineTransform2D extends ImmutableAffineTransform
          */
         final Point2D.Double point = new Point2D.Double(ptSrc.getOrdinate(0), ptSrc.getOrdinate(1));
         super.transform(point, point);
-        ptDst.setOrdinate(0, point.x);
-        ptDst.setOrdinate(1, point.y);
+        ptDst.setOrdinate(0, point.getX());
+        ptDst.setOrdinate(1, point.getY());
         return ptDst;
-    }
-
-    /**
-     * Transforms the specified shape. This method creates a simpler shape then the default
-     * {@linkplain AffineTransform#createTransformedShape(Shape) super-class implementation}.
-     * For example if the given shape is a rectangle and this affine transform has no scale or
-     * shear, then the returned shape will be an instance of {@link java.awt.geom.Rectangle2D}.
-     *
-     * @param  shape  shape to transform.
-     * @return transformed shape, or {@code shape} if this transform is the identity transform.
-     */
-    @Override
-    public final Shape createTransformedShape(final Shape shape) {
-        return AffineTransforms2D.transform(this, shape, false);
     }
 
     /**

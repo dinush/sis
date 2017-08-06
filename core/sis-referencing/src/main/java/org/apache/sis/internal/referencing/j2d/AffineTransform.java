@@ -261,7 +261,6 @@ public class AffineTransform extends Matrix {
 
     /**
      * Implementation of {@code java.awt.geom.AffineTransform.deltaTransform(double[], int, double[], int, int)}
-     * TEMPORARY IMPLEMENTATION
      * @param srcPts
      * @param srcOff
      * @param dstPts
@@ -269,7 +268,46 @@ public class AffineTransform extends Matrix {
      * @param numPts
      */
     public void deltaTransform(double[] srcPts, int srcOff, double[] dstPts, int dstOff, int numPts) {
-        System.arraycopy(srcPts, srcOff, dstPts, dstOff,
-                numPts * 2);
+        float[] matrix = new float[9];
+        super.getValues(matrix);
+
+        while (--numPts >= 0) {
+            double x = srcPts[srcOff++];
+            double y = srcPts[srcOff++];
+            dstPts[dstOff++] = x * matrix[0] + y * matrix[3];
+            dstPts[dstOff++] = x * matrix[1] + y * matrix[4];
+        }
+    }
+
+    public double getDeterminant() {
+        float[] matrix = new float[9];
+        super.getValues(matrix);
+        return matrix[0] * matrix[4] - matrix[3] * matrix[1];
+    }
+
+    /**
+     * Inverse transform {@link Point2D}
+     * @param srcPt
+     * @param dstPt
+     * @return
+     */
+    public Point2D inverseTransform(Point2D srcPt, Point2D dstPt) {
+        if (dstPt == null) {
+            if (srcPt instanceof Point2D.Double) {
+                dstPt = new Point2D.Double();
+            } else {
+                dstPt = new Point2D.Float();
+            }
+        }
+
+        float[] matrix = new float[9];
+        super.getValues(matrix);
+
+        double x = srcPt.getX() - matrix[6];
+        double y = srcPt.getY() - matrix[7];
+        double det = getDeterminant();
+
+        dstPt.setLocation((x * matrix[4] - y * matrix[3]) / det, (y * matrix[0] - x * matrix[1]) / det);
+        return dstPt;
     }
 }
