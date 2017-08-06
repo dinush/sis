@@ -16,17 +16,9 @@
  */
 package org.apache.sis.internal.referencing.j2d;
 
-import java.awt.Shape;
-import java.awt.geom.Line2D;
-import java.awt.geom.Path2D;
-import java.awt.geom.Point2D;
-import java.awt.geom.QuadCurve2D;
-import java.awt.geom.CubicCurve2D;
-import java.awt.geom.PathIterator;
 import org.apache.sis.util.Static;
 
 import static java.lang.Math.*;
-
 
 /**
  * Static methods operating on shapes from the {@link java.awt.geom} package.
