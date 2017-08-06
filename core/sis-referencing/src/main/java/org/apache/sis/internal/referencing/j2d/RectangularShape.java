@@ -1,9 +1,11 @@
 package org.apache.sis.internal.referencing.j2d;
 
+import android.graphics.RectF;
+
 /**
- * Replacement class for {@code java.awt.geom.RectangularShape}
+ * {@link RectF} wrapper class.
  */
-public abstract class RectangularShape implements Shape {
+public abstract class RectangularShape extends RectF implements Shape {
 
     /**
      * Instantiates a new rectangular shape.
@@ -11,7 +13,9 @@ public abstract class RectangularShape implements Shape {
     protected RectangularShape() {
     }
 
-    public abstract boolean isEmpty();
+    public RectangularShape(float x, float y, float width, float height) {
+        super(x, y, x+width, y-height);
+    }
 
     /**
      * Gets the x coordinate of the upper left corner of the rectangle.
@@ -116,7 +120,7 @@ public abstract class RectangularShape implements Shape {
      * @return the bounding rectangle as a new Rectangle2D object.
      */
     public Rectangle2D getFrame() {
-        return new Rectangle2D.Double(getX(), getY(), getWidth(), getHeight());
+            return new Rectangle.Double(getX(), getY(), getWidth(), getHeight());
     }
 
     /**
@@ -127,35 +131,6 @@ public abstract class RectangularShape implements Shape {
      */
     public void setFrame(Rectangle2D r) {
         setFrame(r.getX(), r.getY(), r.getWidth(), r.getHeight());
-    }
-
-    /**
-     * Sets the framing rectangle given two opposite corners. Any two corners
-     * may be used in any order as long as they are diagonally opposite one
-     * another.
-     *
-     * @param x1 the x coordinate of one of the corner points.
-     * @param y1 the y coordinate of one of the corner points.
-     * @param x2 the x coordinate of the other corner point.
-     * @param y2 the y coordinate of the other corner point.
-     */
-    public void setFrameFromDiagonal(double x1, double y1, double x2, double y2) {
-        double rx, ry, rw, rh;
-        if (x1 < x2) {
-            rx = x1;
-            rw = x2 - x1;
-        } else {
-            rx = x2;
-            rw = x1 - x2;
-        }
-        if (y1 < y2) {
-            ry = y1;
-            rh = y2 - y1;
-        } else {
-            ry = y2;
-            rh = y1 - y2;
-        }
-        setFrame(rx, ry, rw, rh);
     }
 
     /**
