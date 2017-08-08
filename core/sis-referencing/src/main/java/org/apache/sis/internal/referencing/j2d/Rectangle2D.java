@@ -81,4 +81,105 @@ public abstract class Rectangle2D extends RectangularShape implements Shape {
             super(left, top, width, height);
         }
     }
+
+    class Iterator implements PathIterator {
+
+        double x;   // x coordinate of the rectangle's upper left corner.
+        double y;   // y coordinate of the rectangle's upper left corner.
+        double width, height;
+        AffineTransform at;
+        int index = 0;
+
+        Iterator(Rectangle2D rect, AffineTransform at) {
+            this.x      = rect.getX();
+            this.y      = rect.getY();
+            this.width  = rect.getWidth();
+            this.height = rect.getHeight();
+            this.at     = at;
+        }
+
+        @Override
+        public boolean isDone() {
+            return index > 5;
+        }
+
+        @Override
+        public void next() {
+            index++;
+        }
+
+        @Override
+        public int currentSegment(double[] coords) {
+            if (index == 5) {
+                return SEG_CLOSE;
+            }
+            int type;
+            if (index == 0) {
+                type = SEG_MOVETO;
+                coords[0] = x;
+                coords[1] = y;
+            } else {
+                type = SEG_LINETO;
+                switch (index) {
+                    case 1:
+                        coords[0] = x + width;
+                        coords[1] = y;
+                        break;
+                    case 2:
+                        coords[0] = x + width;
+                        coords[1] = y + height;
+                        break;
+                    case 3:
+                        coords[0] = x;
+                        coords[1] = y + height;
+                        break;
+                    case 4:
+                        coords[0] = x;
+                        coords[1] = y;
+                        break;
+                }
+            }
+            if (at != null) {
+                at.transform(coords, 0, coords, 0, 1);
+            }
+            return type;
+        }
+
+        @Override
+        public int currentSegment(float[] coords) {
+            if (index == 5) {
+                return SEG_CLOSE;
+            }
+            int type;
+            if (index == 0) {
+                type = SEG_MOVETO;
+                coords[0] = (float) x;
+                coords[1] = (float) y;
+            } else {
+                type = SEG_LINETO;
+                switch (index) {
+                    case 1:
+                        coords[0] = (float) (x + width);
+                        coords[1] = (float) y;
+                        break;
+                    case 2:
+                        coords[0] = (float) (x + width);
+                        coords[1] = (float) (y + height);
+                        break;
+                    case 3:
+                        coords[0] = (float) x;
+                        coords[1] = (float) (y + height);
+                        break;
+                    case 4:
+                        coords[0] = (float) x;
+                        coords[1] = (float) y;
+                        break;
+                }
+            }
+            if (at != null) {
+                at.transform(coords, 0, coords, 0, 1);
+            }
+            return type;
+        }
+    }
 }
