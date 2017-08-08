@@ -16,17 +16,18 @@
  */
 package org.apache.sis.internal.feature;
 
-import java.util.Iterator;
-import java.awt.Shape;
-import java.awt.geom.Line2D;
-import java.awt.geom.Path2D;
-import java.awt.geom.Point2D;
-import java.awt.geom.Rectangle2D;
 import org.apache.sis.geometry.GeneralEnvelope;
 import org.apache.sis.internal.jdk8.JDK8;
-import org.apache.sis.setup.GeometryLibrary;
+import org.apache.sis.internal.referencing.j2d.Line2D;
+import org.apache.sis.internal.referencing.j2d.Path2D;
+import org.apache.sis.internal.referencing.j2d.Point2D;
+import org.apache.sis.internal.referencing.j2d.Rectangle2D;
+import org.apache.sis.internal.referencing.j2d.Shape;
 import org.apache.sis.internal.referencing.j2d.ShapeUtilities;
+import org.apache.sis.setup.GeometryLibrary;
 import org.apache.sis.math.Vector;
+
+import java.util.Iterator;
 
 
 /**
@@ -141,8 +142,9 @@ final class Java2D extends Geometries<Shape> {
                 return path;
             }
         }
-        final Path2D path = isFloat ? new Path2D.Float (Path2D.WIND_NON_ZERO, length)
-                                    : new Path2D.Double(Path2D.WIND_NON_ZERO, length);
+        final Path2D path = isFloat ? new Path2D.Float()
+                                    : new Path2D.Double();
+
         boolean lineTo = false;
         for (final Vector v : ordinates) {
             final int size = v.size();
