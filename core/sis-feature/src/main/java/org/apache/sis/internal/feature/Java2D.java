@@ -162,7 +162,7 @@ final class Java2D extends Geometries<Shape> {
                 }
             }
         }
-        return ShapeUtilities.toPrimitive(path);
+        return (Shape) path;
     }
 
     /**
@@ -191,7 +191,7 @@ final class Java2D extends Geometries<Shape> {
                         lineTo = true;
                     }
                 } else {
-                    path.append((Shape) next, false);
+                    path.append((Path) next, false);
                     lineTo = false;
                 }
             }

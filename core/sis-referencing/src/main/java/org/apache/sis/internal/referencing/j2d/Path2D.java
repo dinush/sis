@@ -68,6 +68,10 @@ public class Path2D extends Path implements Shape {
         super.quadTo((float) x1, (float) y1, (float) x2, (float) y2);
     }
 
+    public void append(Path line, boolean connect) {
+        super.addPath(line);
+    }
+
     public static class Double extends Path2D {
         public Double() {
             super();
