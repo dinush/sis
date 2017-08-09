@@ -36,11 +36,13 @@ public class Line2D extends Path implements Shape {
 
     class Iterator implements PathIterator {
 
+        Line2D l;
         double x1, y1, x2, y2;
         AffineTransform at;
         int index = 0;
 
         public Iterator(Line2D l, AffineTransform at) {
+            this.l  = l;
             this.x1 = l.x1;
             this.y1 = l.y1;
             this.x2 = l.x2;
@@ -77,6 +79,11 @@ public class Line2D extends Path implements Shape {
                 at.transform(coords, 0, coords, 0, 1);
             }
             return type;
+        }
+
+        @Override
+        public int getWindingRule() {
+            return l.getFillType() == FillType.EVEN_ODD || l.getFillType() == FillType.INVERSE_EVEN_ODD ? WIND_EVEN_ODD : WIND_NON_ZERO;
         }
 
         @Override

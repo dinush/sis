@@ -20,4 +20,6 @@ public interface PathIterator {
     int currentSegment(double[] coords);
 
     int currentSegment(float[] coords);
+
+    int getWindingRule();
 }
