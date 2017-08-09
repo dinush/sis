@@ -71,12 +71,20 @@ public abstract class Rectangle2D extends RectangularShape implements Shape {
     }
 
     public static class Double extends Rectangle2D {
+        public Double() {
+            super();
+        }
+
         public Double(double left, double top, double width, double height) {
             super((float) left, (float) top, (float) width, (float) height);
         }
     }
 
     public static class Float extends Rectangle2D {
+        public Float() {
+            super();
+        }
+
         public Float(float left, float top, float width, float height) {
             super(left, top, width, height);
         }
@@ -180,6 +188,11 @@ public abstract class Rectangle2D extends RectangularShape implements Shape {
                 at.transform(coords, 0, coords, 0, 1);
             }
             return type;
+        }
+
+        @Override
+        public int getWindingRule() {
+            return WIND_NON_ZERO;
         }
     }
 }

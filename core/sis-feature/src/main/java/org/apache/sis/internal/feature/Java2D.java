@@ -16,6 +16,7 @@
  */
 package org.apache.sis.internal.feature;
 
+import android.graphics.Path;
 import org.apache.sis.geometry.GeneralEnvelope;
 import org.apache.sis.internal.jdk8.JDK8;
 import org.apache.sis.internal.referencing.j2d.Line2D;
@@ -142,8 +143,8 @@ final class Java2D extends Geometries<Shape> {
                 return path;
             }
         }
-        final Path2D path = isFloat ? new Path2D.Float()
-                                    : new Path2D.Double();
+        final Path path = isFloat ? new Path2D.Float()
+                                  : new Path2D.Double();
 
         boolean lineTo = false;
         for (final Vector v : ordinates) {
@@ -154,9 +155,9 @@ final class Java2D extends Geometries<Shape> {
                 if (Double.isNaN(x) || Double.isNaN(y)) {
                     lineTo = false;
                 } else if (lineTo) {
-                    path.lineTo(x, y);
+                    path.lineTo((float) x, (float) y);
                 } else {
-                    path.moveTo(x, y);
+                    path.moveTo((float) x, (float) y);
                     lineTo = true;
                 }
             }

@@ -21,6 +21,11 @@ public class Path2D extends Path implements Shape {
         super();
     }
 
+    public Path2D(int windingRule) {
+        super();
+        setWindingRule(windingRule);
+    }
+
     public void lineTo(double x, double y) {
         super.lineTo((float) x, (float) y);
         pathmap.add(new double[]{x, y});
@@ -42,18 +47,44 @@ public class Path2D extends Path implements Shape {
     }
 
     public Rectangle2D getBounds2D() {
-        return null;
+        Rectangle2D rect = new Rectangle2D.Float();
+        super.computeBounds(rect, true);
+        return rect;
+    }
+
+    public int getWindingRule() {
+        return getFillType() == FillType.EVEN_ODD || getFillType() == FillType.INVERSE_EVEN_ODD ? WIND_EVEN_ODD : WIND_NON_ZERO;
+    }
+
+    public void setWindingRule(int windingRule) {
+        setFillType(windingRule == WIND_EVEN_ODD ? FillType.EVEN_ODD : FillType.WINDING);
+    }
+
+    public void closePath() {
+        super.close();
+    }
+
+    public void quadTo(double x1, double y1, double x2, double y2) {
+        super.quadTo((float) x1, (float) y1, (float) x2, (float) y2);
     }
 
     public static class Double extends Path2D {
         public Double() {
             super();
         }
+
+        public Double(int windingRule) {
+            super(windingRule);
+        }
     }
 
     public static class Float extends Path2D {
         public Float() {
             super();
+        }
+
+        public Float(int windingRule) {
+            super(windingRule);
         }
     }
 
