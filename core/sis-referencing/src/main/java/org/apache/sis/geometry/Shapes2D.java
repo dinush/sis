@@ -16,11 +16,11 @@
  */
 package org.apache.sis.geometry;
 
-import java.awt.geom.Point2D;
-import java.awt.geom.Line2D;
-import java.awt.geom.Ellipse2D;
-import java.awt.geom.Rectangle2D;
-import java.awt.geom.AffineTransform;
+import org.apache.sis.internal.referencing.j2d.Line2D;
+import org.apache.sis.internal.referencing.j2d.Point2D;
+import org.apache.sis.internal.referencing.j2d.Rectangle2D;
+import org.apache.sis.internal.referencing.j2d.AffineTransform;
+import org.opengis.geometry.DirectPosition;
 import org.opengis.geometry.MismatchedDimensionException;
 import org.opengis.referencing.cs.CoordinateSystem;
 import org.opengis.referencing.cs.CoordinateSystemAxis;
@@ -28,7 +28,6 @@ import org.opengis.referencing.crs.CoordinateReferenceSystem;
 import org.opengis.referencing.operation.CoordinateOperation;
 import org.opengis.referencing.operation.Matrix;
 import org.opengis.referencing.operation.MathTransform;
-import org.opengis.referencing.operation.MathTransform2D;
 import org.opengis.referencing.operation.NoninvertibleTransformException;
 import org.opengis.referencing.operation.TransformException;
 import org.apache.sis.internal.referencing.j2d.ShapeUtilities;
@@ -135,7 +134,7 @@ public final class Shapes2D extends Static {
      * @param  P3  the third point.
      * @return a circle passing by the given points.
      */
-    public static Ellipse2D circle(final Point2D P1, final Point2D P2, final Point2D P3) {
+    /*public static Ellipse2D circle(final Point2D P1, final Point2D P2, final Point2D P3) {
         final Point2D.Double center = ShapeUtilities.circleCentre(P1.getX(), P1.getY(),
                                                                   P2.getX(), P2.getY(),
                                                                   P3.getX(), P3.getY());
@@ -143,7 +142,7 @@ public final class Shapes2D extends Static {
         return new Ellipse2D.Double(center.x - radius,
                                     center.y - radius,
                                     2*radius, 2*radius);
-    }
+    }*/
 
     /**
      * Transforms a rectangular envelope using the given math transform.
@@ -165,9 +164,9 @@ public final class Shapes2D extends Static {
      * @see #transform(CoordinateOperation, Rectangle2D, Rectangle2D)
      * @see Envelopes#transform(MathTransform, Envelope)
      */
-    public static Rectangle2D transform(final MathTransform2D transform,
+    public static Rectangle2D transform(final MathTransform transform,
                                         final Rectangle2D     envelope,
-                                              Rectangle2D     destination)
+                                        Rectangle2D     destination)
             throws TransformException
     {
         ArgumentChecks.ensureNonNull("transform", transform);
@@ -184,7 +183,7 @@ public final class Shapes2D extends Static {
      * the center of the source envelope projected to the target CRS.
      */
     @SuppressWarnings("fallthrough")
-    private static Rectangle2D transform(final MathTransform2D transform,
+    private static Rectangle2D transform(final MathTransform   transform,
                                          final Rectangle2D     envelope,
                                                Rectangle2D     destination,
                                          final double[]        point)
@@ -396,14 +395,14 @@ public final class Shapes2D extends Static {
         if (envelope == null) {
             return null;
         }
-        final MathTransform transform = operation.getMathTransform();
-        if (!(transform instanceof MathTransform2D)) {
+        MathTransform transform = operation.getMathTransform();
+        if (!(transform instanceof MathTransform)) {
             throw new MismatchedDimensionException(Errors.format(Errors.Keys.IllegalPropertyValueClass_3,
-                    "transform", MathTransform2D.class, MathTransform.class));
+                    "transform", MathTransform.class, MathTransform.class));
         }
-        MathTransform2D mt = (MathTransform2D) transform;
+//        MathTransform2D mt = (MathTransform2D) transform;
         final double[] center = new double[2];
-        destination = transform(mt, envelope, destination, center);
+        destination = transform(transform, envelope, destination, center);
         /*
          * If the source envelope crosses the expected range of valid coordinates, also projects
          * the range bounds as a safety. See the comments in transform(Envelope, ...).
@@ -430,13 +429,13 @@ public final class Shapes2D extends Static {
                         pt = new Point2D.Double();
                     }
                     if ((i & 2) == 0) {
-                        pt.x = v;
-                        pt.y = envelope.getCenterY();
+                        pt.x = (float) v;
+                        pt.y = (float) envelope.getCenterY();
                     } else {
-                        pt.x = envelope.getCenterX();
-                        pt.y = v;
+                        pt.x = (float) envelope.getCenterX();
+                        pt.y = (float) v;
                     }
-                    destination.add(mt.transform(pt, pt));
+                    destination.add((Point2D) transform.transform((DirectPosition) pt, (DirectPosition) pt));
                 }
             }
         }
@@ -476,7 +475,7 @@ public final class Shapes2D extends Static {
             }
             if (targetPt == null) {
                 try {
-                    mt = mt.inverse();
+                    transform = transform.inverse();
                 } catch (NoninvertibleTransformException exception) {
                     Envelopes.recoverableException(Shapes2D.class, exception);
                     return destination;
@@ -489,7 +488,7 @@ public final class Shapes2D extends Static {
                 default: throw new AssertionError(border);
             }
             try {
-                sourcePt = mt.transform(targetPt, sourcePt);
+                sourcePt = (Point2D) transform.transform((DirectPosition) targetPt, (DirectPosition) sourcePt);
             } catch (TransformException exception) {
                 if (warning == null) {
                     warning = exception;
@@ -555,7 +554,7 @@ public final class Shapes2D extends Static {
                 }
                 targetPt.setLocation(x, y);
                 try {
-                    sourcePt = mt.transform(targetPt, sourcePt);
+                    sourcePt = (Point2D) transform.transform((DirectPosition) targetPt, (DirectPosition) sourcePt);
                 } catch (TransformException exception) {
                     if (warning == null) {
                         warning = exception;
