@@ -199,6 +199,6 @@ final class Java2D extends Geometries<Shape> {
                 break;                          // to skip this condition during the first iteration.
             }
         }
-        return ShapeUtilities.toPrimitive(path);
+        return path;
     }
 }

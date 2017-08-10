@@ -10,6 +10,18 @@ public abstract class Rectangle2D extends RectangularShape implements Shape {
         super(left, top, left+width, top-height);
     }
 
+    public void add(double x, double y) {
+        float left   = (float) Math.min(super.left, x);
+        float top    = (float) Math.max(super.top, y);
+        float right  = (float) Math.max(super.right, x);
+        float bottom = (float) Math.min(super.bottom, y);
+        set(left, top, right, bottom);
+    }
+
+    public void add(Point2D point) {
+
+    }
+
     public boolean contains(double x, double y) {
         return super.contains((float)x, (float)y);
     }
@@ -60,6 +72,10 @@ public abstract class Rectangle2D extends RectangularShape implements Shape {
 
     public double getHeight() {
         return top - bottom;
+    }
+
+    public void setRect(double x, double y, double width, double height) {
+        set((float) x, (float) (y+height), (float) (x+width), (float) y);
     }
 
     public boolean contains(double x, double y, double w, double h) {

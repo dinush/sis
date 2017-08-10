@@ -160,15 +160,15 @@ public abstract class RectangularShape extends RectF implements Shape {
     }
 
     public boolean contains(Point2D point) {
-        return contains(point.getX(), point.getY());
+        return contains((float) point.getX(), (float) point.getY());
     }
 
     public boolean intersects(Rectangle2D rect) {
-        return intersects(rect.getX(), rect.getY(), rect.getWidth(), rect.getHeight());
+        return intersects((float) rect.getX(), (float) rect.getY(), (float) rect.getWidth(), (float) rect.getHeight());
     }
 
     public boolean contains(Rectangle2D rect) {
-        return contains(rect.getX(), rect.getY(), rect.getWidth(), rect.getHeight());
+        return contains((float) rect.getX(), (float) rect.getY(), (float) rect.getWidth(), (float) rect.getHeight());
     }
 
     public Rectangle getBounds() {
@@ -179,7 +179,7 @@ public abstract class RectangularShape extends RectF implements Shape {
         return new Rectangle(x1, y1, x2 - x1, y2 - y1);
     }
 
-    public PathIterator getPathIterator(AffineTransform t, double flatness) {
-        return new FlatteningPathIterator(getPathIterator(t), flatness);
-    }
+//    public PathIterator getPathIterator(AffineTransform t, double flatness) {
+//        return new FlatteningPathIterator(getPathIterator(t), flatness);
+//    }
 }

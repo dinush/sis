@@ -16,16 +16,14 @@
  */
 package org.apache.sis.referencing.operation.transform;
 
-import java.awt.Shape;
-import java.awt.geom.Point2D;
-import java.awt.geom.Line2D;
-import java.awt.geom.QuadCurve2D;
-import java.awt.geom.Path2D;
-import java.awt.geom.PathIterator;
-import java.awt.geom.AffineTransform;
-import java.awt.geom.IllegalPathStateException;
+import org.apache.sis.internal.referencing.j2d.IllegalPathStateException;
+import org.apache.sis.internal.referencing.j2d.PathIterator;
+import org.apache.sis.internal.referencing.j2d.Point2D;
+import org.apache.sis.internal.referencing.j2d.AffineTransform;
+import org.apache.sis.internal.referencing.j2d.Shape;
+import org.apache.sis.internal.referencing.j2d.MathTransform2D;
+import org.apache.sis.internal.referencing.j2d.Path2D;
 import org.opengis.referencing.operation.Matrix;
-import org.opengis.referencing.operation.MathTransform2D;
 import org.opengis.referencing.operation.TransformException;
 import org.opengis.referencing.operation.NoninvertibleTransformException;
 import org.apache.sis.internal.referencing.Resources;
@@ -268,7 +266,7 @@ public abstract class AbstractMathTransform2D extends AbstractMathTransform impl
         if (postTransform != null) {
             path.transform(postTransform);
         }
-        return ShapeUtilities.toPrimitive(path);
+        return path;
     }
 
     /**
