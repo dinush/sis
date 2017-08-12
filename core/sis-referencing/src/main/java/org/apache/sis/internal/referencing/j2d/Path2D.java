@@ -46,10 +46,25 @@ public class Path2D extends Path implements Shape {
         return new Iterator(this);
     }
 
+    @Override
+    public Rectangle getBounds() {
+        return getBounds2D().getBounds();
+    }
+
     public Rectangle2D getBounds2D() {
         Rectangle2D rect = new Rectangle2D.Float();
         super.computeBounds(rect, true);
         return rect;
+    }
+
+    @Override
+    public boolean intersects(double x, double y, double w, double h) {
+        throw new NotImplementedException("intersect(double, double, double, double) is not implemented in Path2D");
+    }
+
+    @Override
+    public boolean intersects(Rectangle2D r) {
+        throw new NotImplementedException("intersect(Rectangle2D) is not implemented in Path2D");
     }
 
     public int getWindingRule() {
