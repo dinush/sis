@@ -17,7 +17,6 @@
 package org.apache.sis.internal.referencing.j2d;
 
 import java.util.Objects;
-import java.awt.geom.AffineTransform;
 import org.opengis.parameter.ParameterValueGroup;
 import org.opengis.parameter.ParameterDescriptorGroup;
 import org.opengis.referencing.operation.MathTransform;

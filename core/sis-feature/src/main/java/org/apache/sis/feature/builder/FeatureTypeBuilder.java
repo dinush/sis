@@ -704,7 +704,7 @@ public class FeatureTypeBuilder extends TypeBuilder {
      *
      * <div class="note"><b>Example:</b>
      * the following code creates an attribute named "MyPoint" with values of class
-     * {@link java.awt.geom.Point2D} if the library in use is {@linkplain GeometryLibrary#JAVA2D Java2D}.
+     * {@link Point2D} if the library in use is {@linkplain GeometryLibrary#JAVA2D Java2D}.
      * The Coordinate Reference System (CRS) uses (<var>longitude</var>, <var>latitude</var>) axes on the WGS 84 datum.
      * Finally that new attribute is declared the feature <em>default</em> geometry:
      *

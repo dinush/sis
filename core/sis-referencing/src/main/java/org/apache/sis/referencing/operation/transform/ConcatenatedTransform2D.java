@@ -16,11 +16,10 @@
  */
 package org.apache.sis.referencing.operation.transform;
 
-import java.awt.Shape;
-import java.awt.geom.Point2D;
+import org.apache.sis.internal.referencing.j2d.Point2D;
+import org.apache.sis.internal.referencing.j2d.Shape;
 import org.opengis.geometry.DirectPosition;
 import org.opengis.referencing.operation.MathTransform;
-import org.opengis.referencing.operation.MathTransform2D;
 import org.opengis.referencing.operation.Matrix;
 import org.opengis.referencing.operation.NoninvertibleTransformException;
 import org.opengis.referencing.operation.TransformException;
@@ -35,7 +34,7 @@ import org.apache.sis.geometry.DirectPosition2D;
  * @since   0.5
  * @module
  */
-final class ConcatenatedTransform2D extends ConcatenatedTransform implements MathTransform2D {
+final class ConcatenatedTransform2D extends ConcatenatedTransform implements MathTransform {
     /**
      * Serial number for inter-operability with different versions.
      */
@@ -62,7 +61,6 @@ final class ConcatenatedTransform2D extends ConcatenatedTransform implements Mat
      * Transforms the specified {@code ptSrc} and stores the result in {@code ptDst}.
      * This method is a copy of {@link AbstractMathTransform2D#transform(Point2D, Point2D)}.
      */
-    @Override
     public Point2D transform(final Point2D ptSrc, final Point2D ptDst) throws TransformException {
         final double[] ord = new double[] {ptSrc.getX(), ptSrc.getY()};
         transform(ord, 0, ord, 0, false);
@@ -81,7 +79,6 @@ final class ConcatenatedTransform2D extends ConcatenatedTransform implements Mat
      * @return transformed shape.
      * @throws TransformException if a transform failed.
      */
-    @Override
     public Shape createTransformedShape(final Shape shape) throws TransformException {
         return AbstractMathTransform2D.createTransformedShape(this, shape, null, null, false);
     }
@@ -95,7 +92,6 @@ final class ConcatenatedTransform2D extends ConcatenatedTransform implements Mat
      * @return the derivative at the specified point as a 2×2 matrix.
      * @throws TransformException if the derivative can't be evaluated at the specified point.
      */
-    @Override
     public Matrix derivative(final Point2D point) throws TransformException {
         return super.derivative(point instanceof DirectPosition ?
                 (DirectPosition) point : new DirectPosition2D(point.getX(), point.getY()));
@@ -105,7 +101,7 @@ final class ConcatenatedTransform2D extends ConcatenatedTransform implements Mat
      * Creates the inverse transform of this object.
      */
     @Override
-    public MathTransform2D inverse() throws NoninvertibleTransformException {
-        return (MathTransform2D) super.inverse();
+    public MathTransform inverse() throws NoninvertibleTransformException {
+        return super.inverse();
     }
 }

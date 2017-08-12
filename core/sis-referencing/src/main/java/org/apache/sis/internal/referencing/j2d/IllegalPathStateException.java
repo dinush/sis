@@ -1,4 +1,4 @@
-package org.apache.sis.geometry;
+package org.apache.sis.internal.referencing.j2d;
 
 /**
  * Replacement class for {@code java.awt.geom.IllegalPathStateException}

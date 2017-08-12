@@ -16,9 +16,11 @@
  */
 package org.apache.sis.internal.referencing.j2d;
 
-import org.opengis.referencing.operation.MathTransform2D;
-import org.opengis.referencing.operation.NoninvertibleTransformException;
 import org.apache.sis.referencing.operation.transform.LinearTransform;
+import org.opengis.referencing.operation.MathTransform;
+import org.opengis.referencing.operation.Matrix;
+import org.opengis.referencing.operation.NoninvertibleTransformException;
+import org.opengis.referencing.operation.TransformException;
 
 
 /**
@@ -30,7 +32,7 @@ import org.apache.sis.referencing.operation.transform.LinearTransform;
  * @since   0.7
  * @module
  */
-public interface LinearTransform2D extends MathTransform2D, LinearTransform {
+public interface LinearTransform2D extends MathTransform, LinearTransform {
     /**
      * Returns the inverse transform, which shall be linear and two-dimensional.
      *
@@ -38,4 +40,6 @@ public interface LinearTransform2D extends MathTransform2D, LinearTransform {
      */
     @Override
     LinearTransform2D inverse() throws NoninvertibleTransformException;
+
+    Matrix derivative(Point2D var1) throws TransformException;
 }

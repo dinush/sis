@@ -17,6 +17,8 @@
 package org.apache.sis.geometry;
 
 import java.util.Objects;
+
+import org.apache.sis.internal.referencing.j2d.Point2D;
 import org.opengis.geometry.DirectPosition;
 import org.opengis.geometry.MismatchedDimensionException;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;

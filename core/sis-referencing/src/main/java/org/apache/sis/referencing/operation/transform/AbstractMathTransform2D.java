@@ -21,8 +21,8 @@ import org.apache.sis.internal.referencing.j2d.PathIterator;
 import org.apache.sis.internal.referencing.j2d.Point2D;
 import org.apache.sis.internal.referencing.j2d.AffineTransform;
 import org.apache.sis.internal.referencing.j2d.Shape;
-import org.apache.sis.internal.referencing.j2d.MathTransform2D;
 import org.apache.sis.internal.referencing.j2d.Path2D;
+import org.opengis.referencing.operation.MathTransform;
 import org.opengis.referencing.operation.Matrix;
 import org.opengis.referencing.operation.TransformException;
 import org.opengis.referencing.operation.NoninvertibleTransformException;
@@ -60,7 +60,7 @@ import org.apache.sis.internal.referencing.j2d.ShapeUtilities;
  * @since   0.5
  * @module
  */
-public abstract class AbstractMathTransform2D extends AbstractMathTransform implements MathTransform2D {
+public abstract class AbstractMathTransform2D extends AbstractMathTransform implements MathTransform {
     /**
      * Constructor for subclasses.
      */
@@ -97,7 +97,6 @@ public abstract class AbstractMathTransform2D extends AbstractMathTransform impl
      *
      * @see MathTransform2D#transform(Point2D, Point2D)
      */
-    @Override
     public Point2D transform(final Point2D ptSrc, final Point2D ptDst) throws TransformException {
         return transform(this, ptSrc, ptDst);
     }
@@ -126,7 +125,6 @@ public abstract class AbstractMathTransform2D extends AbstractMathTransform impl
      * @return transformed shape, or {@code shape} if this transform is the identity transform.
      * @throws TransformException if a transform failed.
      */
-    @Override
     public Shape createTransformedShape(final Shape shape) throws TransformException {
         return isIdentity() ? shape : createTransformedShape(this, shape, null, null, false);
     }
@@ -146,7 +144,7 @@ public abstract class AbstractMathTransform2D extends AbstractMathTransform impl
      * @return the transformed geometric shape.
      * @throws TransformException if a transformation failed.
      */
-    static Shape createTransformedShape(final MathTransform2D mt,
+    static Shape createTransformedShape(final MathTransform mt,
                                         final Shape           shape,
                                         final AffineTransform preTransform,
                                         final AffineTransform postTransform,
@@ -285,7 +283,6 @@ public abstract class AbstractMathTransform2D extends AbstractMathTransform impl
      * @return the derivative at the specified point as a 2×2 matrix.
      * @throws TransformException if the derivative can not be evaluated at the specified point.
      */
-    @Override
     public Matrix derivative(final Point2D point) throws TransformException {
         return derivative(this, point);
     }
@@ -308,8 +305,8 @@ public abstract class AbstractMathTransform2D extends AbstractMathTransform impl
      * or throws an exception otherwise. Subclasses should override this method.
      */
     @Override
-    public MathTransform2D inverse() throws NoninvertibleTransformException {
-        return (MathTransform2D) super.inverse();
+    public MathTransform inverse() throws NoninvertibleTransformException {
+        return super.inverse();
     }
 
     /**
@@ -327,7 +324,7 @@ public abstract class AbstractMathTransform2D extends AbstractMathTransform impl
      * @since   0.5
      * @module
      */
-    protected abstract class Inverse extends AbstractMathTransform.Inverse implements MathTransform2D {
+    protected abstract class Inverse extends AbstractMathTransform.Inverse implements MathTransform {
         /**
          * Serial number for inter-operability with different versions.
          */
@@ -343,8 +340,8 @@ public abstract class AbstractMathTransform2D extends AbstractMathTransform impl
          * Returns the enclosing math transform.
          */
         @Override
-        public MathTransform2D inverse() {
-            return (MathTransform2D) super.inverse();
+        public MathTransform inverse() {
+            return (MathTransform) super.inverse();
         }
 
         /**
@@ -361,7 +358,6 @@ public abstract class AbstractMathTransform2D extends AbstractMathTransform impl
          *
          * @see MathTransform2D#transform(Point2D, Point2D)
          */
-        @Override
         public Point2D transform(final Point2D ptSrc, final Point2D ptDst) throws TransformException {
             return AbstractMathTransform2D.transform(this, ptSrc, ptDst);
         }
@@ -376,7 +372,6 @@ public abstract class AbstractMathTransform2D extends AbstractMathTransform impl
          * @return transformed shape, or {@code shape} if this transform is the identity transform.
          * @throws TransformException if a transform failed.
          */
-        @Override
         public Shape createTransformedShape(final Shape shape) throws TransformException {
             return isIdentity() ? shape : AbstractMathTransform2D.createTransformedShape(this, shape, null, null, false);
         }
@@ -397,7 +392,6 @@ public abstract class AbstractMathTransform2D extends AbstractMathTransform impl
          * @return the derivative at the specified point as a 2×2 matrix.
          * @throws TransformException if the derivative can not be evaluated at the specified point.
          */
-        @Override
         public Matrix derivative(final Point2D point) throws TransformException {
             return AbstractMathTransform2D.derivative(this, point);
         }

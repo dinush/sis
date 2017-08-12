@@ -16,10 +16,11 @@
  */
 package org.apache.sis.referencing.operation.transform;
 
-import java.awt.Shape;
-import java.awt.geom.Point2D;
+import org.apache.sis.internal.referencing.j2d.Shape;
+import org.apache.sis.internal.referencing.j2d.Point2D;
+import org.opengis.geometry.DirectPosition;
 import org.opengis.referencing.operation.Matrix;
-import org.opengis.referencing.operation.MathTransform2D;
+import org.opengis.referencing.operation.MathTransform;
 import org.opengis.referencing.operation.TransformException;
 import org.opengis.referencing.operation.NoninvertibleTransformException;
 import org.apache.sis.referencing.operation.matrix.Matrices;
@@ -33,7 +34,7 @@ import org.apache.sis.referencing.operation.matrix.Matrices;
  * @since   0.5
  * @module
  */
-final class ConcatenatedTransformDirect2D extends ConcatenatedTransformDirect implements MathTransform2D {
+final class ConcatenatedTransformDirect2D extends ConcatenatedTransformDirect implements MathTransform {
     /**
      * Serial number for inter-operability with different versions.
      */
@@ -42,8 +43,8 @@ final class ConcatenatedTransformDirect2D extends ConcatenatedTransformDirect im
     /**
      * Constructs a concatenated transform.
      */
-    public ConcatenatedTransformDirect2D(final MathTransform2D transform1,
-                                         final MathTransform2D transform2)
+    public ConcatenatedTransformDirect2D(final MathTransform transform1,
+                                         final MathTransform transform2)
     {
         super(transform1, transform2);
     }
@@ -59,13 +60,12 @@ final class ConcatenatedTransformDirect2D extends ConcatenatedTransformDirect im
     /**
      * Transforms the specified {@code ptSrc} and stores the result in {@code ptDst}.
      */
-    @Override
     public Point2D transform(final Point2D ptSrc, Point2D ptDst) throws TransformException {
         assert isValid();
-        final MathTransform2D transform1 = (MathTransform2D) this.transform1;
-        final MathTransform2D transform2 = (MathTransform2D) this.transform2;
-        ptDst = transform1.transform(ptSrc, ptDst);
-        return  transform2.transform(ptDst, ptDst);
+        final MathTransform transform1 = (MathTransform) this.transform1;
+        final MathTransform transform2 = (MathTransform) this.transform2;
+        ptDst = (Point2D) transform1.transform((DirectPosition) ptSrc, (DirectPosition) ptDst);
+        return (Point2D) transform2.transform((DirectPosition) ptDst, (DirectPosition) ptDst);
     }
 
     /**
@@ -75,7 +75,6 @@ final class ConcatenatedTransformDirect2D extends ConcatenatedTransformDirect im
      * @return transformed shape.
      * @throws TransformException if a transform failed.
      */
-    @Override
     public Shape createTransformedShape(final Shape shape) throws TransformException {
         return AbstractMathTransform2D.createTransformedShape(this, shape, null, null, false);
     }
@@ -87,12 +86,11 @@ final class ConcatenatedTransformDirect2D extends ConcatenatedTransformDirect im
      * @return the derivative at the specified point (never {@code null}).
      * @throws TransformException if the derivative can't be evaluated at the specified point.
      */
-    @Override
     public Matrix derivative(final Point2D point) throws TransformException {
-        final MathTransform2D transform1 = (MathTransform2D) this.transform1;
-        final MathTransform2D transform2 = (MathTransform2D) this.transform2;
-        final Matrix matrix1 = transform1.derivative(point);
-        final Matrix matrix2 = transform2.derivative(transform1.transform(point,null));
+        final MathTransform transform1 = (MathTransform) this.transform1;
+        final MathTransform transform2 = (MathTransform) this.transform2;
+        final Matrix matrix1 = transform1.derivative((DirectPosition) point);
+        final Matrix matrix2 = transform2.derivative(transform1.transform((DirectPosition) point,null));
         return Matrices.multiply(matrix2, matrix1);
     }
 
@@ -100,7 +98,7 @@ final class ConcatenatedTransformDirect2D extends ConcatenatedTransformDirect im
      * Creates the inverse transform of this object.
      */
     @Override
-    public MathTransform2D inverse() throws NoninvertibleTransformException {
-        return (MathTransform2D) super.inverse();
+    public MathTransform inverse() throws NoninvertibleTransformException {
+        return super.inverse();
     }
 }

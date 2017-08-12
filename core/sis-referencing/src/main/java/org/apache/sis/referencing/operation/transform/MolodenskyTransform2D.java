@@ -16,11 +16,11 @@
  */
 package org.apache.sis.referencing.operation.transform;
 
-import java.awt.Shape;
-import java.awt.geom.Point2D;
+import org.apache.sis.internal.referencing.j2d.Shape;
+import org.apache.sis.internal.referencing.j2d.Point2D;
 import org.opengis.referencing.datum.Ellipsoid;
 import org.opengis.referencing.operation.Matrix;
-import org.opengis.referencing.operation.MathTransform2D;
+import org.opengis.referencing.operation.MathTransform;
 import org.opengis.referencing.operation.TransformException;
 
 
@@ -33,7 +33,7 @@ import org.opengis.referencing.operation.TransformException;
  * @since   0.7
  * @module
  */
-final class MolodenskyTransform2D extends MolodenskyTransform implements MathTransform2D {
+final class MolodenskyTransform2D extends MolodenskyTransform implements MathTransform {
     /**
      * Serial number for compatibility with different versions.
      */
@@ -63,7 +63,6 @@ final class MolodenskyTransform2D extends MolodenskyTransform implements MathTra
     /**
      * Computes the derivative at the given position point.
      */
-    @Override
     public Matrix derivative(Point2D point) throws TransformException {
         return AbstractMathTransform2D.derivative(this, point);
     }
@@ -71,7 +70,6 @@ final class MolodenskyTransform2D extends MolodenskyTransform implements MathTra
     /**
      * Transforms a single point.
      */
-    @Override
     public Point2D transform(Point2D ptSrc, Point2D ptDst) throws TransformException {
         return AbstractMathTransform2D.transform(this, ptSrc, ptDst);
     }
@@ -79,7 +77,6 @@ final class MolodenskyTransform2D extends MolodenskyTransform implements MathTra
     /**
      * Transforms the given shape.
      */
-    @Override
     public Shape createTransformedShape(Shape shape) throws TransformException {
         return AbstractMathTransform2D.createTransformedShape(this, shape, null, null, false);
     }
@@ -88,7 +85,7 @@ final class MolodenskyTransform2D extends MolodenskyTransform implements MathTra
      * Returns the inverse transform of this transform.
      */
     @Override
-    public MathTransform2D inverse() {
-        return (MathTransform2D) super.inverse();
+    public MathTransform inverse() {
+        return super.inverse();
     }
 }

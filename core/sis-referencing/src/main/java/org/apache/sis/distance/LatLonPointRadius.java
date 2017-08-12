@@ -18,9 +18,9 @@
 package org.apache.sis.distance;
 
 //JDK imports
-import java.awt.geom.Area;
-import java.awt.geom.Path2D;
-import java.awt.geom.Rectangle2D;
+import org.apache.sis.internal.referencing.j2d.Area;
+import org.apache.sis.internal.referencing.j2d.Path2D;
+import org.apache.sis.internal.referencing.j2d.Rectangle2D;
 
 // GeoAPI import
 import org.opengis.geometry.DirectPosition;
