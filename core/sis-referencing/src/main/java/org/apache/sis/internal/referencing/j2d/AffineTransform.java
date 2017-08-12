@@ -310,4 +310,18 @@ public class AffineTransform extends Matrix {
         dstPt.setLocation((x * matrix[4] - y * matrix[3]) / det, (y * matrix[0] - x * matrix[1]) / det);
         return dstPt;
     }
+
+    public Shape createTransformedShape(Shape src) {
+        if (src == null)
+            return null;
+
+        if (src instanceof Path2D) {
+            return ((Path2D) src).createTransformedShape(this);
+        }
+
+        PathIterator path = src.getPathIterator(this);
+        Path2D dst = new Path2D(path.getWindingRule());
+        dst.append(path, false);
+        return dst;
+    }
 }

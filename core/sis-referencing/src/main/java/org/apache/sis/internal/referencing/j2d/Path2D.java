@@ -72,6 +72,15 @@ public class Path2D extends Path implements Shape {
         super.addPath(line);
     }
 
+    public void append(PathIterator pi, boolean connect) {
+        float[] coords = new float[6];
+        while (!pi.isDone()) {
+            pi.currentSegment(coords);
+            lineTo(coords[0], coords[1]);
+            pi.next();
+        }
+    }
+
     public boolean contains(double x, double y) {
         return false;
     }
