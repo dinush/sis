@@ -2,6 +2,10 @@ package org.apache.sis.internal.referencing.j2d;
 
 public class Rectangle extends Rectangle2D {
 
+    public Rectangle() {
+        super(0, 0, 0, 0);
+    }
+
     public Rectangle(int x, int y, int width, int height) {
         super(x, y, x+width, y-height);
     }

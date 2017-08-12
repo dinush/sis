@@ -55,6 +55,14 @@ public abstract class Rectangle2D extends RectangularShape implements Shape {
         return intersects(this, r);
     }
 
+    public static void intersect(Rectangle2D src1, Rectangle2D src2, Rectangle2D dst) {
+        double x1 = Math.max(src1.getMinX(), src2.getMinX());
+        double y1 = Math.max(src1.getMinY(), src2.getMinY());
+        double x2 = Math.min(src1.getMaxX(), src2.getMaxX());
+        double y2 = Math.min(src1.getMaxY(), src2.getMaxY());
+        dst.setFrame(x1, y1, x2 - x1, y2 - y1);
+    }
+
     public boolean contains(Rectangle2D rect) {
         return super.contains(rect);
     }
