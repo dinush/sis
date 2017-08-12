@@ -24,6 +24,22 @@ public class Line2D extends Path implements Shape {
         this.y2 = y2;
     }
 
+    public double getX1() {
+        return x1;
+    }
+
+    public double getY1() {
+        return y1;
+    }
+
+    public double getX2() {
+        return x2;
+    }
+
+    public double getY2() {
+        return y2;
+    }
+
     @Override
     public PathIterator getPathIterator(AffineTransform at) {
         return new Iterator(this, at);
@@ -32,6 +48,13 @@ public class Line2D extends Path implements Shape {
     @Override
     public PathIterator getPathIterator(AffineTransform at, double flatness) {
         return new Iterator(this, at);
+    }
+
+    @Override
+    public Rectangle2D getBounds2D() {
+        Rectangle2D rect = new Rectangle2D.Float();
+        computeBounds(rect, true);
+        return rect;
     }
 
     class Iterator implements PathIterator {
