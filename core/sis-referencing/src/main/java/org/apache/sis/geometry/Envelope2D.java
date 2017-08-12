@@ -17,6 +17,9 @@
 package org.apache.sis.geometry;
 
 import java.util.Objects;
+
+import org.apache.sis.internal.referencing.j2d.Point2D;
+import org.apache.sis.internal.referencing.j2d.Rectangle2D;
 import org.opengis.geometry.Envelope;
 import org.opengis.geometry.DirectPosition;
 import org.opengis.geometry.MismatchedDimensionException;
@@ -77,7 +80,7 @@ import static org.apache.sis.geometry.AbstractEnvelope.isNegativeUnsafe;
  *   <li>{@link #getMaximum(int)}</li>
  *   <li>{@link #getSpan(int)}</li>
  *   <li>{@link #getMedian(int)}</li>
- *   <li>{@link #isEmpty()}</li>
+ *   <li>{@link #isThisEmpty()}</li>
  *   <li>{@link #toRectangles()}</li>
  *   <li>{@link #contains(double,double)}</li>
  *   <li>{@link #contains(Rectangle2D)} and its variant receiving {@code double} arguments</li>
@@ -574,8 +577,7 @@ public class Envelope2D extends Rectangle2D.Double implements Envelope, Emptiabl
      *
      * @return {@code true} if this envelope is empty.
      */
-    @Override
-    public boolean isEmpty() {
+    public boolean isThisEmpty() {
         return !((width  > 0 || (isNegative(width)  && isWrapAround(crs, 0)))
               && (height > 0 || (isNegative(height) && isWrapAround(crs, 1))));
     }
@@ -847,7 +849,7 @@ public class Envelope2D extends Rectangle2D.Double implements Envelope, Emptiabl
     /**
      * Returns the intersection of this envelope with the specified rectangle. If this envelope
      * or the given rectangle have at least one {@link java.lang.Double#NaN NaN} values, then this
-     * method returns an {@linkplain #isEmpty() empty} envelope.
+     * method returns an {@linkplain #isThisEmpty() empty} envelope.
      *
      * <div class="section">Spanning the anti-meridian of a Geographic CRS</div>
      * This method supports anti-meridian spanning in the same way than
@@ -909,7 +911,7 @@ public class Envelope2D extends Rectangle2D.Double implements Envelope, Emptiabl
             }
             inter.setRange(i, min, max);
         }
-        assert inter.isEmpty() || (contains(inter) && rect.contains(inter)) : inter;
+        assert inter.isThisEmpty() || (contains(inter) && rect.contains(inter)) : inter;
         return inter;
     }
 
@@ -921,10 +923,10 @@ public class Envelope2D extends Rectangle2D.Double implements Envelope, Emptiabl
      * @param  rect  the rectangle to add to this envelope.
      * @return the union of the given rectangle with this envelope.
      */
-    public Envelope2D createUnion(final Rectangle2D rect) {
+    public Envelope2D createUnion(final Rectangle2D rect) throws CloneNotSupportedException {
         final Envelope2D union = clone();
         union.add(rect);
-        assert union.isEmpty() || (union.contains(this) && union.contains(rect)) : union;
+        assert union.isThisEmpty() || (union.contains(this) && union.contains(rect)) : union;
         return union;
     }
 
@@ -1059,7 +1061,7 @@ public class Envelope2D extends Rectangle2D.Double implements Envelope, Emptiabl
                 else {y=py;  height -= off;}
             }
         }
-        assert contains(px, py) || isEmpty() || isNaN(px) || isNaN(py);
+        assert contains(px, py) || isThisEmpty() || isNaN(px) || isNaN(py);
     }
 
     /**
@@ -1149,7 +1151,7 @@ public class Envelope2D extends Rectangle2D.Double implements Envelope, Emptiabl
      * @return a clone of this envelope.
      */
     @Override
-    public Envelope2D clone() {
+    public Envelope2D clone() throws CloneNotSupportedException {
         return (Envelope2D) super.clone();
     }
 
