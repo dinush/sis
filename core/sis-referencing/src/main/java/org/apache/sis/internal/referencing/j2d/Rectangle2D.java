@@ -2,6 +2,11 @@ package org.apache.sis.internal.referencing.j2d;
 
 public abstract class Rectangle2D extends RectangularShape implements Shape {
 
+    public double x         = left;
+    public double y         = top;
+    public double width     = right - left;
+    public double height    = top - bottom;
+
     public Rectangle2D() {
         super();
     }
@@ -16,10 +21,6 @@ public abstract class Rectangle2D extends RectangularShape implements Shape {
         float right  = (float) Math.max(super.right, x);
         float bottom = (float) Math.min(super.bottom, y);
         set(left, top, right, bottom);
-    }
-
-    public void add(Point2D point) {
-
     }
 
     public boolean contains(double x, double y) {
@@ -76,6 +77,10 @@ public abstract class Rectangle2D extends RectangularShape implements Shape {
 
     public void setRect(double x, double y, double width, double height) {
         set((float) x, (float) (y+height), (float) (x+width), (float) y);
+    }
+
+    public void setRect(Rectangle2D rect) {
+        set(rect);
     }
 
     public boolean contains(double x, double y, double w, double h) {

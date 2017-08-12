@@ -15,7 +15,7 @@ public class Path2D extends Path implements Shape {
     public static final int WIND_EVEN_ODD = PathIterator.WIND_EVEN_ODD;
     public static final int WIND_NON_ZERO = PathIterator.WIND_NON_ZERO;
 
-    List pathmap = new ArrayList();
+    List<double[]> pathmap = new ArrayList();
 
     public Path2D() {
         super();
@@ -70,6 +70,38 @@ public class Path2D extends Path implements Shape {
 
     public void append(Path line, boolean connect) {
         super.addPath(line);
+    }
+
+    public boolean contains(double x, double y) {
+        return false;
+    }
+
+    public Shape createTransformedShape(AffineTransform at) {
+        Path2D pathClone = null;
+        try {
+            pathClone = (Path2D) clone();
+            if (at != null) {
+                pathClone.transform(at);
+            }
+            return pathClone;
+        } catch (CloneNotSupportedException e) {
+            e.printStackTrace();
+        }
+        return this;
+    }
+
+    public void transform(AffineTransform at) {
+        float[] coords = new float[pathmap.size() * 2];
+        for (int i=0, j=0; i < pathmap.size(); i++) {
+            coords[j++] = (float) pathmap.get(i)[0];
+            coords[j++] = (float) pathmap.get(i)[1];
+        }
+        at.transform(coords, 0, coords, 0, coords.length / 2);
+
+        pathmap.clear();
+        for (int i=0; i < coords.length;) {
+            pathmap.add(new double[]{coords[i++], coords[i++]});
+        }
     }
 
     public static class Double extends Path2D {
