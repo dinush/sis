@@ -23,12 +23,11 @@ import org.apache.sis.internal.referencing.j2d.Shape;
 import org.apache.sis.internal.referencing.j2d.Path2D;
 import org.apache.sis.internal.referencing.j2d.Area;
 import org.apache.sis.internal.referencing.j2d.Point2D;
-import org.apache.sis.internal.referencing.j2d.NoninvertibleTransformException;
 import org.apache.sis.util.Static;
 import org.opengis.referencing.operation.Matrix;
 import org.apache.sis.internal.referencing.Resources;
-import org.apache.sis.util.Static;
 import org.apache.sis.util.ArgumentChecks;
+import org.opengis.referencing.operation.NoninvertibleTransformException;
 
 import static java.lang.Math.*;
 import static org.apache.sis.internal.referencing.j2d.AffineTransform.*;
@@ -112,35 +111,12 @@ public final class AffineTransforms2D extends Static {
         if (shape == null) {
             return null;
         }
-        final int type = transform.getType();
-        if (type == TYPE_IDENTITY) {
+        if (transform.isIdentity()) {
             return shape;
         }
-        /*
-         * If there is only scale, flip, quadrant rotation or translation,
-         * then we can optimize the transformation of rectangular shapes.
-         */
-        if ((type & (TYPE_GENERAL_ROTATION | TYPE_GENERAL_TRANSFORM)) == 0) {
-            // For a Rectangle input, the output should be a rectangle as well.
-            if (shape instanceof Rectangle2D) {
-                final Rectangle2D rect = (Rectangle2D) shape;
-                return transform(transform, rect, allowOverwrite ? rect : null);
-            }
-            /*
-             * For other rectangular shapes, we restrict to cases without
-             * rotation or flip because we don't know if the shape is symmetric.
-             */
-            if ((type & (TYPE_FLIP | TYPE_MASK_ROTATION)) == 0) {
-                if (shape instanceof RectangularShape) {
-                    RectangularShape rect = (RectangularShape) shape;
-                    if (!allowOverwrite) {
-                        rect = (RectangularShape) rect.clone();
-                    }
-                    final Rectangle2D frame = rect.getFrame();
-                    rect.setFrame(transform(transform, frame, frame));
-                    return rect;
-                }
-            }
+        if (shape instanceof Rectangle2D) {
+            final Rectangle2D rect = (Rectangle2D) shape;
+            return transform(transform, rect, allowOverwrite ? rect : null);
         }
         if (shape instanceof Path2D) {
             final Path2D path = (Path2D) shape;
