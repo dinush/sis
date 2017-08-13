@@ -51,10 +51,27 @@ public class Line2D extends Path implements Shape {
     }
 
     @Override
+    public Rectangle getBounds() {
+        Rectangle bound = new Rectangle();
+        super.computeBounds(bound, false);
+        return bound;
+    }
+
+    @Override
     public Rectangle2D getBounds2D() {
         Rectangle2D rect = new Rectangle2D.Float();
         computeBounds(rect, true);
         return rect;
+    }
+
+    @Override
+    public boolean intersects(double x, double y, double w, double h) {
+        throw new NotImplementedException("intersect(double, double, double, double) is not implemented in Line2D");
+    }
+
+    @Override
+    public boolean intersects(Rectangle2D r) {
+        throw new NotImplementedException("intersect(Rectangle2D) is not implemented in Line2D");
     }
 
     class Iterator implements PathIterator {

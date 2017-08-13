@@ -3,7 +3,6 @@ package org.apache.sis.internal.referencing.j2d;
 import android.graphics.Path;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.NoSuchElementException;
 
@@ -24,6 +23,12 @@ public class Path2D extends Path implements Shape {
     public Path2D(int windingRule) {
         super();
         setWindingRule(windingRule);
+    }
+
+    public Path2D(Shape shape, AffineTransform at) {
+        PathIterator pi = shape.getPathIterator(at);
+        setWindingRule(pi.getWindingRule());
+        append(pi, false);
     }
 
     public void lineTo(double x, double y) {
@@ -135,6 +140,10 @@ public class Path2D extends Path implements Shape {
 
         public Double(int windingRule) {
             super(windingRule);
+        }
+
+        public Double(Shape shape, AffineTransform at) {
+            super(shape, at);
         }
     }
 

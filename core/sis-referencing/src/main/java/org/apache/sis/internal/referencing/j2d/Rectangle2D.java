@@ -23,6 +23,10 @@ public abstract class Rectangle2D extends RectangularShape implements Shape {
         set(left, top, right, bottom);
     }
 
+    public void add(Point2D position) {
+        add(position.x, position.y);
+    }
+
     public boolean contains(double x, double y) {
         return super.contains((float)x, (float)y);
     }

@@ -48,6 +48,10 @@ public abstract class Point2D extends PointF {
         super.set(x, y);
     }
 
+    public void setLocation(Point2D position) {
+        setLocation(position.x, position.y);
+    }
+
     public static class Double extends Point2D {
 
         public Double() {
