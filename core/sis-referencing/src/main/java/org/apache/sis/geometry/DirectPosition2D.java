@@ -140,8 +140,8 @@ public class DirectPosition2D extends Point2D.Double implements DirectPosition, 
     public DirectPosition2D(final DirectPosition position) throws MismatchedDimensionException {
         ensureNonNull("position", position);
         ensureDimensionMatches("position", 2, position);
-        x   = position.getOrdinate(0);
-        y   = position.getOrdinate(1);
+        x   = (float) position.getOrdinate(0);
+        y   = (float) position.getOrdinate(1);
         crs = position.getCoordinateReferenceSystem();
     }
 
@@ -168,8 +168,8 @@ public class DirectPosition2D extends Point2D.Double implements DirectPosition, 
                     Errors.Keys.UnparsableStringForClass_2, "POINT", wkt));
         }
         ensureDimensionMatches("wkt", 2, ordinates);
-        x = ordinates[0];
-        y = ordinates[1];
+        x = (float) ordinates[0];
+        y = (float) ordinates[1];
     }
 
     /**
@@ -256,8 +256,8 @@ public class DirectPosition2D extends Point2D.Double implements DirectPosition, 
     @Override
     public void setOrdinate(int dimension, double value) throws IndexOutOfBoundsException {
         switch (dimension) {
-            case 0:  x = value; break;
-            case 1:  y = value; break;
+            case 0:  x = (float) value; break;
+            case 1:  y = (float) value; break;
             default: throw new IndexOutOfBoundsException(Errors.format(Errors.Keys.IndexOutOfBounds_1, dimension));
         }
     }
@@ -350,7 +350,7 @@ public class DirectPosition2D extends Point2D.Double implements DirectPosition, 
      * @return a clone of this position.
      */
     @Override
-    public DirectPosition2D clone() {
+    public DirectPosition2D clone() throws CloneNotSupportedException {
         return (DirectPosition2D) super.clone();
     }
 }
