@@ -19,7 +19,7 @@ package org.apache.sis.referencing.operation.builder;
 import java.util.Map;
 import java.util.HashMap;
 import java.util.Random;
-import java.awt.geom.AffineTransform;
+import org.apache.sis.internal.referencing.j2d.AffineTransform;
 import org.opengis.util.FactoryException;
 import org.opengis.referencing.operation.Matrix;
 import org.apache.sis.geometry.DirectPosition1D;

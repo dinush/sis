@@ -16,7 +16,7 @@
  */
 package org.apache.sis.geometry;
 
-import java.awt.geom.Rectangle2D;
+import org.apache.sis.internal.referencing.j2d.Rectangle2D;
 import org.apache.sis.test.DependsOn;
 import org.apache.sis.test.DependsOnMethod;
 import org.apache.sis.test.TestCase;

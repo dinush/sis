@@ -16,6 +16,8 @@
  */
 package org.apache.sis.geometry;
 
+import org.apache.sis.internal.referencing.j2d.Point2D;
+import org.apache.sis.internal.referencing.j2d.Rectangle2D;
 import org.opengis.geometry.Envelope;
 import org.opengis.geometry.DirectPosition;
 import org.apache.sis.internal.metadata.AxisNames;
@@ -135,7 +137,7 @@ public strictfp class GeneralEnvelopeTest extends TestCase {
         final Envelope2D r1 = new Envelope2D(e1);
         final Envelope2D r2 = new Envelope2D(e2);
         final Envelope2D ri = r1.createIntersection(r2);
-        assertEquals("isEmpty", isEmpty, r1.isEmpty());
+        assertEquals("isEmpty", isEmpty, r1.isThisEmpty());
         assertEnvelopeEquals(ri, xmin, ymin, xmax, ymax);
         assertEquals("Interchanged arguments.", ri, r2.createIntersection(r1));
 
@@ -166,8 +168,7 @@ public strictfp class GeneralEnvelopeTest extends TestCase {
      */
     private static void assertUnionEquals(final GeneralEnvelope e1, final GeneralEnvelope e2,
             final double xmin, final double ymin, final double xmax, final double ymax,
-            final boolean inf, final boolean exactlyOneAntiMeridianSpan)
-    {
+            final boolean inf, final boolean exactlyOneAntiMeridianSpan) throws CloneNotSupportedException {
         final Envelope2D r1 = new Envelope2D(e1);
         final Envelope2D r2 = new Envelope2D(e2);
         final Envelope2D ri = r1.createUnion(r2);
@@ -283,7 +284,7 @@ public strictfp class GeneralEnvelopeTest extends TestCase {
      * {@link Envelope2D#createUnion(Rectangle2D)} methods.
      */
     @Test
-    public void testUnion() {
+    public void testUnion() throws CloneNotSupportedException {
         //  ┌─────────────┐
         //  │  ┌───────┐  │
         //  │  └───────┘  │

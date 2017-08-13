@@ -80,7 +80,7 @@ public final strictfp class DirectPosition2DTest extends TestCase {
      * Tests {@link DirectPosition2D#clone()}.
      */
     @Test
-    public void testClone() {
+    public void testClone() throws CloneNotSupportedException {
         final DirectPosition2D p1 = new DirectPosition2D(10, 30);
         final DirectPosition2D p2 = p1.clone();
         assertEquals("Expected the same CRS and ordinates.", p1, p2);

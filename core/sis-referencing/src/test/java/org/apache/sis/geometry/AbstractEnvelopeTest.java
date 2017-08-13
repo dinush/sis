@@ -16,7 +16,7 @@
  */
 package org.apache.sis.geometry;
 
-import java.awt.geom.Rectangle2D;
+import org.apache.sis.internal.referencing.j2d.Rectangle2D;
 import org.opengis.geometry.Envelope;
 import org.opengis.geometry.DirectPosition;
 import org.opengis.referencing.crs.GeographicCRS;

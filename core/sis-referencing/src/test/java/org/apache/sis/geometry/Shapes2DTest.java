@@ -16,7 +16,7 @@
  */
 package org.apache.sis.geometry;
 
-import java.awt.geom.Rectangle2D;
+import org.apache.sis.internal.referencing.j2d.Rectangle2D;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
 import org.opengis.referencing.operation.CoordinateOperation;
 import org.opengis.referencing.operation.MathTransform2D;

@@ -19,7 +19,7 @@ package org.apache.sis.distance;
 
 
 // JDK imports
-import java.awt.geom.Rectangle2D;
+import org.apache.sis.internal.referencing.j2d.Rectangle2D;
 
 // SIS imports
 import org.apache.sis.test.TestCase;

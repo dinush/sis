@@ -17,9 +17,9 @@
 package org.apache.sis.test;
 
 import java.util.Collection;
-import java.awt.geom.Rectangle2D;
-import java.awt.geom.RectangularShape;
-import java.awt.geom.AffineTransform;
+import org.apache.sis.internal.referencing.j2d.Rectangle2D;
+import org.apache.sis.internal.referencing.j2d.RectangularShape;
+import org.apache.sis.internal.referencing.j2d.AffineTransform;
 import javax.measure.Unit;
 
 import org.opengis.geometry.Envelope;
@@ -320,7 +320,7 @@ public strictfp class ReferencingAssert extends MetadataAssert {
             assertFalse("inner.contains(outer)",   inner.contains  ((Rectangle2D) outer));
         }
         assertTrue("outer.contains(centerX, centerY)",
-                outer.contains(inner.getCenterX(), inner.getCenterY()));
+                outer.contains((float) inner.getCenterX(), (float) inner.getCenterY()));
     }
 
     /**
@@ -382,7 +382,7 @@ public strictfp class ReferencingAssert extends MetadataAssert {
                 case 2: y = r2.getMaxY();    break;
                 default: throw new AssertionError(i);
             }
-            assertFalse("r1.contains(" + x + ", " + y + ')', r1.contains(x, y));
+            assertFalse("r1.contains(" + x + ", " + y + ')', r1.contains((float) x, (float) y));
         }
     }
 
