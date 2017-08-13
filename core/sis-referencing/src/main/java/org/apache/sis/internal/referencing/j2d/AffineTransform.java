@@ -219,7 +219,7 @@ public class AffineTransform extends Matrix {
      * @param ptSrc
      * @param ptDst
      */
-    public void transform(Point2D ptSrc, Point2D ptDst) {
+    public Point2D transform(Point2D ptSrc, Point2D ptDst) {
         if (ptDst == null) {
             if (ptSrc instanceof Point2D.Double) {
                 ptDst = new Point2D.Double();
@@ -233,6 +233,7 @@ public class AffineTransform extends Matrix {
         super.mapPoints(dst, src);
 
         ptDst.setLocation(dst[0], dst[1]);
+        return ptDst;
     }
 
     /**
@@ -323,5 +324,15 @@ public class AffineTransform extends Matrix {
         Path2D dst = new Path2D(path.getWindingRule());
         dst.append(path, false);
         return dst;
+    }
+
+    public void setToScale(double scx, double scy) {
+        super.setValues(new float[]{(float) scx, 0.0f, 0F, 0.0f, (float) scy, 0F, 0.0f, 0.0f, 1f });
+    }
+
+    public static AffineTransform getRotateInstance(double angle, double x, double y) {
+        Matrix matrix = new Matrix();
+        matrix.postRotate((float) angle, (float) x, (float) y);
+        return (AffineTransform) matrix;
     }
 }
