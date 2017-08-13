@@ -16,14 +16,17 @@
  */
 package org.apache.sis.referencing.operation.transform;
 
-import java.awt.Shape;
-import java.awt.geom.Point2D;
 import javax.measure.Quantity;
+
+import org.opengis.referencing.operation.MathTransform;
 import org.opengis.referencing.operation.Matrix;
 import org.opengis.referencing.operation.MathTransform2D;
 import org.opengis.referencing.operation.TransformException;
 import org.apache.sis.referencing.datum.DatumShiftGrid;
 import org.apache.sis.referencing.operation.matrix.NoninvertibleMatrixException;
+
+import org.apache.sis.internal.referencing.j2d.Point2D;
+import org.apache.sis.internal.referencing.j2d.Shape;
 
 
 /**
@@ -34,7 +37,7 @@ import org.apache.sis.referencing.operation.matrix.NoninvertibleMatrixException;
  * @since   0.7
  * @module
  */
-final class InterpolatedTransform2D extends InterpolatedTransform implements MathTransform2D {
+final class InterpolatedTransform2D extends InterpolatedTransform implements MathTransform {
     /**
      * Serial number for compatibility with different versions.
      */
@@ -50,7 +53,6 @@ final class InterpolatedTransform2D extends InterpolatedTransform implements Mat
     /**
      * Computes the derivative at the given position point.
      */
-    @Override
     public Matrix derivative(Point2D point) throws TransformException {
         return AbstractMathTransform2D.derivative(this, point);
     }
@@ -58,7 +60,6 @@ final class InterpolatedTransform2D extends InterpolatedTransform implements Mat
     /**
      * Transforms a single point.
      */
-    @Override
     public Point2D transform(Point2D ptSrc, Point2D ptDst) throws TransformException {
         return AbstractMathTransform2D.transform(this, ptSrc, ptDst);
     }
@@ -66,7 +67,6 @@ final class InterpolatedTransform2D extends InterpolatedTransform implements Mat
     /**
      * Transforms the given shape.
      */
-    @Override
     public Shape createTransformedShape(Shape shape) throws TransformException {
         return AbstractMathTransform2D.createTransformedShape(this, shape, null, null, false);
     }
@@ -95,7 +95,7 @@ final class InterpolatedTransform2D extends InterpolatedTransform implements Mat
      * @since   0.7
      * @module
      */
-    final class Inverse extends InterpolatedTransform.Inverse implements MathTransform2D {
+    final class Inverse extends InterpolatedTransform.Inverse implements MathTransform {
         /**
          * Serial number for inter-operability with different versions.
          */
@@ -110,7 +110,6 @@ final class InterpolatedTransform2D extends InterpolatedTransform implements Mat
         /**
          * Computes the derivative at the given position point.
          */
-        @Override
         public Matrix derivative(Point2D point) throws TransformException {
             return AbstractMathTransform2D.derivative(this, point);
         }
@@ -118,7 +117,6 @@ final class InterpolatedTransform2D extends InterpolatedTransform implements Mat
         /**
          * Transforms a single point.
          */
-        @Override
         public Point2D transform(Point2D ptSrc, Point2D ptDst) throws TransformException {
             return AbstractMathTransform2D.transform(this, ptSrc, ptDst);
         }
@@ -126,7 +124,6 @@ final class InterpolatedTransform2D extends InterpolatedTransform implements Mat
         /**
          * Transforms the given shape.
          */
-        @Override
         public Shape createTransformedShape(Shape shape) throws TransformException {
             return AbstractMathTransform2D.createTransformedShape(this, shape, null, null, false);
         }

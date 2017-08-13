@@ -16,15 +16,17 @@
  */
 package org.apache.sis.referencing.operation.transform;
 
-import java.awt.Shape;
-import java.awt.geom.Point2D;
 import javax.measure.quantity.Angle;
 import javax.measure.quantity.Length;
 import org.opengis.referencing.datum.Ellipsoid;
+import org.opengis.referencing.operation.MathTransform;
 import org.opengis.referencing.operation.Matrix;
 import org.opengis.referencing.operation.MathTransform2D;
 import org.opengis.referencing.operation.TransformException;
 import org.apache.sis.referencing.datum.DatumShiftGrid;
+
+import org.apache.sis.internal.referencing.j2d.Point2D;
+import org.apache.sis.internal.referencing.j2d.Shape;
 
 
 /**
@@ -35,7 +37,7 @@ import org.apache.sis.referencing.datum.DatumShiftGrid;
  * @since   0.7
  * @module
  */
-final class InterpolatedMolodenskyTransform2D extends InterpolatedMolodenskyTransform implements MathTransform2D {
+final class InterpolatedMolodenskyTransform2D extends InterpolatedMolodenskyTransform implements MathTransform {
     /**
      * Serial number for compatibility with different versions.
      */
@@ -51,7 +53,6 @@ final class InterpolatedMolodenskyTransform2D extends InterpolatedMolodenskyTran
     /**
      * Computes the derivative at the given position point.
      */
-    @Override
     public Matrix derivative(Point2D point) throws TransformException {
         return AbstractMathTransform2D.derivative(this, point);
     }
@@ -59,7 +60,6 @@ final class InterpolatedMolodenskyTransform2D extends InterpolatedMolodenskyTran
     /**
      * Transforms a single point.
      */
-    @Override
     public Point2D transform(Point2D ptSrc, Point2D ptDst) throws TransformException {
         return AbstractMathTransform2D.transform(this, ptSrc, ptDst);
     }
@@ -67,7 +67,6 @@ final class InterpolatedMolodenskyTransform2D extends InterpolatedMolodenskyTran
     /**
      * Transforms the given shape.
      */
-    @Override
     public Shape createTransformedShape(Shape shape) throws TransformException {
         return AbstractMathTransform2D.createTransformedShape(this, shape, null, null, false);
     }
@@ -88,7 +87,7 @@ final class InterpolatedMolodenskyTransform2D extends InterpolatedMolodenskyTran
      * @since   0.7
      * @module
      */
-    static final class Inverse extends InterpolatedMolodenskyTransform.Inverse implements MathTransform2D {
+    static final class Inverse extends InterpolatedMolodenskyTransform.Inverse implements MathTransform {
         /**
          * Serial number for inter-operability with different versions.
          */
@@ -108,7 +107,6 @@ final class InterpolatedMolodenskyTransform2D extends InterpolatedMolodenskyTran
         /**
          * Computes the derivative at the given position point.
          */
-        @Override
         public Matrix derivative(Point2D point) throws TransformException {
             return AbstractMathTransform2D.derivative(this, point);
         }
@@ -116,7 +114,6 @@ final class InterpolatedMolodenskyTransform2D extends InterpolatedMolodenskyTran
         /**
          * Transforms a single point.
          */
-        @Override
         public Point2D transform(Point2D ptSrc, Point2D ptDst) throws TransformException {
             return AbstractMathTransform2D.transform(this, ptSrc, ptDst);
         }
@@ -124,7 +121,6 @@ final class InterpolatedMolodenskyTransform2D extends InterpolatedMolodenskyTran
         /**
          * Transforms the given shape.
          */
-        @Override
         public Shape createTransformedShape(Shape shape) throws TransformException {
             return AbstractMathTransform2D.createTransformedShape(this, shape, null, null, false);
         }

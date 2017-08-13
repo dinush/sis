@@ -16,8 +16,8 @@
  */
 package org.apache.sis.referencing.operation.transform;
 
-import java.awt.Shape;
-import java.awt.geom.Point2D;
+import org.apache.sis.internal.referencing.j2d.Shape;
+import org.apache.sis.internal.referencing.j2d.Point2D;
 import org.opengis.geometry.DirectPosition;
 import org.opengis.referencing.operation.Matrix;
 import org.opengis.referencing.operation.MathTransform;
@@ -35,7 +35,7 @@ import org.apache.sis.geometry.DirectPosition2D;
  * @since   0.5
  * @module
  */
-final class PassThroughTransform2D extends PassThroughTransform implements MathTransform2D {
+final class PassThroughTransform2D extends PassThroughTransform implements MathTransform {
     /**
      * Serial number for inter-operability with different versions.
      */
@@ -60,7 +60,6 @@ final class PassThroughTransform2D extends PassThroughTransform implements MathT
      * Implementation is similar but not identical to {@link AbstractMathTransform2D#transform(Point2D, Point2D)}.
      * The difference is in the {@code transform(…)} method invoked.
      */
-    @Override
     public Point2D transform(final Point2D ptSrc, final Point2D ptDst) throws TransformException {
         final double[] ord = new double[] {ptSrc.getX(), ptSrc.getY()};
         transform(ord, 0, ord, 0, 1);
@@ -75,7 +74,6 @@ final class PassThroughTransform2D extends PassThroughTransform implements MathT
     /**
      * Transforms the specified shape.
      */
-    @Override
     public Shape createTransformedShape(final Shape shape) throws TransformException {
         return AbstractMathTransform2D.createTransformedShape(this, shape, null, null, false);
     }
@@ -86,7 +84,6 @@ final class PassThroughTransform2D extends PassThroughTransform implements MathT
      * @return {@inheritDoc}
      * @throws TransformException if the {@linkplain #getSubTransform() sub-transform} failed.
      */
-    @Override
     public Matrix derivative(final Point2D point) throws TransformException {
         return super.derivative(point instanceof DirectPosition ?
                 (DirectPosition) point : new DirectPosition2D(point.getX(), point.getY()));

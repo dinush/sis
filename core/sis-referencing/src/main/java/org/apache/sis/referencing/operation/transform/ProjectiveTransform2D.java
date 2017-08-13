@@ -16,8 +16,8 @@
  */
 package org.apache.sis.referencing.operation.transform;
 
-import java.awt.Shape;
-import java.awt.geom.Point2D;
+import org.apache.sis.internal.referencing.j2d.Shape;
+import org.apache.sis.internal.referencing.j2d.Point2D;
 import org.opengis.referencing.operation.Matrix;
 import org.opengis.referencing.operation.NoninvertibleTransformException;
 import org.opengis.referencing.operation.TransformException;
@@ -54,7 +54,6 @@ final class ProjectiveTransform2D extends ProjectiveTransform implements LinearT
      * Implementation is similar but not identical to {@link AbstractMathTransform2D#transform(Point2D, Point2D)}.
      * The difference is in the {@code transform(…)} method invoked.
      */
-    @Override
     public Point2D transform(final Point2D ptSrc, final Point2D ptDst) {
         final double[] ord = new double[] {ptSrc.getX(), ptSrc.getY()};
         transform(ord, 0, ord, 0, 1);
@@ -69,7 +68,6 @@ final class ProjectiveTransform2D extends ProjectiveTransform implements LinearT
     /**
      * Transforms the specified shape.
      */
-    @Override
     public Shape createTransformedShape(final Shape shape) throws TransformException {
         return AbstractMathTransform2D.createTransformedShape(this, shape, null, null, false);
     }

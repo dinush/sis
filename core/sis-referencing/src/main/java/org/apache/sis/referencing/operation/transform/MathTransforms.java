@@ -18,7 +18,7 @@ package org.apache.sis.referencing.operation.transform;
 
 import java.util.List;
 import java.util.Collections;
-import java.awt.geom.AffineTransform;
+import org.apache.sis.internal.referencing.j2d.AffineTransform;
 import org.opengis.util.FactoryException;
 import org.opengis.geometry.MismatchedDimensionException;
 import org.opengis.referencing.operation.Matrix;

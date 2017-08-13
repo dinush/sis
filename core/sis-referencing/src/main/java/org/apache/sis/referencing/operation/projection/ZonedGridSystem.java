@@ -23,7 +23,7 @@ import org.opengis.parameter.ParameterDescriptor;
 import org.opengis.referencing.operation.OperationMethod;
 import org.opengis.referencing.operation.TransformException;
 import org.opengis.referencing.operation.Matrix;
-import org.opengis.referencing.operation.MathTransform2D;
+import org.opengis.referencing.operation.MathTransform;
 import org.opengis.referencing.operation.MathTransformFactory;
 import org.opengis.referencing.operation.NoninvertibleTransformException;
 import org.apache.sis.referencing.operation.transform.AbstractMathTransform;
@@ -99,7 +99,7 @@ public class ZonedGridSystem extends AbstractMathTransform2D implements Serializ
     /**
      * The inverse of this map projection.
      */
-    private final MathTransform2D inverse;
+    private final MathTransform inverse;
 
     /**
      * Creates a Zoned Grid System from the given parameters.
@@ -177,7 +177,7 @@ public class ZonedGridSystem extends AbstractMathTransform2D implements Serializ
      * @return the inverse of this map projection.
      */
     @Override
-    public MathTransform2D inverse() {
+    public MathTransform inverse() {
         return inverse;
     }
 
