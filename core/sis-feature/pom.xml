@@ -37,7 +37,7 @@
        =========================================================== -->
   <groupId>org.apache.sis.core</groupId>
   <artifactId>sis-feature</artifactId>
-  <packaging>jar</packaging>
+  <packaging>aar</packaging>
   <name>Apache SIS features</name>
   <description>
   <!-- Left alignment because this description will be copied in META-INF/MANIFEST.MF
@@ -88,16 +88,22 @@ Representations of geographic features.
       <groupId>org.apache.sis.core</groupId>
       <artifactId>sis-utility</artifactId>
       <version>${project.version}</version>
+      <scope>provided</scope>
+      <type>aar</type>
     </dependency>
     <dependency>
       <groupId>org.apache.sis.core</groupId>
       <artifactId>sis-metadata</artifactId>
       <version>${project.version}</version>
+      <scope>provided</scope>
+      <type>aar</type>
     </dependency>
     <dependency>
       <groupId>org.apache.sis.core</groupId>
       <artifactId>sis-referencing</artifactId>
       <version>${project.version}</version>
+      <scope>provided</scope>
+      <type>aar</type>
     </dependency>
     <dependency>
       <groupId>com.esri.geometry</groupId>
