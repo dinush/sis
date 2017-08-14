@@ -21,7 +21,7 @@ import java.util.Map;
 import java.util.IdentityHashMap;
 import java.util.ConcurrentModificationException;
 import java.util.Iterator;
-import java.awt.geom.Rectangle2D;
+import org.apache.sis.internal.referencing.j2d.Rectangle2D;
 import javax.xml.bind.annotation.XmlTransient;
 import org.opengis.util.FactoryException;
 import org.opengis.geometry.Envelope;

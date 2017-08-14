@@ -16,7 +16,7 @@
  */
 package org.apache.sis.internal.referencing.j2d;
 
-import java.awt.geom.Rectangle2D;
+import org.apache.sis.internal.referencing.j2d.Rectangle2D;
 import org.opengis.geometry.Envelope;
 import org.opengis.geometry.DirectPosition;
 import org.apache.sis.geometry.Envelope2D;
@@ -138,8 +138,7 @@ public class IntervalRectangle extends Rectangle2D {
      *
      * @return {@code true} if this rectangle is empty; {@code false} otherwise.
      */
-    @Override
-    public final boolean isEmpty() {
+    public final boolean isThisEmpty() {
         return !(xmin < xmax && ymin < ymax);
     }
 
@@ -393,7 +392,7 @@ public class IntervalRectangle extends Rectangle2D {
      * @see #OUT_RIGHT
      * @see #OUT_BOTTOM
      */
-    @Override
+    /*@Override
     public final int outcode(final double x, final double y) {
         int out = 0;
         if (!(xmax > xmin)) out |= OUT_LEFT | OUT_RIGHT;
@@ -404,7 +403,7 @@ public class IntervalRectangle extends Rectangle2D {
         else if (y < ymin)  out |= OUT_TOP;
         else if (y > ymax)  out |= OUT_BOTTOM;
         return out;
-    }
+    }*/
 
     /**
      * Intersects a {@link Rectangle2D} object with this rectangle.
@@ -438,7 +437,6 @@ public class IntervalRectangle extends Rectangle2D {
      *
      * @see #intersect(Rectangle2D)
      */
-    @Override
     public final Rectangle2D createIntersection(final Rectangle2D rect) {
         final IntervalRectangle r = new IntervalRectangle();
         r.xmin = Math.max(xmin, rect.getMinX());
@@ -455,7 +453,6 @@ public class IntervalRectangle extends Rectangle2D {
      * @param  rect  the {@code Rectangle2D} to be combined with this rectangle.
      * @return the smallest {@code Rectangle2D} containing both the specified {@code Rectangle2D} and this one.
      */
-    @Override
     public final Rectangle2D createUnion(final Rectangle2D rect) {
         final IntervalRectangle r = new IntervalRectangle();
         r.xmin = Math.min(xmin, rect.getMinX());
@@ -493,7 +490,6 @@ public class IntervalRectangle extends Rectangle2D {
      *
      * @param  rect  the {@code Rectangle2D} to add to this rectangle.
      */
-    @Override
     public final void add(final Rectangle2D rect) {
         double t;
         if ((t = rect.getMinX()) < xmin) xmin = t;
