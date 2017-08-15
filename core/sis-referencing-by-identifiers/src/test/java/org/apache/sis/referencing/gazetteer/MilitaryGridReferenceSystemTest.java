@@ -154,16 +154,16 @@ public final strictfp class MilitaryGridReferenceSystemTest extends TestCase {
              * distance from that centre.  In the South hemisphere, this is the value on the zone border
              * where we have the maximal distance from the centre.
              */
-            geographic.x = φ;
-            geographic.y = isSouth ? zoneBorder : zoneCentre;
+            geographic.x = (float) φ;
+            geographic.y = (float) (isSouth ? zoneBorder : zoneCentre);
             final double ymin = projection.transform(geographic, projected).getOrdinate(1);
             /*
              * Computes the largest possible northing value. This is not only the value of the next latitude band;
              * we also need to interchange the "zone centre" and "zone border" logic described in previous comment.
              * The result is that we will have some overlap in the northing value of consecutive latitude bands.
              */
-            geographic.y = isSouth ? zoneCentre : zoneBorder;
-            geographic.x = MilitaryGridReferenceSystem.Decoder.upperBound(φ);
+            geographic.y = (float) (isSouth ? zoneCentre : zoneBorder);
+            geographic.x = (float) MilitaryGridReferenceSystem.Decoder.upperBound(φ);
             final double ymax = projection.transform(geographic, projected).getOrdinate(1);
             /*
              * Computes the value that we will encode in the MilitaryGridReferenceSystem.Decoder.ROW_RESOLVER table.
@@ -619,8 +619,8 @@ public final strictfp class MilitaryGridReferenceSystemTest extends TestCase {
         final DirectPosition2D expected = new DirectPosition2D();
         final DirectPosition2D position = new DirectPosition2D(CommonCRS.WGS84.geographic());
         for (int i=0; i<100; i++) {
-            position.x = random.nextDouble() * 180 -  90;       // Latitude  (despite the 'x' field name)
-            position.y = random.nextDouble() * 358 - 179;       // Longitude (despite the 'y' field name)
+            position.x = (float) (random.nextDouble() * 180 -  90);       // Latitude  (despite the 'x' field name)
+            position.y = (float) (random.nextDouble() * 358 - 179);       // Longitude (despite the 'y' field name)
             final String reference = coder.encode(position);
             final DirectPosition r = decode(coder, reference);
             final ProjectedCRS crs = (ProjectedCRS) r.getCoordinateReferenceSystem();

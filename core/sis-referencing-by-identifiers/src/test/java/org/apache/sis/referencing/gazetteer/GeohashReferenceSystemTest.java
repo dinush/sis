@@ -107,8 +107,8 @@ public final strictfp class GeohashReferenceSystemTest extends TestCase {
         final GeohashReferenceSystem.Coder coder = instance().createCoder();
         final DirectPosition2D position = new DirectPosition2D(CommonCRS.WGS84.geographic());
         for (final Place place : PLACES) {
-            position.x = place.latitude;
-            position.y = place.longitude;
+            position.x = (float) place.latitude;
+            position.y = (float) place.longitude;
             assertEquals(place.name, place.geohash, coder.encode(position));
         }
     }
