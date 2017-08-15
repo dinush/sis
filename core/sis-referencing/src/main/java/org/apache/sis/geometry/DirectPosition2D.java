@@ -16,6 +16,7 @@
  */
 package org.apache.sis.geometry;
 
+import java.io.Serializable;
 import java.util.Objects;
 
 import org.apache.sis.internal.referencing.j2d.Point2D;
@@ -70,7 +71,7 @@ import static org.apache.sis.util.ArgumentChecks.ensureDimensionMatches;
  * @since 0.3
  * @module
  */
-public class DirectPosition2D extends Point2D.Double implements DirectPosition, Cloneable {
+public class DirectPosition2D extends Point2D.Double implements DirectPosition, Cloneable, Serializable {
     /**
      * Serial number for inter-operability with different versions.
      */
