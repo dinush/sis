@@ -1,6 +1,7 @@
 package org.apache.sis.internal.referencing.j2d;
 
 import android.graphics.Matrix;
+import org.opengis.referencing.operation.NoninvertibleTransformException;
 
 /**
  * Wrapper class for Android {@link Matrix}.
@@ -334,5 +335,17 @@ public class AffineTransform extends Matrix {
         Matrix matrix = new Matrix();
         matrix.postRotate((float) angle, (float) x, (float) y);
         return (AffineTransform) matrix;
+    }
+
+    public AffineTransform createInverse() throws NoninvertibleTransformException {
+        if (!this.invert(this)) {
+            throw new NoninvertibleTransformException();
+        }
+
+        return this;
+    }
+
+    public void concatenate(AffineTransform at) {
+        postConcat(at);
     }
 }
