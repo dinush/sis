@@ -52,6 +52,20 @@ public abstract class Point2D extends PointF {
         setLocation(position.x, position.y);
     }
 
+    public double distance(double px, double py) {
+        return Math.sqrt(distanceSq(px, py));
+    }
+
+    public static double distanceSq(double x1, double y1, double x2, double y2) {
+        x2 -= x1;
+        y2 -= y1;
+        return x2 * x2 + y2 * y2;
+    }
+
+    public double distanceSq(double px, double py) {
+        return Point2D.distanceSq(getX(), getY(), px, py);
+    }
+
     public static class Double extends Point2D {
 
         public Double() {
