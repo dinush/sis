@@ -27,7 +27,6 @@ import org.opengis.parameter.ParameterDescriptorGroup;
 import org.opengis.referencing.operation.Matrix;
 import org.opengis.referencing.operation.MathTransform;
 import org.opengis.referencing.operation.MathTransform1D;
-import org.opengis.referencing.operation.MathTransform2D;
 import org.opengis.referencing.operation.MathTransformFactory;
 import org.opengis.referencing.operation.TransformException;
 import org.opengis.referencing.operation.NoninvertibleTransformException;
@@ -138,7 +137,7 @@ class ConcatenatedTransform extends AbstractMathTransform implements Serializabl
     /**
      * Concatenates the two given transforms.
      * If the concatenation result works with two-dimensional input and output points,
-     * then the returned transform will implement {@link MathTransform2D}.
+     * then the returned transform will implement {@link MathTransform}.
      * Likewise if the concatenation result works with one-dimensional input and output points,
      * then the returned transform will implement {@link MathTransform1D}.
      *
@@ -240,9 +239,9 @@ class ConcatenatedTransform extends AbstractMathTransform implements Serializabl
             /*
              * Result needs to be a MathTransform2D.
              */
-            if (tr1 instanceof MathTransform2D && tr2 instanceof MathTransform2D) {
-                return new ConcatenatedTransformDirect2D((MathTransform2D) tr1,
-                                                         (MathTransform2D) tr2);
+            if (tr1 instanceof MathTransform && tr2 instanceof MathTransform) {
+                return new ConcatenatedTransformDirect2D(tr1,
+                                                         tr2);
             } else {
                 return new ConcatenatedTransform2D(tr1, tr2);
             }

@@ -20,7 +20,6 @@ import javax.measure.Quantity;
 
 import org.opengis.referencing.operation.MathTransform;
 import org.opengis.referencing.operation.Matrix;
-import org.opengis.referencing.operation.MathTransform2D;
 import org.opengis.referencing.operation.TransformException;
 import org.apache.sis.referencing.datum.DatumShiftGrid;
 import org.apache.sis.referencing.operation.matrix.NoninvertibleMatrixException;
@@ -75,8 +74,8 @@ final class InterpolatedTransform2D extends InterpolatedTransform implements Mat
      * Returns the inverse transform of this transform.
      */
     @Override
-    public MathTransform2D inverse() {
-        return (MathTransform2D) super.inverse();
+    public MathTransform inverse() {
+        return super.inverse();
     }
 
     /**
@@ -132,8 +131,8 @@ final class InterpolatedTransform2D extends InterpolatedTransform implements Mat
          * Returns the inverse transform of this transform.
          */
         @Override
-        public MathTransform2D inverse() {
-            return (MathTransform2D) super.inverse();
+        public MathTransform inverse() {
+            return super.inverse();
         }
     }
 }

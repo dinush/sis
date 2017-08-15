@@ -23,7 +23,6 @@ import javax.measure.quantity.Length;
 import org.opengis.referencing.datum.Ellipsoid;
 import org.opengis.referencing.operation.MathTransform;
 import org.opengis.referencing.operation.Matrix;
-import org.opengis.referencing.operation.MathTransform2D;
 import org.opengis.referencing.operation.TransformException;
 import org.apache.sis.referencing.datum.DatumShiftGrid;
 
@@ -74,8 +73,8 @@ final class InterpolatedGeocentricTransform2D extends InterpolatedGeocentricTran
      * Returns the inverse transform of this transform.
      */
     @Override
-    public MathTransform2D inverse() {
-        return (MathTransform2D) super.inverse();
+    public MathTransform inverse() {
+        return super.inverse();
     }
 
     /**
@@ -128,8 +127,8 @@ final class InterpolatedGeocentricTransform2D extends InterpolatedGeocentricTran
          * Returns the inverse transform of this transform.
          */
         @Override
-        public MathTransform2D inverse() {
-            return (MathTransform2D) super.inverse();
+        public MathTransform inverse() {
+            return super.inverse();
         }
     }
 }

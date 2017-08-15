@@ -20,7 +20,7 @@ import org.opengis.geometry.DirectPosition;
 import org.opengis.parameter.ParameterValueGroup;
 import org.opengis.parameter.ParameterDescriptorGroup;
 import org.opengis.referencing.operation.Matrix;
-import org.opengis.referencing.operation.MathTransform2D;
+import org.opengis.referencing.operation.MathTransform;
 import org.opengis.referencing.operation.NoninvertibleTransformException;
 import org.apache.sis.geometry.DirectPosition2D;
 import org.apache.sis.parameter.Parameterized;
@@ -40,7 +40,7 @@ import static org.apache.sis.util.ArgumentChecks.ensureDimensionMatches;
 
 /**
  * Transforms two-dimensional coordinate points using an affine transform. This class both extends
- * {@link AffineTransform} and implements {@link MathTransform2D}, so it can be used as a bridge
+ * {@link AffineTransform} and implements {@link MathTransform}, so it can be used as a bridge
  * between Java2D and the referencing module. Note that this bridge role involve a tricky issue with
  * the {@link #equals(Object) equals} method, hopefully to occur only in exceptional corner cases.
  *
