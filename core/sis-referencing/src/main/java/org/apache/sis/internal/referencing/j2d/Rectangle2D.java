@@ -4,8 +4,8 @@ public abstract class Rectangle2D extends RectangularShape implements Shape {
 
     public double x         = left;
     public double y         = top;
-    public double width     = right - left;
-    public double height    = top - bottom;
+    public double width     = right > left ? right - left : left - right;
+    public double height    = top > bottom ? top - bottom : bottom - top;
 
     public Rectangle2D() {
         super();
@@ -80,11 +80,11 @@ public abstract class Rectangle2D extends RectangularShape implements Shape {
     }
 
     public double getWidth() {
-        return right - left;
+        return width;
     }
 
     public double getHeight() {
-        return top - bottom;
+        return height;
     }
 
     public void setRect(double x, double y, double width, double height) {
