@@ -18,6 +18,8 @@ package org.apache.sis.referencing.operation.projection;
 
 import java.util.EnumMap;
 import java.io.Serializable;
+
+import org.apache.sis.internal.referencing.j2d.MathTransform2D;
 import org.opengis.util.FactoryException;
 import org.opengis.parameter.ParameterDescriptor;
 import org.opengis.referencing.operation.OperationMethod;
@@ -99,7 +101,7 @@ public class ZonedGridSystem extends AbstractMathTransform2D implements Serializ
     /**
      * The inverse of this map projection.
      */
-    private final MathTransform inverse;
+    private final MathTransform2D inverse;
 
     /**
      * Creates a Zoned Grid System from the given parameters.
@@ -177,7 +179,7 @@ public class ZonedGridSystem extends AbstractMathTransform2D implements Serializ
      * @return the inverse of this map projection.
      */
     @Override
-    public MathTransform inverse() {
+    public MathTransform2D inverse() {
         return inverse;
     }
 

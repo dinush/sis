@@ -16,12 +16,12 @@
  */
 package org.apache.sis.geometry;
 
+import org.apache.sis.internal.referencing.j2d.MathTransform2D;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
 import org.opengis.referencing.crs.GeographicCRS;
 import org.opengis.referencing.crs.ProjectedCRS;
 import org.opengis.referencing.operation.Conversion;
 import org.opengis.referencing.operation.CoordinateOperation;
-import org.opengis.referencing.operation.MathTransform2D;
 import org.opengis.referencing.operation.NoninvertibleTransformException;
 import org.opengis.referencing.operation.TransformException;
 import org.opengis.util.FactoryException;
@@ -107,7 +107,7 @@ public abstract strictfp class TransformTestCase<G> extends TestCase {
          * Those values are the same than in EnvelopesTest.testTransform().
          */
         final G expected = createFromExtremums(targetCRS, 166021.56, -2214294.03,
-                                                          833978.44,  4432069.06);
+                833978.44,  4432069.06);
         assertGeometryEquals(expected, rectXY, LINEAR_TOLERANCE, LINEAR_TOLERANCE);
         /*
          * Test the inverse conversion.
@@ -129,14 +129,14 @@ public abstract strictfp class TransformTestCase<G> extends TestCase {
     public final void testTransformOverPole() throws FactoryException, TransformException {
         final ProjectedCRS sourceCRS = (ProjectedCRS) CRS.fromWKT(
                 "PROJCS[“WGS 84 / Antarctic Polar Stereographic”,\n" +
-                "  GEOGCS[“WGS 84”,\n" +
-                "    DATUM[“World Geodetic System 1984”,\n" +
-                "      SPHEROID[“WGS 84”, 6378137.0, 298.257223563]],\n" +
-                "    PRIMEM[“Greenwich”, 0.0],\n" +
-                "    UNIT[“degree”, 0.017453292519943295]],\n" +
-                "  PROJECTION[“Polar Stereographic (variant B)”],\n" +
-                "  PARAMETER[“standard_parallel_1”, -71.0],\n" +
-                "  UNIT[“m”, 1.0]]");
+                        "  GEOGCS[“WGS 84”,\n" +
+                        "    DATUM[“World Geodetic System 1984”,\n" +
+                        "      SPHEROID[“WGS 84”, 6378137.0, 298.257223563]],\n" +
+                        "    PRIMEM[“Greenwich”, 0.0],\n" +
+                        "    UNIT[“degree”, 0.017453292519943295]],\n" +
+                        "  PROJECTION[“Polar Stereographic (variant B)”],\n" +
+                        "  PARAMETER[“standard_parallel_1”, -71.0],\n" +
+                        "  UNIT[“m”, 1.0]]");
         final GeographicCRS   targetCRS  = sourceCRS.getBaseCRS();
         final Conversion      conversion = inverse(sourceCRS.getConversionFromBase());
         final MathTransform2D transform  = (MathTransform2D) conversion.getMathTransform();
@@ -145,7 +145,7 @@ public abstract strictfp class TransformTestCase<G> extends TestCase {
          */
         G rectangle = createFromExtremums(sourceCRS,
                 -3943612.4042124213, -4078471.954436003,
-                 3729092.5890516187,  4033483.085688618);
+                3729092.5890516187,  4033483.085688618);
         /*
          * This is what we get without special handling of singularity point.
          * Note that is does not include the South pole as we would expect.
@@ -153,10 +153,10 @@ public abstract strictfp class TransformTestCase<G> extends TestCase {
          * larger amount of points.
          */
         G expected = createFromExtremums(targetCRS,
-            //  -178.4935231040927  -56.61747883535035          // empirical values
+                //  -178.4935231040927  -56.61747883535035          // empirical values
                 -179.8650137390031, -88.99136583196396,         // anti-regression values
-            //   178.8122742080059  -40.90577500420587]         // empirical values
-                 137.9769431693009, -40.90577500420587);        // anti-regression values
+                //   178.8122742080059  -40.90577500420587]         // empirical values
+                137.9769431693009, -40.90577500420587);        // anti-regression values
         /*
          * Tests what we actually get. First, test using the method working on MathTransform.
          * Next, test again the same transform, but using the API on Envelope objects.

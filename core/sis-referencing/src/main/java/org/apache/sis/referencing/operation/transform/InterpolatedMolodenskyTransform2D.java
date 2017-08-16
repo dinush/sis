@@ -26,6 +26,7 @@ import org.apache.sis.referencing.datum.DatumShiftGrid;
 
 import org.apache.sis.internal.referencing.j2d.Point2D;
 import org.apache.sis.internal.referencing.j2d.Shape;
+import org.apache.sis.internal.referencing.j2d.MathTransform2D;
 
 
 /**
@@ -36,7 +37,7 @@ import org.apache.sis.internal.referencing.j2d.Shape;
  * @since   0.7
  * @module
  */
-final class InterpolatedMolodenskyTransform2D extends InterpolatedMolodenskyTransform implements MathTransform {
+final class InterpolatedMolodenskyTransform2D extends InterpolatedMolodenskyTransform implements MathTransform2D {
     /**
      * Serial number for compatibility with different versions.
      */
@@ -74,8 +75,8 @@ final class InterpolatedMolodenskyTransform2D extends InterpolatedMolodenskyTran
      * Returns the inverse transform of this transform.
      */
     @Override
-    public MathTransform inverse() {
-        return super.inverse();
+    public MathTransform2D inverse() {
+        return (MathTransform2D) super.inverse();
     }
 
     /**
@@ -86,7 +87,7 @@ final class InterpolatedMolodenskyTransform2D extends InterpolatedMolodenskyTran
      * @since   0.7
      * @module
      */
-    static final class Inverse extends InterpolatedMolodenskyTransform.Inverse implements MathTransform {
+    static final class Inverse extends InterpolatedMolodenskyTransform.Inverse implements MathTransform2D {
         /**
          * Serial number for inter-operability with different versions.
          */
@@ -128,8 +129,8 @@ final class InterpolatedMolodenskyTransform2D extends InterpolatedMolodenskyTran
          * Returns the inverse transform of this transform.
          */
         @Override
-        public MathTransform inverse() {
-            return super.inverse();
+        public MathTransform2D inverse() {
+            return (MathTransform2D) super.inverse();
         }
     }
 }

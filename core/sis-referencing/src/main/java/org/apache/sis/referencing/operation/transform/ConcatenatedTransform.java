@@ -19,17 +19,19 @@ package org.apache.sis.referencing.operation.transform;
 import java.util.List;
 import java.util.ArrayList;
 import java.io.Serializable;
+
+import org.apache.sis.internal.referencing.j2d.MathTransform2D;
+import org.opengis.referencing.operation.MathTransform;
+import org.opengis.referencing.operation.MathTransform1D;
+import org.opengis.referencing.operation.NoninvertibleTransformException;
+import org.opengis.referencing.operation.Matrix;
+import org.opengis.referencing.operation.TransformException;
+import org.opengis.referencing.operation.MathTransformFactory;
 import org.opengis.util.FactoryException;
 import org.opengis.geometry.DirectPosition;
 import org.opengis.geometry.MismatchedDimensionException;
 import org.opengis.parameter.ParameterValueGroup;
 import org.opengis.parameter.ParameterDescriptorGroup;
-import org.opengis.referencing.operation.Matrix;
-import org.opengis.referencing.operation.MathTransform;
-import org.opengis.referencing.operation.MathTransform1D;
-import org.opengis.referencing.operation.MathTransformFactory;
-import org.opengis.referencing.operation.TransformException;
-import org.opengis.referencing.operation.NoninvertibleTransformException;
 import org.apache.sis.parameter.Parameterized;
 import org.apache.sis.referencing.operation.matrix.Matrices;
 import org.apache.sis.internal.referencing.provider.GeocentricAffine;
@@ -239,9 +241,9 @@ class ConcatenatedTransform extends AbstractMathTransform implements Serializabl
             /*
              * Result needs to be a MathTransform2D.
              */
-            if (tr1 instanceof MathTransform && tr2 instanceof MathTransform) {
-                return new ConcatenatedTransformDirect2D(tr1,
-                                                         tr2);
+            if (tr1 instanceof MathTransform2D && tr2 instanceof MathTransform2D) {
+                return new ConcatenatedTransformDirect2D((MathTransform2D)tr1,
+                                                         (MathTransform2D)tr2);
             } else {
                 return new ConcatenatedTransform2D(tr1, tr2);
             }

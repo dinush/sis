@@ -18,6 +18,7 @@ package org.apache.sis.referencing.operation.transform;
 
 import org.apache.sis.internal.referencing.j2d.Shape;
 import org.apache.sis.internal.referencing.j2d.Point2D;
+import org.apache.sis.internal.referencing.j2d.MathTransform2D;
 import org.opengis.referencing.datum.Ellipsoid;
 import org.opengis.referencing.operation.Matrix;
 import org.opengis.referencing.operation.MathTransform;
@@ -33,7 +34,7 @@ import org.opengis.referencing.operation.TransformException;
  * @since   0.7
  * @module
  */
-final class MolodenskyTransform2D extends MolodenskyTransform implements MathTransform {
+final class MolodenskyTransform2D extends MolodenskyTransform implements MathTransform2D {
     /**
      * Serial number for compatibility with different versions.
      */
@@ -85,7 +86,7 @@ final class MolodenskyTransform2D extends MolodenskyTransform implements MathTra
      * Returns the inverse transform of this transform.
      */
     @Override
-    public MathTransform inverse() {
-        return super.inverse();
+    public MathTransform2D inverse() {
+        return (MathTransform2D) super.inverse();
     }
 }

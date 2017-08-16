@@ -18,9 +18,10 @@ package org.apache.sis.referencing.operation.transform;
 
 import java.util.Random;
 import java.io.IOException;
+
+import org.apache.sis.internal.referencing.j2d.MathTransform2D;
 import org.opengis.referencing.operation.MathTransform;
 import org.opengis.referencing.operation.MathTransform1D;
-import org.opengis.referencing.operation.MathTransform2D;
 import org.opengis.referencing.operation.TransformException;
 import org.opengis.parameter.ParameterDescriptorGroup;
 import org.opengis.parameter.ParameterValueGroup;

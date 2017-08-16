@@ -17,9 +17,11 @@
 package org.apache.sis.geometry;
 
 import org.apache.sis.internal.referencing.j2d.Line2D;
-import org.apache.sis.internal.referencing.j2d.Point2D;
+import org.apache.sis.internal.referencing.j2d.MathTransform2D;
 import org.apache.sis.internal.referencing.j2d.Rectangle2D;
+import org.apache.sis.internal.referencing.j2d.Point2D;
 import org.apache.sis.internal.referencing.j2d.AffineTransform;
+import org.apache.sis.internal.referencing.j2d.ShapeUtilities;
 import org.opengis.geometry.DirectPosition;
 import org.opengis.geometry.MismatchedDimensionException;
 import org.opengis.referencing.cs.CoordinateSystem;
@@ -30,7 +32,6 @@ import org.opengis.referencing.operation.Matrix;
 import org.opengis.referencing.operation.MathTransform;
 import org.opengis.referencing.operation.NoninvertibleTransformException;
 import org.opengis.referencing.operation.TransformException;
-import org.apache.sis.internal.referencing.j2d.ShapeUtilities;
 import org.apache.sis.referencing.operation.matrix.AffineTransforms2D;
 import org.apache.sis.util.resources.Errors;
 import org.apache.sis.util.ArgumentChecks;
@@ -164,7 +165,7 @@ public final class Shapes2D extends Static {
      * @see #transform(CoordinateOperation, Rectangle2D, Rectangle2D)
      * @see Envelopes#transform(MathTransform, Envelope)
      */
-    public static Rectangle2D transform(final MathTransform transform,
+    public static Rectangle2D transform(final MathTransform2D transform,
                                         final Rectangle2D     envelope,
                                         Rectangle2D     destination)
             throws TransformException
@@ -183,7 +184,7 @@ public final class Shapes2D extends Static {
      * the center of the source envelope projected to the target CRS.
      */
     @SuppressWarnings("fallthrough")
-    private static Rectangle2D transform(final MathTransform   transform,
+    private static Rectangle2D transform(final MathTransform2D transform,
                                          final Rectangle2D     envelope,
                                                Rectangle2D     destination,
                                          final double[]        point)
@@ -396,13 +397,13 @@ public final class Shapes2D extends Static {
             return null;
         }
         MathTransform transform = operation.getMathTransform();
-        if (!(transform instanceof MathTransform)) {
+        if (!(transform instanceof MathTransform2D)) {
             throw new MismatchedDimensionException(Errors.format(Errors.Keys.IllegalPropertyValueClass_3,
-                    "transform", MathTransform.class, MathTransform.class));
+                    "transform", MathTransform2D.class, MathTransform.class));
         }
-//        MathTransform2D mt = (MathTransform2D) transform;
+        MathTransform2D mt = (MathTransform2D) transform;
         final double[] center = new double[2];
-        destination = transform(transform, envelope, destination, center);
+        destination = transform(mt, envelope, destination, center);
         /*
          * If the source envelope crosses the expected range of valid coordinates, also projects
          * the range bounds as a safety. See the comments in transform(Envelope, ...).

@@ -18,7 +18,9 @@ package org.apache.sis.referencing.operation.transform;
 
 import java.util.List;
 import java.util.Collections;
+
 import org.apache.sis.internal.referencing.j2d.AffineTransform;
+import org.apache.sis.internal.referencing.j2d.MathTransform2D;
 import org.opengis.util.FactoryException;
 import org.opengis.geometry.MismatchedDimensionException;
 import org.opengis.referencing.operation.Matrix;
@@ -70,7 +72,7 @@ public final class MathTransforms extends Static {
      * <p>Special cases:</p>
      * <ul>
      *   <li>If {@code dimension == 1}, then the returned transform implements {@link MathTransform1D}.</li>
-     *   <li>If {@code dimension == 2}, then the returned transform implements {@link MathTransform}.</li>
+     *   <li>If {@code dimension == 2}, then the returned transform implements {@link MathTransform2D}.</li>
      * </ul>
      *
      * @param  dimension  the dimension of the transform to be returned.
@@ -223,7 +225,7 @@ public final class MathTransforms extends Static {
 
     /**
      * Concatenates the two given transforms. The returned transform will implement
-     * {@link MathTransform1D} or {@link MathTransform} if the dimensions of the
+     * {@link MathTransform1D} or {@link MathTransform2D} if the dimensions of the
      * concatenated transform are equal to 1 or 2 respectively.
      *
      * @param  tr1  the first math transform.
@@ -267,6 +269,23 @@ public final class MathTransforms extends Static {
     }
 
     /**
+     * Concatenates the given two-dimensional transforms. This is a convenience methods
+     * delegating to {@link #concatenate(MathTransform, MathTransform)} and casting the
+     * result to a {@link MathTransform2D} instance.
+     *
+     * @param  tr1  the first math transform.
+     * @param  tr2  the second math transform.
+     * @return the concatenated transform.
+     * @throws MismatchedDimensionException if the output dimension of the first transform
+     *         does not match the input dimension of the second transform.
+     */
+    public static MathTransform2D concatenate(MathTransform2D tr1, MathTransform2D tr2)
+            throws MismatchedDimensionException
+    {
+        return (MathTransform2D) concatenate((MathTransform) tr1, (MathTransform) tr2);
+    }
+
+    /**
      * Concatenates the three given transforms. This is a convenience methods doing its job
      * as two consecutive concatenations.
      *
@@ -302,6 +321,24 @@ public final class MathTransforms extends Static {
             throws MismatchedDimensionException
     {
         return (MathTransform1D) concatenate((MathTransform) tr1, (MathTransform) tr2, (MathTransform) tr3);
+    }
+
+    /**
+     * Concatenates the three given two-dimensional transforms. This is a convenience methods
+     * delegating to {@link #concatenate(MathTransform, MathTransform, MathTransform)} and
+     * casting the result to a {@link MathTransform2D} instance.
+     *
+     * @param  tr1  the first math transform.
+     * @param  tr2  the second math transform.
+     * @param  tr3  the third math transform.
+     * @return the concatenated transform.
+     * @throws MismatchedDimensionException if the output dimension of a transform
+     *         does not match the input dimension of next transform.
+     */
+    public static MathTransform2D concatenate(MathTransform2D tr1, MathTransform2D tr2, MathTransform2D tr3)
+            throws MismatchedDimensionException
+    {
+        return (MathTransform2D) concatenate((MathTransform) tr1, (MathTransform) tr2, (MathTransform) tr3);
     }
 
     /**

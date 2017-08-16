@@ -18,6 +18,7 @@ package org.apache.sis.referencing.operation.transform;
 
 import javax.measure.Quantity;
 
+import org.apache.sis.internal.referencing.j2d.MathTransform2D;
 import org.opengis.referencing.operation.MathTransform;
 import org.opengis.referencing.operation.Matrix;
 import org.opengis.referencing.operation.TransformException;
@@ -36,7 +37,7 @@ import org.apache.sis.internal.referencing.j2d.Shape;
  * @since   0.7
  * @module
  */
-final class InterpolatedTransform2D extends InterpolatedTransform implements MathTransform {
+final class InterpolatedTransform2D extends InterpolatedTransform implements MathTransform2D {
     /**
      * Serial number for compatibility with different versions.
      */
@@ -74,8 +75,8 @@ final class InterpolatedTransform2D extends InterpolatedTransform implements Mat
      * Returns the inverse transform of this transform.
      */
     @Override
-    public MathTransform inverse() {
-        return super.inverse();
+    public MathTransform2D inverse() {
+        return (MathTransform2D) super.inverse();
     }
 
     /**
@@ -94,7 +95,7 @@ final class InterpolatedTransform2D extends InterpolatedTransform implements Mat
      * @since   0.7
      * @module
      */
-    final class Inverse extends InterpolatedTransform.Inverse implements MathTransform {
+    final class Inverse extends InterpolatedTransform.Inverse implements MathTransform2D {
         /**
          * Serial number for inter-operability with different versions.
          */
@@ -131,8 +132,8 @@ final class InterpolatedTransform2D extends InterpolatedTransform implements Mat
          * Returns the inverse transform of this transform.
          */
         @Override
-        public MathTransform inverse() {
-            return super.inverse();
+        public MathTransform2D inverse() {
+            return (MathTransform2D) super.inverse();
         }
     }
 }

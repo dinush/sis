@@ -16,6 +16,7 @@
  */
 package org.apache.sis.referencing.operation.transform;
 
+import org.apache.sis.internal.referencing.j2d.MathTransform2D;
 import org.apache.sis.internal.referencing.j2d.Shape;
 import org.apache.sis.internal.referencing.j2d.Point2D;
 import javax.measure.quantity.Angle;
@@ -35,7 +36,7 @@ import org.apache.sis.referencing.datum.DatumShiftGrid;
  * @since   0.7
  * @module
  */
-final class InterpolatedGeocentricTransform2D extends InterpolatedGeocentricTransform implements MathTransform {
+final class InterpolatedGeocentricTransform2D extends InterpolatedGeocentricTransform implements MathTransform2D {
     /**
      * Serial number for compatibility with different versions.
      */
@@ -73,8 +74,8 @@ final class InterpolatedGeocentricTransform2D extends InterpolatedGeocentricTran
      * Returns the inverse transform of this transform.
      */
     @Override
-    public MathTransform inverse() {
-        return super.inverse();
+    public MathTransform2D inverse() {
+        return (MathTransform2D) super.inverse();
     }
 
     /**
@@ -85,7 +86,7 @@ final class InterpolatedGeocentricTransform2D extends InterpolatedGeocentricTran
      * @since   0.7
      * @module
      */
-    static final class Inverse extends InterpolatedGeocentricTransform.Inverse implements MathTransform {
+    static final class Inverse extends InterpolatedGeocentricTransform.Inverse implements MathTransform2D {
         /**
          * Serial number for inter-operability with different versions.
          */
@@ -127,8 +128,8 @@ final class InterpolatedGeocentricTransform2D extends InterpolatedGeocentricTran
          * Returns the inverse transform of this transform.
          */
         @Override
-        public MathTransform inverse() {
-            return super.inverse();
+        public MathTransform2D inverse() {
+            return (MathTransform2D) super.inverse();
         }
     }
 }

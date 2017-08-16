@@ -21,6 +21,8 @@ import java.util.HashMap;
 import java.util.Objects;
 import java.io.Serializable;
 import java.lang.reflect.Modifier;
+
+import org.apache.sis.internal.referencing.j2d.MathTransform2D;
 import org.opengis.parameter.ParameterValueGroup;
 import org.opengis.parameter.ParameterDescriptor;
 import org.opengis.parameter.ParameterDescriptorGroup;
@@ -207,7 +209,7 @@ public abstract class NormalizedProjection extends AbstractMathTransform2D imple
      * construction time). In addition this field is part of serialization form in order to preserve the
      * references graph.</div>
      */
-    private final MathTransform inverse;
+    private final MathTransform2D inverse;
 
     /**
      * Maps the parameters to be used for initializing {@link NormalizedProjection} and its
@@ -701,7 +703,7 @@ public abstract class NormalizedProjection extends AbstractMathTransform2D imple
      * @return the inverse of this map projection.
      */
     @Override
-    public MathTransform inverse() {
+    public MathTransform2D inverse() {
         return inverse;
     }
 

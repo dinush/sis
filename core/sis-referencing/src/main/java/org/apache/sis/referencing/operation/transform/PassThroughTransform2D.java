@@ -18,6 +18,7 @@ package org.apache.sis.referencing.operation.transform;
 
 import org.apache.sis.internal.referencing.j2d.Shape;
 import org.apache.sis.internal.referencing.j2d.Point2D;
+import org.apache.sis.internal.referencing.j2d.MathTransform2D;
 import org.opengis.geometry.DirectPosition;
 import org.opengis.referencing.operation.Matrix;
 import org.opengis.referencing.operation.MathTransform;
@@ -34,7 +35,7 @@ import org.apache.sis.geometry.DirectPosition2D;
  * @since   0.5
  * @module
  */
-final class PassThroughTransform2D extends PassThroughTransform implements MathTransform {
+final class PassThroughTransform2D extends PassThroughTransform implements MathTransform2D {
     /**
      * Serial number for inter-operability with different versions.
      */
@@ -92,12 +93,12 @@ final class PassThroughTransform2D extends PassThroughTransform implements MathT
      * Creates the inverse transform of this object.
      */
     @Override
-    public synchronized MathTransform inverse() throws NoninvertibleTransformException {
+    public synchronized MathTransform2D inverse() throws NoninvertibleTransformException {
         if (inverse == null) {
             inverse = new PassThroughTransform2D(
                     firstAffectedOrdinate, subTransform.inverse(), numTrailingOrdinates);
             inverse.inverse = this;
         }
-        return inverse;
+        return (MathTransform2D) inverse;
     }
 }

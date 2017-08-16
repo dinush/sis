@@ -17,11 +17,12 @@
 package org.apache.sis.geometry;
 
 import java.util.Collections;
+
+import org.apache.sis.internal.referencing.j2d.MathTransform2D;
 import org.opengis.geometry.Envelope;
 import org.opengis.util.FactoryException;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
 import org.opengis.referencing.operation.CoordinateOperation;
-import org.opengis.referencing.operation.MathTransform2D;
 import org.opengis.referencing.operation.TransformException;
 import org.apache.sis.referencing.crs.DefaultCompoundCRS;
 import org.apache.sis.referencing.crs.HardCodedCRS;
@@ -43,8 +44,8 @@ import static org.opengis.test.Validators.validate;
  * @module
  */
 @DependsOn({
-    GeneralEnvelopeTest.class,
-    CurveExtremumTest.class
+        GeneralEnvelopeTest.class,
+        CurveExtremumTest.class
 })
 public final strictfp class EnvelopesTest extends TransformTestCase<GeneralEnvelope> {
     /**

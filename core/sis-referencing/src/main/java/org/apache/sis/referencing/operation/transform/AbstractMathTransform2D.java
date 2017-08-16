@@ -22,6 +22,7 @@ import org.apache.sis.internal.referencing.j2d.Point2D;
 import org.apache.sis.internal.referencing.j2d.AffineTransform;
 import org.apache.sis.internal.referencing.j2d.Shape;
 import org.apache.sis.internal.referencing.j2d.Path2D;
+import org.apache.sis.internal.referencing.j2d.MathTransform2D;
 import org.opengis.referencing.operation.MathTransform;
 import org.opengis.referencing.operation.Matrix;
 import org.opengis.referencing.operation.TransformException;
@@ -60,7 +61,7 @@ import org.apache.sis.internal.referencing.j2d.ShapeUtilities;
  * @since   0.5
  * @module
  */
-public abstract class AbstractMathTransform2D extends AbstractMathTransform implements MathTransform {
+public abstract class AbstractMathTransform2D extends AbstractMathTransform implements MathTransform2D {
     /**
      * Constructor for subclasses.
      */
@@ -144,7 +145,7 @@ public abstract class AbstractMathTransform2D extends AbstractMathTransform impl
      * @return the transformed geometric shape.
      * @throws TransformException if a transformation failed.
      */
-    static Shape createTransformedShape(final MathTransform mt,
+    static Shape createTransformedShape(final MathTransform2D mt,
                                         final Shape           shape,
                                         final AffineTransform preTransform,
                                         final AffineTransform postTransform,
@@ -305,8 +306,8 @@ public abstract class AbstractMathTransform2D extends AbstractMathTransform impl
      * or throws an exception otherwise. Subclasses should override this method.
      */
     @Override
-    public MathTransform inverse() throws NoninvertibleTransformException {
-        return super.inverse();
+    public MathTransform2D inverse() throws NoninvertibleTransformException {
+        return (MathTransform2D) super.inverse();
     }
 
     /**
@@ -324,7 +325,7 @@ public abstract class AbstractMathTransform2D extends AbstractMathTransform impl
      * @since   0.5
      * @module
      */
-    protected abstract class Inverse extends AbstractMathTransform.Inverse implements MathTransform {
+    protected abstract class Inverse extends AbstractMathTransform.Inverse implements MathTransform2D {
         /**
          * Serial number for inter-operability with different versions.
          */
@@ -340,8 +341,8 @@ public abstract class AbstractMathTransform2D extends AbstractMathTransform impl
          * Returns the enclosing math transform.
          */
         @Override
-        public MathTransform inverse() {
-            return (MathTransform) super.inverse();
+        public MathTransform2D inverse() {
+            return (MathTransform2D) super.inverse();
         }
 
         /**

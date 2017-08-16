@@ -16,10 +16,10 @@
  */
 package org.apache.sis.geometry;
 
+import org.apache.sis.internal.referencing.j2d.MathTransform2D;
 import org.apache.sis.internal.referencing.j2d.Rectangle2D;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
 import org.opengis.referencing.operation.CoordinateOperation;
-import org.opengis.referencing.operation.MathTransform2D;
 import org.opengis.referencing.operation.TransformException;
 import org.apache.sis.test.DependsOn;
 

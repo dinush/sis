@@ -16,10 +16,10 @@
  */
 package org.apache.sis.referencing.operation.transform;
 
+import org.apache.sis.internal.referencing.j2d.MathTransform2D;
 import org.opengis.referencing.operation.Matrix;
 import org.opengis.referencing.operation.MathTransform;
 import org.opengis.referencing.operation.MathTransform1D;
-import org.opengis.referencing.operation.MathTransform2D;
 import org.opengis.referencing.operation.MathTransformFactory;
 import org.apache.sis.referencing.operation.matrix.Matrices;
 import org.apache.sis.referencing.operation.matrix.MatrixSIS;
@@ -186,11 +186,11 @@ public strictfp class ProjectiveTransformTest extends TransformTestCase {
     @Test
     public void testOptimize() throws TransformException {
         matrix = Matrices.create(5, 4, new double[] {
-            2, 0, 0, 0,
-            0, 3, 0, 0,
-            0, 0, 4, 0,
-            0, 0, 0, 5,
-            0, 0, 0, 1
+                2, 0, 0, 0,
+                0, 3, 0, 0,
+                0, 0, 4, 0,
+                0, 0, 0, 5,
+                0, 0, 0, 1
         });
         transform = new ProjectiveTransform(matrix).optimize();
         assertInstanceOf("Non-diagonal matrix shall not be handled by ScaleTransform.", ProjectiveTransform.class, transform);

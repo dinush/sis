@@ -201,7 +201,7 @@ public class TransferFunction implements Cloneable, Serializable {
             } else if (TransferFunctionType.EXPONENTIAL.equals(type)) {
                 transform = ExponentialTransform1D.create(base, scale);
                 if (offset != 0) {                                          // Rarely occurs in practice.
-                    transform = MathTransforms.concatenate(transform, LinearTransform1D.create(0, offset));
+                    transform = (MathTransform1D) MathTransforms.concatenate(transform, LinearTransform1D.create(0, offset));
                 }
             } else if (TransferFunctionType.LOGARITHMIC.equals(type)) {
                 if (scale == 1) {
@@ -212,7 +212,7 @@ public class TransferFunction implements Cloneable, Serializable {
                      * The ExponentialTransform1D.concatenate(…) method will rewrite the equation using
                      * mathematical identities. The result will be a function with a different base.
                      */
-                    transform = MathTransforms.concatenate(
+                    transform = (MathTransform1D) MathTransforms.concatenate(
                             LogarithmicTransform1D.create(base, 0),
                             LinearTransform1D.create(scale, offset));
                 }
@@ -255,13 +255,13 @@ public class TransferFunction implements Cloneable, Serializable {
              * exponential transform and see if the result is linear.
              */
             final LogarithmicTransform1D log = LogarithmicTransform1D.Base10.INSTANCE;
-            MathTransform1D f = MathTransforms.concatenate(function, log);
+            MathTransform1D f = (MathTransform1D) MathTransforms.concatenate(function, log);
             if (f instanceof LinearTransform) {
                 setLinearTerms((LinearTransform) f);
                 type = TransferFunctionType.EXPONENTIAL;
                 base = 10;
             } else {
-                f = MathTransforms.concatenate(log.inverse(), function);
+                f = (MathTransform1D) MathTransforms.concatenate(log.inverse(), function);
                 if (f instanceof LinearTransform) {
                     setLinearTerms((LinearTransform) f);
                     type = TransferFunctionType.LOGARITHMIC;

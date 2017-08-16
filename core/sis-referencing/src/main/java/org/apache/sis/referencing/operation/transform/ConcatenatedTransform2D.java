@@ -16,6 +16,7 @@
  */
 package org.apache.sis.referencing.operation.transform;
 
+import org.apache.sis.internal.referencing.j2d.MathTransform2D;
 import org.apache.sis.internal.referencing.j2d.Point2D;
 import org.apache.sis.internal.referencing.j2d.Shape;
 import org.opengis.geometry.DirectPosition;
@@ -34,7 +35,7 @@ import org.apache.sis.geometry.DirectPosition2D;
  * @since   0.5
  * @module
  */
-final class ConcatenatedTransform2D extends ConcatenatedTransform implements MathTransform {
+final class ConcatenatedTransform2D extends ConcatenatedTransform implements MathTransform2D {
     /**
      * Serial number for inter-operability with different versions.
      */
@@ -101,7 +102,7 @@ final class ConcatenatedTransform2D extends ConcatenatedTransform implements Mat
      * Creates the inverse transform of this object.
      */
     @Override
-    public MathTransform inverse() throws NoninvertibleTransformException {
-        return super.inverse();
+    public MathTransform2D inverse() throws NoninvertibleTransformException {
+        return (MathTransform2D) super.inverse();
     }
 }

@@ -32,7 +32,7 @@ import org.opengis.referencing.operation.TransformException;
  * @since   0.7
  * @module
  */
-public interface LinearTransform2D extends MathTransform, LinearTransform {
+public interface LinearTransform2D extends MathTransform2D, LinearTransform {
     /**
      * Returns the inverse transform, which shall be linear and two-dimensional.
      *

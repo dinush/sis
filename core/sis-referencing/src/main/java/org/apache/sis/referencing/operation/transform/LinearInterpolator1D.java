@@ -172,7 +172,7 @@ final class LinearInterpolator1D extends AbstractMathTransform1D implements Seri
                 throw new IllegalArgumentException(Resources.format(Resources.Keys.NonMonotonicSequence_1, "preimage"), e);
             }
             if (indexToValues != null) {
-                tr = MathTransforms.concatenate(tr, indexToValues);
+                tr = (MathTransform1D) MathTransforms.concatenate(tr, indexToValues);
             }
         }
         return tr;
