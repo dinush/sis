@@ -3,7 +3,7 @@ package org.apache.sis.internal.referencing.j2d;
 public abstract class Rectangle2D extends RectangularShape implements Shape {
 
     public double x         = left;
-    public double y         = top;
+    public double y         = bottom;
     public double width     = right > left ? right - left : left - right;
     public double height    = top > bottom ? top - bottom : bottom - top;
 
@@ -11,8 +11,8 @@ public abstract class Rectangle2D extends RectangularShape implements Shape {
         super();
     }
 
-    public Rectangle2D(float left, float top, float width, float height) {
-        super(left, top, left+width, top-height);
+    public Rectangle2D(float x, float y, float width, float height) {
+        super(x, y, width, height);
     }
 
     public void add(double x, double y) {
@@ -32,15 +32,15 @@ public abstract class Rectangle2D extends RectangularShape implements Shape {
     }
 
     public boolean contains(Point2D p) {
-        return super.contains(p.x, p.y);
+        return left <= p.x && p.x < right && bottom <= p.y && p.y < top;
     }
 
     public Rectangle getBounds() {
-        return new Rectangle(left, top, right, bottom);
+        return new Rectangle(left, bottom, right - left, top - bottom);
     }
 
     public Rectangle2D getBounds2D() {
-        return new Float(left, top, right-left, top-bottom);
+        return new Float(left, bottom, right-left, top-bottom);
     }
 
     public PathIterator getPathIterator(AffineTransform at) {
@@ -52,7 +52,7 @@ public abstract class Rectangle2D extends RectangularShape implements Shape {
     }
 
     public boolean intersects(double x, double y, double w, double h) {
-        return super.intersects((float)x, (float)y, (float)(x+w), (float) (y-h));
+        return super.intersects((float)x, (float) (y + h), (float)(x+w), (float) (y));
     }
 
     public boolean intersects(Rectangle2D r) {
@@ -76,7 +76,7 @@ public abstract class Rectangle2D extends RectangularShape implements Shape {
     }
 
     public double getY() {
-        return top;
+        return bottom;
     }
 
     public double getWidth() {
@@ -96,11 +96,11 @@ public abstract class Rectangle2D extends RectangularShape implements Shape {
     }
 
     public boolean contains(double x, double y, double w, double h) {
-        return super.contains((float) x, (float) y, (float) (x+w), (float) (y-h));
+        return super.contains((float) x, (float) (y + h), (float) (x+w), (float) y);
     }
 
     public void setFrame(double x, double y, double w, double h) {
-        set((float) x, (float) y, (float) (x+w), (float) (y-h));
+        set((float) x, (float) (y + h), (float) (x+w), (float) y);
     }
 
     public static class Double extends Rectangle2D {
@@ -108,8 +108,8 @@ public abstract class Rectangle2D extends RectangularShape implements Shape {
             super();
         }
 
-        public Double(double left, double top, double width, double height) {
-            super((float) left, (float) top, (float) width, (float) height);
+        public Double(double x, double y, double width, double height) {
+            super((float) x, (float) y, (float) width, (float) height);
         }
     }
 
@@ -118,8 +118,8 @@ public abstract class Rectangle2D extends RectangularShape implements Shape {
             super();
         }
 
-        public Float(float left, float top, float width, float height) {
-            super(left, top, width, height);
+        public Float(float x, float y, float width, float height) {
+            super(x, y, width, height);
         }
     }
 

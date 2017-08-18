@@ -14,7 +14,7 @@ public abstract class RectangularShape extends RectF implements Shape {
     }
 
     public RectangularShape(float x, float y, float width, float height) {
-        super(x, y, x+width, y-height);
+        super(x, y + height, x+width, y);
     }
 
     /**
@@ -157,6 +157,10 @@ public abstract class RectangularShape extends RectF implements Shape {
      */
     public void setFrameFromCenter(Point2D center, Point2D corner) {
         setFrameFromCenter(center.getX(), center.getY(), corner.getX(), corner.getY());
+    }
+
+    public boolean contains(float x, float y) {
+        return left <= x && x < right && bottom <= y && y < top;
     }
 
     public boolean contains(Point2D point) {

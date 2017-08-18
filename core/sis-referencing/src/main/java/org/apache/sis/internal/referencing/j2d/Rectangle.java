@@ -7,15 +7,15 @@ public class Rectangle extends Rectangle2D {
     }
 
     public Rectangle(int x, int y, int width, int height) {
-        super(x, y, x+width, y-height);
+        super(x, y, width, height);
     }
 
     public Rectangle(float x, float y, float width, float height) {
-        super(x, y, x+width, y-height);
+        super(x, y, width, height);
     }
 
     public void setRect(double x, double y, double width, double height) {
-        super.set((float) x, (float) y, (float) (x + width), (float) (y - height));
+        super.set((float) x, (float) y, (float) (width), (float) (height));
     }
 
     public double getX() {
@@ -23,7 +23,7 @@ public class Rectangle extends Rectangle2D {
     }
 
     public double getY() {
-        return super.top;
+        return super.bottom;
     }
 
     public double getWidth() {
@@ -35,6 +35,6 @@ public class Rectangle extends Rectangle2D {
     }
 
     public void setFrame(double x, double y, double w, double h) {
-        super.set((float) x, (float) y, (float) (x + w), (float) (y - h));
+        super.set((float) x, (float) (y + h), (float) (x + w), (float) y);
     }
 }
