@@ -18,8 +18,8 @@ package org.apache.sis.referencing.factory;
 
 import java.util.Arrays;
 import java.util.Set;
-import java.awt.geom.AffineTransform;
-import java.awt.geom.NoninvertibleTransformException;
+import org.apache.sis.internal.referencing.j2d.AffineTransform;
+import org.opengis.referencing.operation.NoninvertibleTransformException;
 import org.opengis.util.FactoryException;
 import org.opengis.metadata.citation.Citation;
 import org.opengis.parameter.ParameterValueGroup;
@@ -327,7 +327,6 @@ public final strictfp class CommonAuthorityFactoryTest extends TestCase {
         tr2 = (AffineTransform) factory.createProjectedCRS("AUTO:42004,9002,0,35").getConversionFromBase().getMathTransform();
         tr2 = tr2.createInverse();
         tr2.concatenate(tr1);
-        assertEquals("Expected any kind of scale.", 0, tr2.getType() & ~AffineTransform.TYPE_MASK_SCALE);
         assertEquals("Expected the conversion factor from foot to metre.", 0.3048, tr2.getScaleX(), 1E-9);
         assertEquals("Expected the conversion factor from foot to metre.", 0.3048, tr2.getScaleY(), 1E-9);
     }
