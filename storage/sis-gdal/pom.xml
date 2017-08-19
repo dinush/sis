@@ -37,7 +37,7 @@
        =========================================================== -->
   <groupId>org.apache.sis.storage</groupId>
   <artifactId>sis-gdal</artifactId>
-  <packaging>jar</packaging>
+  <packaging>aar</packaging>
   <name>Apache SIS bindings for Proj4</name>
   <description>
   <!-- Left alignment because this description will be copied in META-INF/MANIFEST.MF
@@ -81,6 +81,8 @@ Referencing services from Proj4 through GeoAPI interfaces.
       <groupId>org.apache.sis.core</groupId>
       <artifactId>sis-referencing</artifactId>
       <version>${project.version}</version>
+      <scope>provided</scope>
+      <type>aar</type>
     </dependency>
     <dependency>
       <groupId>org.apache.sis.core</groupId>

@@ -37,7 +37,7 @@
        =========================================================== -->
   <groupId>org.apache.sis.storage</groupId>
   <artifactId>sis-netcdf</artifactId>
-  <packaging>jar</packaging>
+  <packaging>aar</packaging>
   <name>Apache SIS NetCDF storage</name>
   <description>
   <!-- Left alignment because this description will be copied in META-INF/MANIFEST.MF
@@ -94,6 +94,8 @@ Bridge between NetCDF Climate and Forecast (CF) convention and ISO 19115 metadat
       <groupId>org.apache.sis.storage</groupId>
       <artifactId>sis-storage</artifactId>
       <version>${project.version}</version>
+      <scope>provided</scope>
+      <type>aar</type>
     </dependency>
     <dependency>
       <groupId>edu.ucar</groupId>

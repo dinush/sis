@@ -37,7 +37,7 @@
        =========================================================== -->
   <groupId>org.apache.sis.storage</groupId>
   <artifactId>sis-earth-observation</artifactId>
-  <packaging>jar</packaging>
+  <packaging>aar</packaging>
   <name>Apache SIS Earth Observation storage</name>
   <description>
   <!-- Left alignment because this description will be copied in META-INF/MANIFEST.MF
@@ -105,6 +105,8 @@ Landsat and MODIS metadata files to ISO 19115 metadata.
       <groupId>org.apache.sis.storage</groupId>
       <artifactId>sis-storage</artifactId>
       <version>${project.version}</version>
+      <scope>provided</scope>
+      <type>aar</type>
     </dependency>
   </dependencies>
 

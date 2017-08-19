@@ -128,11 +128,15 @@
       <groupId>org.apache.sis.core</groupId>
       <artifactId>sis-metadata</artifactId>
       <version>${project.version}</version>
+      <scope>provided</scope>
+      <type>aar</type>
     </dependency>
     <dependency>
       <groupId>org.apache.sis.core</groupId>
       <artifactId>sis-referencing</artifactId>
       <version>${project.version}</version>
+      <scope>provided</scope>
+      <type>aar</type>
     </dependency>
     <dependency>
       <groupId>org.opengis</groupId>

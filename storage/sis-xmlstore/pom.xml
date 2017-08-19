@@ -37,7 +37,7 @@
        =========================================================== -->
   <groupId>org.apache.sis.storage</groupId>
   <artifactId>sis-xmlstore</artifactId>
-  <packaging>jar</packaging>
+  <packaging>aar</packaging>
   <name>Apache SIS XML storage</name>
   <description>
   <!-- Left alignment because this description will be copied in META-INF/MANIFEST.MF
@@ -95,11 +95,15 @@ Read and write files in the GPX format.
       <groupId>org.apache.sis.core</groupId>
       <artifactId>sis-feature</artifactId>
       <version>${project.version}</version>
+      <scope>provided</scope>
+      <type>aar</type>
     </dependency>
     <dependency>
       <groupId>org.apache.sis.storage</groupId>
       <artifactId>sis-storage</artifactId>
       <version>${project.version}</version>
+      <scope>provided</scope>
+      <type>aar</type>
     </dependency>
     <dependency>
       <groupId>com.esri.geometry</groupId>

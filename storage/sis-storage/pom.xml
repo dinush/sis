@@ -37,7 +37,7 @@
        =========================================================== -->
   <groupId>org.apache.sis.storage</groupId>
   <artifactId>sis-storage</artifactId>
-  <packaging>jar</packaging>
+  <packaging>aar</packaging>
   <name>Apache SIS common storage</name>
   <description>
   <!-- Left alignment because this description will be copied in META-INF/MANIFEST.MF
@@ -106,6 +106,8 @@ Provides the interfaces and base classes to be implemented by various storage fo
       <groupId>org.apache.sis.core</groupId>
       <artifactId>sis-feature</artifactId>
       <version>${project.version}</version>
+      <scope>provided</scope>
+      <type>aar</type>
     </dependency>
 
     <!-- Test dependencies -->
