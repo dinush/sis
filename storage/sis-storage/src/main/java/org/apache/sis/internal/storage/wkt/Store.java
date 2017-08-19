@@ -25,6 +25,8 @@ import java.io.Reader;
 import java.io.IOException;
 import java.text.ParsePosition;
 import java.text.ParseException;
+
+import android.content.Context;
 import org.opengis.metadata.Metadata;
 import org.opengis.util.FactoryException;
 import org.opengis.referencing.ReferenceSystem;

@@ -17,7 +17,6 @@
 package org.apache.sis.index.tree;
 
 //JDK imports
-import java.awt.geom.Rectangle2D;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -26,6 +25,7 @@ import org.apache.sis.geometry.DirectPosition2D;
 import org.apache.sis.geometry.Envelope2D;
 import org.apache.sis.distance.DistanceUtils;
 import org.apache.sis.distance.LatLonPointRadius;
+import org.apache.sis.internal.referencing.j2d.Rectangle2D;
 
 /**
  * Implementation of Quad Tree Index. Insertion algorithm implemented based on

@@ -16,6 +16,7 @@
  */
 package org.apache.sis.internal.storage.csv;
 
+import android.content.Context;
 import org.apache.sis.storage.DataStore;
 import org.apache.sis.storage.DataStoreException;
 import org.apache.sis.storage.DataStoreProvider;
@@ -45,6 +46,8 @@ public final class StoreProvider extends DataStoreProvider {
      * The format names for static features and moving features.
      */
     static final String NAME = "CSV", MOVING = "CSV-MF";
+
+    private final Context context;
 
     /**
      * The object to use for verifying if the first keyword is the expected one.
@@ -103,7 +106,8 @@ public final class StoreProvider extends DataStoreProvider {
     /**
      * Creates a new provider.
      */
-    public StoreProvider() {
+    public StoreProvider(final Context context) {
+        this.context = context;
     }
 
     /**
@@ -138,6 +142,6 @@ public final class StoreProvider extends DataStoreProvider {
      */
     @Override
     public DataStore open(final StorageConnector connector) throws DataStoreException {
-        return new Store(this, connector, false);
+        return new Store(this, connector, false, context);
     }
 }

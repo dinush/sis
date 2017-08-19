@@ -26,6 +26,7 @@ import java.util.List;
 import java.util.Map;
 import java.nio.charset.Charset;
 import javax.measure.Unit;
+
 import org.opengis.util.MemberName;
 import org.opengis.util.GenericName;
 import org.opengis.util.InternationalString;
@@ -44,7 +45,6 @@ import org.opengis.metadata.spatial.SpatialRepresentationType;
 import org.opengis.metadata.constraint.Restriction;
 import org.opengis.metadata.content.TransferFunctionType;
 import org.opengis.metadata.maintenance.ScopeCode;
-import org.opengis.metadata.acquisition.Context;
 import org.opengis.metadata.acquisition.OperationType;
 import org.opengis.metadata.identification.Progress;
 import org.opengis.metadata.identification.KeywordType;
@@ -116,6 +116,7 @@ import org.apache.sis.internal.jdk8.LocalDate;
 import org.apache.sis.internal.jdk8.JDK8;
 import org.apache.sis.feature.DefaultFeatureType;
 import org.apache.sis.metadata.iso.citation.DefaultResponsibleParty;
+import android.content.Context;
 
 
 /**
@@ -183,6 +184,7 @@ public class MetadataBuilder {
      * Creates a new metadata builder.
      */
     public MetadataBuilder() {
+
     }
 
     /**
@@ -908,10 +910,10 @@ public class MetadataBuilder {
      *
      * @see #addCompression(CharSequence)
      */
-    public final void setFormat(final String abbreviation) throws MetadataStoreException {
+    public final void setFormat(final String abbreviation, final Context context) throws MetadataStoreException {
         if (abbreviation != null && abbreviation.length() != 0) {
             if (format == null) {
-                format = MetadataSource.getProvided().lookup(Format.class, abbreviation);
+                format = MetadataSource.getProvided(context).lookup(Format.class, abbreviation);
                 /*
                  * Additional step for converting deprecated "name" and "specification" into non-deprecated properties.
                  * This step is not required on SIS branches that depend on development branches of GeoAPI 3.1 or 4.0.
@@ -2379,7 +2381,7 @@ parse:      for (int i = 0; i < length;) {
     public final void addAcquisitionTime(final Date time) {
         if (time != null) {
             final DefaultEvent event = new DefaultEvent();
-            event.setContext(Context.ACQUISITION);
+            event.setContext(org.opengis.metadata.acquisition.Context.ACQUISITION);
             event.setTime(time);
             final DefaultOperation op = new DefaultOperation();
             op.setSignificantEvents(singleton(event));

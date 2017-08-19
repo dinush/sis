@@ -17,6 +17,8 @@
 package org.apache.sis.internal.storage;
 
 import java.util.logging.Logger;
+
+import android.content.Context;
 import org.opengis.metadata.distribution.Format;
 import org.apache.sis.metadata.sql.MetadataSource;
 import org.apache.sis.metadata.sql.MetadataStoreException;
@@ -78,9 +80,8 @@ public abstract class DocumentedStoreProvider extends DataStoreProvider {
      *
      * @return a description of the data format.
      */
-    @Override
-    public final Format getFormat() {
-        return getFormat(null);
+    public final Format getFormat(final Context context) {
+        return getFormat(null, context);
     }
 
     /**
@@ -89,12 +90,12 @@ public abstract class DocumentedStoreProvider extends DataStoreProvider {
      * @param  listeners  where to report the warning in case of error, or {@code null} if none.
      * @return a description of the data format.
      */
-    public final Format getFormat(final WarningListeners<DataStore> listeners) {
+    public final Format getFormat(final WarningListeners<DataStore> listeners, final Context context) {
         /*
          * Note: this method does not cache the format because such caching is already done by MetadataSource.
          */
         if (name != null) try {
-            return MetadataSource.getProvided().lookup(Format.class, name);
+            return MetadataSource.getProvided(context).lookup(Format.class, name);
         } catch (MetadataStoreException e) {
             if (listeners != null) {
                 listeners.warning(null, e);

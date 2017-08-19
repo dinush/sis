@@ -30,6 +30,7 @@ import java.net.URI;
 import java.nio.charset.Charset;
 import javax.measure.Unit;
 import javax.measure.quantity.Time;
+
 import org.opengis.metadata.Metadata;
 import org.opengis.util.FactoryException;
 import org.opengis.metadata.maintenance.ScopeCode;
@@ -69,6 +70,7 @@ import org.apache.sis.internal.jdk8.Stream;
 import org.apache.sis.internal.jdk8.StreamSupport;
 import org.apache.sis.feature.AbstractFeature;
 import org.apache.sis.feature.AbstractIdentifiedType;
+import android.content.Context;
 
 
 /**
@@ -198,6 +200,8 @@ public final class Store extends DataStore {
      */
     private transient List<AbstractFeature> movingFeatures;
 
+    private final Context context;
+
     /**
      * Creates a new CSV store from the given file, URL or stream.
      *
@@ -209,10 +213,11 @@ public final class Store extends DataStore {
      * @param  immediate  {@code true} for forcing the creation of a distinct {@code Feature} instance for each line.
      * @throws DataStoreException if an error occurred while opening the stream.
      */
-    public Store(final StoreProvider provider, final StorageConnector connector, final boolean immediate)
+    public Store(final StoreProvider provider, final StorageConnector connector, final boolean immediate, final Context context)
             throws DataStoreException
     {
         super(provider, connector);
+        this.context = context;
         final Reader r = connector.getStorageAs(Reader.class);
         connector.closeAllExcept(r);
         if (r == null) {
@@ -577,7 +582,7 @@ public final class Store extends DataStore {
         if (metadata == null) {
             final MetadataBuilder builder = new MetadataBuilder();
             try {
-                builder.setFormat(timeEncoding != null && hasTrajectories ? StoreProvider.MOVING : StoreProvider.NAME);
+                builder.setFormat(timeEncoding != null && hasTrajectories ? StoreProvider.MOVING : StoreProvider.NAME, context);
             } catch (MetadataStoreException e) {
                 listeners.warning(null, e);
             }
