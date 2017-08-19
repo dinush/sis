@@ -2,10 +2,10 @@ package org.apache.sis.internal.referencing.j2d;
 
 public abstract class Rectangle2D extends RectangularShape implements Shape {
 
-    public double x         = left;
-    public double y         = bottom;
-    public double width     = right > left ? right - left : left - right;
-    public double height    = top > bottom ? top - bottom : bottom - top;
+    public double x;
+    public double y;
+    public double width;
+    public double height;
 
     public Rectangle2D() {
         super();
@@ -13,6 +13,11 @@ public abstract class Rectangle2D extends RectangularShape implements Shape {
 
     public Rectangle2D(float x, float y, float width, float height) {
         super(x, y, width, height);
+
+        this.x = x;
+        this.y = y;
+        this.width = width;
+        this.height = height;
     }
 
     public void add(double x, double y) {
@@ -21,6 +26,11 @@ public abstract class Rectangle2D extends RectangularShape implements Shape {
         float right  = (float) Math.max(super.right, x);
         float bottom = (float) Math.min(super.bottom, y);
         set(left, top, right, bottom);
+
+        this.x = left;
+        this.y = bottom;
+        this.width = right - left;
+        this.height = top - bottom;
     }
 
     public void add(Point2D position) {
@@ -89,10 +99,18 @@ public abstract class Rectangle2D extends RectangularShape implements Shape {
 
     public void setRect(double x, double y, double width, double height) {
         set((float) x, (float) (y+height), (float) (x+width), (float) y);
+        this.x = x;
+        this.y = y;
+        this.width = width;
+        this.height = height;
     }
 
     public void setRect(Rectangle2D rect) {
         set(rect);
+        this.x = rect.x;
+        this.y = rect.y;
+        this.width = rect.width;
+        this.height = rect.height;
     }
 
     public boolean contains(double x, double y, double w, double h) {
@@ -100,7 +118,7 @@ public abstract class Rectangle2D extends RectangularShape implements Shape {
     }
 
     public void setFrame(double x, double y, double w, double h) {
-        set((float) x, (float) (y + h), (float) (x+w), (float) y);
+        setRect(x, y, w, h);
     }
 
     public static class Double extends Rectangle2D {
@@ -125,8 +143,8 @@ public abstract class Rectangle2D extends RectangularShape implements Shape {
 
     class Iterator implements PathIterator {
 
-        double x;   // x coordinate of the rectangle's upper left corner.
-        double y;   // y coordinate of the rectangle's upper left corner.
+        double x;   // x coordinate of the rectangle's lower left corner.
+        double y;   // y coordinate of the rectangle's lower left corner.
         double width, height;
         AffineTransform at;
         int index = 0;
