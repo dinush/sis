@@ -334,7 +334,9 @@ public class AffineTransform extends Matrix {
     public static AffineTransform getRotateInstance(double angle, double x, double y) {
         Matrix matrix = new Matrix();
         matrix.postRotate((float) angle, (float) x, (float) y);
-        return (AffineTransform) matrix;
+        AffineTransform at = new AffineTransform();
+        at.postRotate((float) angle, (float) x, (float) y);
+        return at;
     }
 
     public AffineTransform createInverse() throws NoninvertibleTransformException {
