@@ -155,6 +155,53 @@ public class AffineTransform extends Matrix {
         super.setValues(new float[]{(float) m00, (float) m10, 0F, (float) m01, (float) m11, 0F, (float) m02, (float) m12, 1F});
     }
 
+    public void setToIdentity() {
+        setTransform(1.0, 0.0, 0.0, 1.0, 0.0, 0.0);
+    }
+
+    public void setToTranslation(double tx, double ty) {
+        setTransform(1.0, 0.0, 0.0, 1.0, tx, ty);
+    }
+
+    public void setToRotation(double theta) {
+        double sin = Math.sin(theta);
+        double cos;
+        if (sin == 1.0 || sin == -1.0) {
+            cos = 0.0;
+        } else {
+            cos = Math.cos(theta);
+            sin = (cos == -1.0 || cos == 1.0) ? 0.0 : sin;
+        }
+        setTransform(cos, sin, -sin, cos, 0.0, 0.0);
+    }
+
+    public void setToRotation(double theta, double anchorx, double anchory) {
+        setToRotation(theta);
+
+        double[] matrix = new double[6];
+        getMatrix(matrix);
+
+        double sin = matrix[1];
+        double tmp = 1.0 - matrix[0];
+        double m02 = anchorx * tmp + anchory * sin;
+        double m12 = anchory * tmp - anchorx * sin;
+        setTransform(matrix[0], matrix[1], matrix[2], matrix[3], m02, m12);
+    }
+
+    public void setToShear(double shx, double shy) {
+        setTransform(1.0, shy, shx, 1.0, 0.0, 0.0);
+    }
+
+    public void preConcatenate(AffineTransform at) {
+        float[] values = new float[9];
+        at.getValues(values);
+
+        Matrix matrix = new Matrix();
+        matrix.setValues(values);
+
+        super.preConcat(matrix);
+    }
+
     /**
      * Implementation of {@code java.awt.geom.AffineTransform.getScaleX()}
      * @return
