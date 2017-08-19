@@ -18,6 +18,8 @@ package org.apache.sis.internal.referencing.j2d;
 
 import org.apache.sis.internal.referencing.Resources;
 
+import java.io.Serializable;
+
 
 /**
  * Overrides all mutable {@link AffineTransform} methods in order to check for permission
@@ -30,7 +32,7 @@ import org.apache.sis.internal.referencing.Resources;
  * @module
  */
 @SuppressWarnings("CloneableClassWithoutClone")    // No additional fields compared to parent.
-public class ImmutableAffineTransform extends AffineTransform {
+public class ImmutableAffineTransform extends AffineTransform implements Serializable {
     /**
      * Serial number for inter-operability with different versions.
      */
