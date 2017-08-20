@@ -20,6 +20,7 @@ import java.io.Reader;
 import java.io.BufferedReader;
 import java.io.LineNumberReader;
 import java.io.IOException;
+
 import org.opengis.metadata.Metadata;
 import org.opengis.util.FactoryException;
 import org.apache.sis.storage.DataStore;
@@ -30,6 +31,7 @@ import org.apache.sis.storage.StorageConnector;
 import org.apache.sis.setup.OptionKey;
 import org.apache.sis.storage.Resource;
 import org.apache.sis.util.Debug;
+import android.content.Context;
 
 
 /**
@@ -77,6 +79,11 @@ public class LandsatStore extends DataStore {
     private Metadata metadata;
 
     /**
+     * Android app context.
+     */
+    private final Context context;
+
+    /**
      * Creates a new Landsat store from the given file, URL, stream or character reader.
      * This constructor invokes {@link StorageConnector#closeAllExcept(Object)},
      * keeping open only the needed resource.
@@ -85,8 +92,9 @@ public class LandsatStore extends DataStore {
      * @param  connector  information about the storage (URL, stream, reader instance, <i>etc</i>).
      * @throws DataStoreException if an error occurred while opening the Landsat file.
      */
-    public LandsatStore(final LandsatStoreProvider provider, final StorageConnector connector) throws DataStoreException {
+    public LandsatStore(final LandsatStoreProvider provider, final StorageConnector connector, final Context context) throws DataStoreException {
         super(provider, connector);
+        this.context = context;
         source = connector.getStorageAs(Reader.class);
         connector.closeAllExcept(source);
         if (source == null) {
@@ -108,7 +116,7 @@ public class LandsatStore extends DataStore {
         if (metadata == null && source != null) try {
             try (BufferedReader reader = (source instanceof BufferedReader) ? (BufferedReader) source : new LineNumberReader(source)) {
                 source = null;      // Will be closed at the end of this try-finally block.
-                final LandsatReader parser = new LandsatReader(getDisplayName(), listeners);
+                final LandsatReader parser = new LandsatReader(getDisplayName(), listeners, context);
                 parser.read(reader);
                 metadata = parser.getMetadata();
             }

@@ -17,12 +17,14 @@
 package org.apache.sis.storage.earthobservation;
 
 import java.nio.charset.StandardCharsets;
+
 import org.apache.sis.setup.OptionKey;
 import org.apache.sis.storage.ProbeResult;
 import org.apache.sis.storage.StorageConnector;
 import org.apache.sis.storage.DataStoreException;
 import org.apache.sis.test.TestCase;
 import org.junit.Test;
+import android.support.test.InstrumentationRegistry;
 
 import static org.junit.Assert.*;
 
@@ -45,7 +47,7 @@ public final strictfp class LandsatStoreProviderTest extends TestCase {
     public void testProbeContentFromReader() throws DataStoreException {
         final StorageConnector connector = new StorageConnector(LandsatReaderTest.class.getResourceAsStream("LandsatTest.txt"));
         connector.setOption(OptionKey.ENCODING, StandardCharsets.UTF_8);
-        final LandsatStoreProvider provider = new LandsatStoreProvider();
+        final LandsatStoreProvider provider = new LandsatStoreProvider(InstrumentationRegistry.getContext());
         assertEquals(ProbeResult.SUPPORTED, provider.probeContent(connector));
     }
 }

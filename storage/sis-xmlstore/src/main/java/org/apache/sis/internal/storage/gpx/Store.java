@@ -17,6 +17,7 @@
 package org.apache.sis.internal.storage.gpx;
 
 import java.net.URISyntaxException;
+
 import org.opengis.util.NameFactory;
 import org.opengis.util.FactoryException;
 import org.opengis.metadata.Metadata;
@@ -45,6 +46,7 @@ import org.apache.sis.internal.jdk8.StreamSupport;
 import org.apache.sis.internal.jdk8.UncheckedIOException;
 import org.apache.sis.feature.AbstractFeature;
 import org.apache.sis.feature.DefaultFeatureType;
+import android.content.Context;
 
 
 /**
@@ -81,6 +83,11 @@ public final class Store extends StaxDataStore {
     final Types types;
 
     /**
+     * App context.
+     */
+    private final Context context;
+
+    /**
      * Creates a new GPX store from the given file, URL or stream object.
      * This constructor invokes {@link StorageConnector#closeAllExcept(Object)},
      * keeping open only the needed resource.
@@ -89,8 +96,9 @@ public final class Store extends StaxDataStore {
      * @param  connector  information about the storage (URL, stream, <i>etc</i>).
      * @throws DataStoreException if an error occurred while opening the GPX file.
      */
-    public Store(final StoreProvider provider, final StorageConnector connector) throws DataStoreException {
+    public Store(final StoreProvider provider, final StorageConnector connector, final Context context) throws DataStoreException {
         super(provider, connector);
+        this.context = context;
         final GeometryLibrary library = connector.getOption(OptionKey.GEOMETRY_LIBRARY);
         if (library == null || Types.DEFAULT.geometries.library == library) {
             types = Types.DEFAULT;
@@ -108,9 +116,9 @@ public final class Store extends StaxDataStore {
      * @see StoreProvider#getFormat()
      * @see org.apache.sis.internal.storage.gpx.Metadata#getResourceFormats()
      */
-    final Format getFormat() {
+    final Format getFormat(final Context context) {
         assert Thread.holdsLock(this);
-        Format format = ((StoreProvider) provider).getFormat(listeners);
+        Format format = ((StoreProvider) provider).getFormat(listeners, context);
         if (version != null) {
             final DefaultFormat df = new DefaultFormat(format);
             final DefaultCitation citation = new DefaultCitation(df.getFormatSpecificationCitation());
@@ -155,7 +163,7 @@ public final class Store extends StaxDataStore {
     public synchronized Metadata getMetadata() throws DataStoreException {
         if (metadata == null) try {
             reader   = new Reader(this);
-            version  = reader.initialize(true);
+            version  = reader.initialize(true, context);
             metadata = reader.getMetadata();
         } catch (DataStoreException e) {
             throw e;
@@ -204,7 +212,7 @@ public final class Store extends StaxDataStore {
         reader = null;
         if (r == null) try {
             r = new Reader(this);
-            version = r.initialize(false);
+            version = r.initialize(false, context);
         } catch (DataStoreException e) {
             throw e;
         } catch (URISyntaxException | RuntimeException e) {
@@ -224,7 +232,7 @@ public final class Store extends StaxDataStore {
      * @throws ConcurrentReadException if the {@code features} stream was provided by this data store.
      * @throws DataStoreException if an error occurred while writing the data.
      */
-    public synchronized void write(final Metadata metadata, final Stream<? extends AbstractFeature> features)
+    public synchronized void write(final Metadata metadata, final Stream<? extends AbstractFeature> features, final Context context)
             throws DataStoreException
     {
         try {
@@ -241,7 +249,7 @@ public final class Store extends StaxDataStore {
             /*
              * Get the writer if no read or other write operation is in progress, then write the data.
              */
-            try (Writer writer = new Writer(this, org.apache.sis.internal.storage.gpx.Metadata.castOrCopy(metadata, locale))) {
+            try (Writer writer = new Writer(this, org.apache.sis.internal.storage.gpx.Metadata.castOrCopy(metadata, locale, context))) {
                 writer.writeStartDocument();
                 if (features != null) {
                     features.forEachOrdered(writer);

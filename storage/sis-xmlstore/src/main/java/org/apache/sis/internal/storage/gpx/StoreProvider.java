@@ -18,6 +18,8 @@ package org.apache.sis.internal.storage.gpx;
 
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
+
+import android.content.Context;
 import org.apache.sis.storage.DataStore;
 import org.apache.sis.storage.DataStoreException;
 import org.apache.sis.storage.StorageConnector;
@@ -56,10 +58,16 @@ public final class StoreProvider extends StaxDataStoreProvider {
     private static final Range<Version> VERSIONS = new Range<>(Version.class, V1_0, true, V1_1, true);
 
     /**
+     * Android App context.
+     */
+    private final Context context;
+
+    /**
      * Creates a new GPX store provider.
      */
-    public StoreProvider() {
+    public StoreProvider(final Context context) {
         super("GPX", 4);
+        this.context = context;
         types.put(Tags.NAMESPACE_V10, "application/gpx+xml");
         types.put(Tags.NAMESPACE_V11, "application/gpx+xml");
     }
@@ -83,7 +91,7 @@ public final class StoreProvider extends StaxDataStoreProvider {
      */
     @Override
     public DataStore open(StorageConnector connector) throws DataStoreException {
-        return new Store(this, connector);
+        return new Store(this, connector, context);
     }
 
     /**

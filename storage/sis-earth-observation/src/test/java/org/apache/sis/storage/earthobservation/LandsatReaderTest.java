@@ -21,6 +21,8 @@ import java.util.regex.Matcher;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+
+import android.support.test.InstrumentationRegistry;
 import org.opengis.metadata.Metadata;
 import org.opengis.util.FactoryException;
 import org.apache.sis.metadata.iso.DefaultMetadata;
@@ -88,7 +90,7 @@ public class LandsatReaderTest extends TestCase {
                 LandsatReaderTest.class.getResourceAsStream("LandsatTest.txt"), "UTF-8")))
         {
             final LandsatReader reader = new LandsatReader("LandsatTest.txt",
-                    new EmptyWarningListeners<DataStore>(Locale.ENGLISH, Modules.EARTH_OBSERVATION));
+                    new EmptyWarningListeners<DataStore>(Locale.ENGLISH, Modules.EARTH_OBSERVATION), InstrumentationRegistry.getContext());
             reader.read(in);
             actual = reader.getMetadata();
         }

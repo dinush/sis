@@ -27,6 +27,7 @@ import java.io.IOException;
 import javax.xml.bind.annotation.XmlList;
 import javax.xml.bind.annotation.XmlElement;
 
+import android.content.Context;
 import org.opengis.metadata.citation.Citation;
 import org.opengis.metadata.citation.CitationDate;
 import org.opengis.metadata.citation.DateType;
@@ -179,9 +180,15 @@ public final class Metadata extends SimpleMetadata {
     private Format format;
 
     /**
+     * App context.
+     */
+    private final Context context;
+
+    /**
      * Creates an initially empty metadata object.
      */
-    public Metadata() {
+    public Metadata(final Context context) {
+        this.context = context;
     }
 
     /**
@@ -189,7 +196,8 @@ public final class Metadata extends SimpleMetadata {
      * If a property has more than one value, only the first one will be retained
      * (except for links and keywords where multi-values are allowed).
      */
-    Metadata(final org.opengis.metadata.Metadata md, final Locale locale) {
+    Metadata(final org.opengis.metadata.Metadata md, final Locale locale, final Context context) {
+        this.context = context;
         for (final Identification id : md.getIdentificationInfo()) {
             /*
              * identificationInfo.citation.title                    →   name
@@ -275,8 +283,8 @@ public final class Metadata extends SimpleMetadata {
      * @param  locale  the locale to use for localized strings.
      * @return the GPX metadata, or {@code null}.
      */
-    public static Metadata castOrCopy(final org.opengis.metadata.Metadata md, final Locale locale) {
-        return (md == null || md instanceof Metadata) ? (Metadata) md : new Metadata(md, locale);
+    public static Metadata castOrCopy(final org.opengis.metadata.Metadata md, final Locale locale, final Context context) {
+        return (md == null || md instanceof Metadata) ? (Metadata) md : new Metadata(md, locale, context);
     }
 
     /**
@@ -404,7 +412,7 @@ public final class Metadata extends SimpleMetadata {
             Format f;
             synchronized (store) {
                 if ((f = format) == null) {
-                    format = f = store.getFormat();
+                    format = f = store.getFormat(context);
                 }
             }
             return Collections.singletonList(f);

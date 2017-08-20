@@ -18,6 +18,8 @@ package org.apache.sis.storage.geotiff;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
+
+import android.content.Context;
 import org.apache.sis.util.Version;
 import org.apache.sis.storage.DataStore;
 import org.apache.sis.storage.DataStoreException;
@@ -58,9 +60,15 @@ public class GeoTiffStoreProvider extends DataStoreProvider {
     private static final Version VERSION = new Version("6.0");
 
     /**
+     * Android app context.
+     */
+    private final Context context;
+
+    /**
      * Creates a new provider.
      */
-    public GeoTiffStoreProvider() {
+    public GeoTiffStoreProvider(final Context context) {
+        this.context = context;
     }
 
     /**
@@ -118,6 +126,6 @@ public class GeoTiffStoreProvider extends DataStoreProvider {
      */
     @Override
     public DataStore open(final StorageConnector connector) throws DataStoreException {
-        return new GeoTiffStore(this, connector);
+        return new GeoTiffStore(this, connector, context);
     }
 }

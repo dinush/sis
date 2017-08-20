@@ -16,6 +16,7 @@
  */
 package org.apache.sis.storage.earthobservation;
 
+import android.content.Context;
 import org.apache.sis.storage.DataStore;
 import org.apache.sis.storage.DataStoreProvider;
 import org.apache.sis.storage.DataStoreException;
@@ -41,6 +42,12 @@ import org.apache.sis.internal.storage.wkt.FirstKeywordPeek;
  */
 @Capabilities(Capability.READ)
 public class LandsatStoreProvider extends DataStoreProvider {
+
+    /**
+     * Android app context.
+     */
+    private final Context context;
+
     /**
      * The object to use for verifying if the first keyword is the expected one.
      */
@@ -122,7 +129,8 @@ public class LandsatStoreProvider extends DataStoreProvider {
     /**
      * Creates a new provider.
      */
-    public LandsatStoreProvider() {
+    public LandsatStoreProvider(final Context context) {
+        this.context = context;
     }
 
     /**
@@ -157,6 +165,6 @@ public class LandsatStoreProvider extends DataStoreProvider {
      */
     @Override
     public DataStore open(final StorageConnector connector) throws DataStoreException {
-        return new LandsatStore(this, connector);
+        return new LandsatStore(this, connector, context);
     }
 }

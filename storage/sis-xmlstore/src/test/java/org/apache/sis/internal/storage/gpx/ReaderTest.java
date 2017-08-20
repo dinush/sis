@@ -19,6 +19,7 @@ package org.apache.sis.internal.storage.gpx;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
+
 import com.esri.core.geometry.Point;
 import com.esri.core.geometry.Polyline;
 import org.opengis.geometry.Envelope;
@@ -43,6 +44,7 @@ import org.apache.sis.internal.jdk8.Stream;
 import org.apache.sis.internal.jdk8.Instant;
 import org.apache.sis.feature.AbstractFeature;
 import org.opengis.util.GenericName;
+import android.support.test.InstrumentationRegistry;
 
 
 /**
@@ -67,7 +69,7 @@ public final strictfp class ReaderTest extends TestCase {
      */
     @BeforeClass
     public static void createProvider() {
-        provider = new StoreProvider();
+        provider = new StoreProvider(InstrumentationRegistry.getContext());
     }
 
     /**
@@ -84,7 +86,7 @@ public final strictfp class ReaderTest extends TestCase {
      * @param  resource  name of the test file in a directory relative to {@code "org/apache/sis/internal/gpx"}.
      */
     private static Store create(final String resource) throws DataStoreException {
-        return new Store(provider, new StorageConnector(ReaderTest.class.getResourceAsStream(resource)));
+        return new Store(provider, new StorageConnector(ReaderTest.class.getResourceAsStream(resource)), InstrumentationRegistry.getContext());
     }
 
     /**
@@ -568,7 +570,7 @@ public final strictfp class ReaderTest extends TestCase {
     private static Store createFromURL() throws DataStoreException {
         final StorageConnector connector = new StorageConnector(ReaderTest.class.getResource("1.1/route.xml"));
         connector.setOption(OptionKey.URL_ENCODING, "UTF-8");
-        return new Store(provider, connector);
+        return new Store(provider, connector, InstrumentationRegistry.getContext());
     }
 
     /**

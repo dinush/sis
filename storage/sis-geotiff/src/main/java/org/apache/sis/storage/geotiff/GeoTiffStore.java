@@ -22,6 +22,8 @@ import java.nio.charset.Charset;
 import java.util.logging.LogRecord;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.StandardOpenOption;
+
+import android.content.Context;
 import org.opengis.util.FactoryException;
 import org.opengis.metadata.Metadata;
 import org.opengis.metadata.maintenance.ScopeCode;
@@ -70,6 +72,11 @@ public class GeoTiffStore extends DataStore {
     private Metadata metadata;
 
     /**
+     * Android app context.
+     */
+    private Context context;
+
+    /**
      * Creates a new GeoTIFF store from the given file, URL or stream object.
      * This constructor invokes {@link StorageConnector#closeAllExcept(Object)},
      * keeping open only the needed resource.
@@ -78,8 +85,9 @@ public class GeoTiffStore extends DataStore {
      * @param  connector  information about the storage (URL, stream, <i>etc</i>).
      * @throws DataStoreException if an error occurred while opening the GeoTIFF file.
      */
-    public GeoTiffStore(final GeoTiffStoreProvider provider, final StorageConnector connector) throws DataStoreException {
+    public GeoTiffStore(final GeoTiffStoreProvider provider, final StorageConnector connector, final Context context) throws DataStoreException {
         super(provider, connector);
+        this.context = context;
         final Charset encoding = connector.getOption(OptionKey.ENCODING);
         this.encoding = (encoding != null) ? encoding : StandardCharsets.US_ASCII;
         final ChannelDataInput input = connector.getStorageAs(ChannelDataInput.class);
@@ -109,7 +117,7 @@ public class GeoTiffStore extends DataStore {
             final Reader reader = reader();
             final MetadataBuilder builder = reader.metadata;
             try {
-                builder.setFormat(Constants.GEOTIFF);
+                builder.setFormat(Constants.GEOTIFF, context);
             } catch (MetadataStoreException e) {
                 warning(null, e);
             }

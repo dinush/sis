@@ -19,6 +19,8 @@ package org.apache.sis.internal.storage.gpx;
 import java.util.Arrays;
 import java.net.URI;
 import java.net.URISyntaxException;
+
+import android.support.test.InstrumentationRegistry;
 import org.apache.sis.test.DependsOn;
 import org.apache.sis.test.DependsOnMethod;
 import org.apache.sis.test.TestCase;
@@ -70,7 +72,7 @@ public final strictfp class MetadataTest extends TestCase {
           + "(the SIS implementations of GeoAPI interfaces).")
     public void testCopyConstructor() throws URISyntaxException {
         final Metadata md1 = create();
-        final Metadata md2 = new Metadata(md1, null);
+        final Metadata md2 = new Metadata(md1, null, InstrumentationRegistry.getContext());
         assertEquals("equals", md1, md2);
         assertEquals("hashCode", md1.hashCode(), md2.hashCode());
     }
@@ -95,7 +97,7 @@ public final strictfp class MetadataTest extends TestCase {
         bounds.southBoundLatitude =  10;
         bounds.northBoundLatitude =  40;
 
-        final Metadata metadata = new Metadata();
+        final Metadata metadata = new Metadata(InstrumentationRegistry.getContext());
         metadata.name        = "Sample";
         metadata.description = "GPX test file";
         metadata.author      = person;

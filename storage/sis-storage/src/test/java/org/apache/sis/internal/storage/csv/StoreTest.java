@@ -41,6 +41,7 @@ import org.apache.sis.feature.DefaultAttributeType;
 import org.apache.sis.feature.DefaultFeatureType;
 import org.apache.sis.metadata.iso.identification.AbstractIdentification;
 import org.apache.sis.internal.jdk8.Instant;
+import android.support.test.InstrumentationRegistry;
 
 
 /**
@@ -87,7 +88,7 @@ public final strictfp class StoreTest extends TestCase {
     @Test
     public void testGetMetadata() throws DataStoreException {
         final Metadata metadata;
-        try (Store store = new Store(null, new StorageConnector(testData()), true)) {
+        try (Store store = new Store(null, new StorageConnector(testData()), true, InstrumentationRegistry.getContext())) {
             metadata = store.getMetadata();
         }
         final Extent extent = getSingleton(((AbstractIdentification) getSingleton(metadata.getIdentificationInfo())).getExtents());
@@ -106,7 +107,7 @@ public final strictfp class StoreTest extends TestCase {
      */
     @Test
     public void testStaticFeatures() throws DataStoreException {
-        try (Store store = new Store(null, new StorageConnector(testData()), true)) {
+        try (Store store = new Store(null, new StorageConnector(testData()), true, InstrumentationRegistry.getContext())) {
             verifyFeatureType(store.featureType, double[].class, 1);
             assertEquals("foliation", Foliation.TIME, store.foliation);
             final Iterator<AbstractFeature> it = store.features(false).iterator();
@@ -135,7 +136,7 @@ public final strictfp class StoreTest extends TestCase {
     @Test
     public void testMovingFeatures() throws DataStoreException {
         isMovingFeature = true;
-        try (Store store = new Store(null, new StorageConnector(testData()), false)) {
+        try (Store store = new Store(null, new StorageConnector(testData()), false, InstrumentationRegistry.getContext())) {
             verifyFeatureType(store.featureType, Polyline.class, Integer.MAX_VALUE);
             assertEquals("foliation", Foliation.TIME, store.foliation);
             final Iterator<AbstractFeature> it = store.features(false).iterator();

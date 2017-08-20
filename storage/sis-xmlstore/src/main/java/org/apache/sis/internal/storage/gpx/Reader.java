@@ -25,6 +25,7 @@ import java.net.URISyntaxException;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
 import javax.xml.bind.JAXBException;
+
 import org.apache.sis.storage.gps.Fix;
 import org.apache.sis.storage.DataStoreException;
 import org.apache.sis.storage.DataStoreContentException;
@@ -38,6 +39,7 @@ import org.apache.sis.internal.jdk8.Consumer;
 import org.apache.sis.internal.jdk8.Predicate;
 import java.text.ParseException;
 import org.apache.sis.feature.AbstractFeature;
+import android.content.Context;
 
 
 /**
@@ -145,7 +147,7 @@ final class Reader extends StaxStreamReader {
      * @throws ParseException if a text can not be parsed as a date.
      * @throws EOFException if the file seems to be truncated.
      */
-    public Version initialize(final boolean readMetadata) throws DataStoreException,
+    public Version initialize(final boolean readMetadata, final Context context) throws DataStoreException,
             XMLStreamException, JAXBException, URISyntaxException, ParseException, EOFException
     {
         /*
@@ -205,15 +207,15 @@ parse:  while (reader.hasNext()) {
                                 case Tags.METADATA:     metadata = unmarshal(Metadata.class); break;
 
                                 // GPX 1.0 metadata
-                                case Tags.NAME:         metadata().name        = getElementText();        break;
-                                case Tags.DESCRIPTION:  metadata().description = getElementText();        break;
-                                case Tags.AUTHOR:       author()  .name        = getElementText();        break;
-                                case Tags.EMAIL:        author()  .email       = getElementText();        break;
-                                case Tags.URL:          link()    .uri         = getElementAsURI();       break;
-                                case Tags.URL_NAME:     link()    .text        = getElementText();        break;
-                                case Tags.TIME:         metadata().time        = getElementAsDate();      break;
-                                case Tags.KEYWORDS:     metadata().keywords    = getElementAsList();      break;
-                                case Tags.BOUNDS:       metadata().bounds      = unmarshal(Bounds.class); break;
+                                case Tags.NAME:         metadata(context).name        = getElementText();        break;
+                                case Tags.DESCRIPTION:  metadata(context).description = getElementText();        break;
+                                case Tags.AUTHOR:       author(context)  .name        = getElementText();        break;
+                                case Tags.EMAIL:        author(context)  .email       = getElementText();        break;
+                                case Tags.URL:          link(context)    .uri         = getElementAsURI();       break;
+                                case Tags.URL_NAME:     link(context)    .text        = getElementText();        break;
+                                case Tags.TIME:         metadata(context).time        = getElementAsDate();      break;
+                                case Tags.KEYWORDS:     metadata(context).keywords    = getElementAsList();      break;
+                                case Tags.BOUNDS:       metadata(context).bounds      = unmarshal(Bounds.class); break;
                                 case Tags.WAY_POINT:    // stop metadata parsing.
                                 case Tags.TRACKS:
                                 case Tags.ROUTES:       break parse;
@@ -248,7 +250,7 @@ parse:  while (reader.hasNext()) {
             }
         }
         if (readMetadata) {
-            metadata().store = (Store) owner;
+            metadata(context).store = (Store) owner;
         }
         return version;
     }
@@ -260,9 +262,9 @@ parse:  while (reader.hasNext()) {
      *
      * @see #getMetadata()
      */
-    private Metadata metadata() {
+    private Metadata metadata(final Context context) {
         if (metadata == null) {
-            metadata = new Metadata();
+            metadata = new Metadata(context);
         }
         return metadata;
     }
@@ -271,8 +273,8 @@ parse:  while (reader.hasNext()) {
      * Returns the {@link Metadata#author} field, creating all necessary objects if needed.
      * This is a convenience method for GPX 1.0 metadata parsing.
      */
-    private Person author() {
-        final Metadata metadata = metadata();
+    private Person author(final Context context) {
+        final Metadata metadata = metadata(context);
         if (metadata.author == null) {
             metadata.author = new Person();
         }
@@ -283,8 +285,8 @@ parse:  while (reader.hasNext()) {
      * Returns the first element of the {@link Metadata#links} field, creating all necessary objects if needed.
      * This is a convenience method for GPX 1.0 metadata parsing.
      */
-    private Link link() {
-        final Metadata metadata = metadata();
+    private Link link(final Context context) {
+        final Metadata metadata = metadata(context);
         List<Link> links = metadata.links;
         if (links == null) {
             metadata.links = links = new ArrayList<>();

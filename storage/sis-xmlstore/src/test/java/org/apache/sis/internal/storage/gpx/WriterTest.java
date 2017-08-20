@@ -21,6 +21,7 @@ import java.util.Arrays;
 import java.net.URI;
 import java.io.ByteArrayOutputStream;
 import java.io.UnsupportedEncodingException;
+
 import com.esri.core.geometry.Point;
 import org.apache.sis.storage.gps.Fix;
 import org.apache.sis.storage.DataStoreException;
@@ -41,6 +42,7 @@ import static org.apache.sis.test.Assert.*;
 import org.apache.sis.internal.jdk8.Instant;
 import org.apache.sis.internal.jdk8.Stream;
 import org.apache.sis.feature.AbstractFeature;
+import android.support.test.InstrumentationRegistry;
 
 
 /**
@@ -66,7 +68,7 @@ public final strictfp class WriterTest extends TestCase {
      */
     @BeforeClass
     public static void createProvider() {
-        provider = new StoreProvider();
+        provider = new StoreProvider(InstrumentationRegistry.getContext());
     }
 
     /**
@@ -86,7 +88,7 @@ public final strictfp class WriterTest extends TestCase {
      * Creates a new GPX data store which will read and write in memory.
      */
     private Store create() throws DataStoreException {
-        return new Store(provider, new StorageConnector(output));
+        return new Store(provider, new StorageConnector(output), InstrumentationRegistry.getContext());
     }
 
     /**
@@ -137,7 +139,7 @@ public final strictfp class WriterTest extends TestCase {
         final Metadata metadata = MetadataTest.create();
         try (Store store = create()) {
             store.setVersion(version);
-            store.write(metadata, null);
+            store.write(metadata, null, InstrumentationRegistry.getContext());
         }
         assertXmlEquals(WriterTest.class.getResourceAsStream(expected), toString(), STRICT,
                         new String[] {Tags.NAMESPACE_V11 + ":extensions"},
@@ -349,10 +351,10 @@ public final strictfp class WriterTest extends TestCase {
         bounds.eastBoundLongitude =  30;
         bounds.southBoundLatitude =  10;
         bounds.northBoundLatitude =  40;
-        final Metadata metadata = new Metadata();
+        final Metadata metadata = new Metadata(InstrumentationRegistry.getContext());
         metadata.bounds = bounds;
         metadata.creator = "DataProducer";
-        store.write(metadata, Stream.create(features));
+        store.write(metadata, Stream.create(features), InstrumentationRegistry.getContext());
     }
 
     /**
@@ -366,7 +368,7 @@ public final strictfp class WriterTest extends TestCase {
     @DependsOnMethod("testRoutes110")
     public void testInputReplacement() throws Exception {
         try (Store store = new Store(provider, new StorageConnector(
-                TestUtilities.createTemporaryFile(ReaderTest.class, "1.1/metadata.xml"))))
+                TestUtilities.createTemporaryFile(ReaderTest.class, "1.1/metadata.xml")), InstrumentationRegistry.getContext()))
         {
             /*
              * Read part of the file. We verify its content as a matter of principle,

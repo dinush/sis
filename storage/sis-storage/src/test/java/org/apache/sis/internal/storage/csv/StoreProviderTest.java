@@ -21,6 +21,7 @@ import org.apache.sis.storage.StorageConnector;
 import org.apache.sis.storage.ProbeResult;
 import org.apache.sis.test.TestCase;
 import org.junit.Test;
+import android.support.test.InstrumentationRegistry;
 
 import static org.junit.Assert.*;
 
@@ -41,7 +42,7 @@ public final strictfp class StoreProviderTest extends TestCase {
      */
     @Test
     public void testProbeContent() throws DataStoreException {
-        final StoreProvider p = new StoreProvider();
+        final StoreProvider p = new StoreProvider(InstrumentationRegistry.getContext());
         final StorageConnector c = new StorageConnector(StoreTest.testData());
         assertEquals(ProbeResult.SUPPORTED, p.probeContent(c));
     }

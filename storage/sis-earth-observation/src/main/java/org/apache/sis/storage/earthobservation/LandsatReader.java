@@ -74,6 +74,7 @@ import org.apache.sis.internal.jdk8.OffsetDateTime;
 import org.apache.sis.internal.jdk8.OffsetTime;
 import org.apache.sis.internal.jdk8.Temporal;
 import org.apache.sis.internal.jdk8.DateTimeException;
+import android.content.Context;
 
 
 /**
@@ -290,18 +291,24 @@ final class LandsatReader {
     private ParameterValueGroup projection;
 
     /**
+     * Android app context.
+     */
+    private final Context context;
+
+    /**
      * Creates a new metadata parser.
      *
      * @param  filename   an identifier of the file being read, or {@code null} if unknown.
      * @param  listeners  where to sent warnings that may occur during the parsing process.
      */
-    LandsatReader(final String filename, final WarningListeners<DataStore> listeners) {
+    LandsatReader(final String filename, final WarningListeners<DataStore> listeners, final Context context) {
         this.filename  = filename;
         this.listeners = listeners;
         this.metadata  = new MetadataBuilder();
         this.bands     = new DefaultBand[BAND_NAMES.length];
         this.gridSizes = new int[NUM_GROUPS * DIM];
         this.corners   = new double[GEOGRAPHIC + (4*DIM)];      // GEOGRAPHIC is the last group of corners to store.
+        this.context   = context;
         Arrays.fill(corners, Double.NaN);
     }
 
@@ -514,7 +521,7 @@ final class LandsatReader {
                     value = Constants.GEOTIFF;              // Because 'metadata.setFormat(…)' is case-sensitive.
                 }
                 try {
-                    metadata.setFormat(value);
+                    metadata.setFormat(value, context);
                 } catch (MetadataStoreException e) {
                     warning(key, null, e);
                 }
