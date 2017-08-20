@@ -16,7 +16,7 @@
  */
 package org.apache.sis.referencing.operation.matrix;
 
-import java.awt.geom.AffineTransform;
+import org.apache.sis.internal.referencing.j2d.AffineTransform;
 import org.apache.sis.test.TestCase;
 import org.junit.Test;
 
@@ -55,13 +55,6 @@ public final strictfp class AffineTransforms2DTest extends TestCase {
     }
 
     /**
-     * Gets the flip state using standard {@code AffineTransform} API.
-     */
-    private static int getFlipFromType(final AffineTransform tr) {
-        return (tr.getType() & AffineTransform.TYPE_FLIP) != 0 ? -1 : +1;
-    }
-
-    /**
      * Run the test in the flipped or unflipped case.
      *
      * @param  f  -1 for the flipped case, or +1 for the unflipped case.
@@ -75,7 +68,6 @@ public final strictfp class AffineTransforms2DTest extends TestCase {
         assertEquals( 0, AffineTransforms2D.getRotation(tr), EPS);
         assertEquals( 1, AffineTransforms2D.getSwapXY  (tr));
         assertEquals( f, AffineTransforms2D.getFlip    (tr));
-        assertEquals( f, getFlipFromType               (tr));
 
         // Tests rotation (< 45°)
         double r = toRadians(25);
@@ -85,7 +77,6 @@ public final strictfp class AffineTransforms2DTest extends TestCase {
         assertEquals( r, AffineTransforms2D.getRotation(tr), EPS);
         assertEquals( 1, AffineTransforms2D.getSwapXY  (tr));
         assertEquals( f, AffineTransforms2D.getFlip    (tr));
-        assertEquals( f, getFlipFromType               (tr));
 
         // Tests more rotation (> 45°)
         r = toRadians(65);
@@ -95,7 +86,6 @@ public final strictfp class AffineTransforms2DTest extends TestCase {
         assertEquals( r, AffineTransforms2D.getRotation(tr), EPS);
         assertEquals(-1, AffineTransforms2D.getSwapXY  (tr));
         assertEquals( f, AffineTransforms2D.getFlip    (tr));
-        assertEquals( f, getFlipFromType               (tr));
 
         // Tests scale
         tr.setToScale(2, 3*f);
@@ -104,7 +94,6 @@ public final strictfp class AffineTransforms2DTest extends TestCase {
         assertEquals( 0, AffineTransforms2D.getRotation(tr), EPS);
         assertEquals( 1, AffineTransforms2D.getSwapXY  (tr));
         assertEquals( f, AffineTransforms2D.getFlip    (tr));
-        assertEquals( f, getFlipFromType               (tr));
 
         // Tests rotation + scale
         tr.rotate(r);
@@ -113,7 +102,6 @@ public final strictfp class AffineTransforms2DTest extends TestCase {
         assertEquals( r, AffineTransforms2D.getRotation(tr), EPS);
         assertEquals(-1, AffineTransforms2D.getSwapXY  (tr));
         assertEquals( f, AffineTransforms2D.getFlip    (tr));
-        assertEquals( 1, getFlipFromType(tr));                      // Always unflipped according Java 1.5.0_09
 
         // Tests axis swapping
         r = toRadians(-90 * f);
@@ -123,7 +111,6 @@ public final strictfp class AffineTransforms2DTest extends TestCase {
         assertEquals( r, AffineTransforms2D.getRotation(tr), EPS);
         assertEquals(-1, AffineTransforms2D.getSwapXY  (tr));
         assertEquals(-f, AffineTransforms2D.getFlip    (tr));
-        assertEquals(-f, getFlipFromType               (tr));
 
         // Tests axis swapping + scale
         tr.scale(2, 3);
@@ -132,6 +119,5 @@ public final strictfp class AffineTransforms2DTest extends TestCase {
         assertEquals( r, AffineTransforms2D.getRotation(tr), EPS);
         assertEquals(-1, AffineTransforms2D.getSwapXY  (tr));
         assertEquals(-f, AffineTransforms2D.getFlip    (tr));
-        assertEquals(-f, getFlipFromType               (tr));
     }
 }
