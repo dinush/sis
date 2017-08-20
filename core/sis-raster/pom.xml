@@ -28,7 +28,7 @@
   <parent>
     <groupId>org.apache.sis</groupId>
     <artifactId>core</artifactId>
-    <version>0.8-jdk7-SNAPSHOT</version>
+    <version>0.8-android-SNAPSHOT</version>
   </parent>
 
 
@@ -37,7 +37,7 @@
        =========================================================== -->
   <groupId>org.apache.sis.core</groupId>
   <artifactId>sis-raster</artifactId>
-  <packaging>bundle</packaging>
+  <packaging>aar</packaging>
   <name>Apache SIS rasters</name>
   <description>
   <!-- Left alignment because this description will be copied in META-INF/MANIFEST.MF
@@ -103,6 +103,8 @@ Access to raster data.
       <groupId>org.apache.sis.core</groupId>
       <artifactId>sis-utility</artifactId>
       <version>${project.version}</version>
+      <scope>provided</scope>
+      <type>aar</type>
     </dependency>
 
     <!-- Test dependencies -->
