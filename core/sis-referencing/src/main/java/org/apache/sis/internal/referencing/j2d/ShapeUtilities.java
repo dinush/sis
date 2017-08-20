@@ -374,38 +374,4 @@ public final class ShapeUtilities extends Static {
         final double x   = (y2*sq3 - y3*sq2) / (y2*x3 - y3*x2);
         return new Point2D.Double(x1 + 0.5*x, y1 + 0.5*(sq2 - x*x2)/y2);
     }
-
-    /**
-     * Attempts to replace an arbitrary shape by one of the standard Java2D constructs.
-     * For example if the given {@code path} is a {@link Path2D} containing only a single
-     * line or a quadratic curve, then this method replaces it by a {@link Line2D} or
-     * {@link QuadCurve2D} object respectively.
-     *
-     * @param  path  the shape to replace by a simpler Java2D construct.
-     *         This is generally an instance of {@link Path2D}, but not necessarily.
-     * @return a simpler Java construct, or {@code path} if no better construct is proposed.
-     */
-    public static Shape toPrimitive(final Shape path) {
-        final PathIterator it = path.getPathIterator(null);
-        if (!it.isDone()) {
-            final double[] buffer = new double[6];
-            if (it.currentSegment(buffer) == PathIterator.SEG_MOVETO) {
-                it.next();
-                if (!it.isDone()) {
-                    final double x1 = buffer[0];
-                    final double y1 = buffer[1];
-                    final int code = it.currentSegment(buffer);
-                    it.next();
-                    if (it.isDone()) {
-                        switch (code) {
-                            case PathIterator.SEG_LINETO:  return new       Line2D.Double(x1,y1, buffer[0], buffer[1]);
-                            case PathIterator.SEG_QUADTO:  return new  QuadCurve2D.Double(x1,y1, buffer[0], buffer[1], buffer[2], buffer[3]);
-                            case PathIterator.SEG_CUBICTO: return new CubicCurve2D.Double(x1,y1, buffer[0], buffer[1], buffer[2], buffer[3], buffer[4], buffer[5]);
-                        }
-                    }
-                }
-            }
-        }
-        return path;
-    }
 }

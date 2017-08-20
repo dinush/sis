@@ -16,12 +16,6 @@
  */
 package org.apache.sis.internal.referencing.j2d;
 
-import java.awt.Shape;
-import java.awt.geom.Path2D;
-import java.awt.geom.Point2D;
-import java.awt.geom.Line2D;
-import java.awt.geom.QuadCurve2D;
-import java.awt.geom.CubicCurve2D;
 import org.apache.sis.test.TestCase;
 import org.junit.Test;
 
@@ -132,38 +126,5 @@ public final strictfp class ShapeUtilitiesTest extends TestCase {
     @Test
     public void testCircleCentre() {
         assertPointEquals(117.40902595856156, 151.49785663253124, ShapeUtilities.circleCentre(182, 103, 50, 107, 124, 232));
-    }
-
-    /**
-     * Tests {@link ShapeUtilities#toPrimitive(Shape)}.
-     */
-    @Test
-    public void testToPrimitive() {
-        final Path2D path = new Path2D.Double();
-        path.moveTo(4, 5);
-        path.lineTo(7, 9);
-        Shape p = ShapeUtilities.toPrimitive(path);
-        assertInstanceOf("toPrimitive", Line2D.class, p);
-        assertEquals("P1", new Point2D.Double(4, 5), ((Line2D) p).getP1());
-        assertEquals("P2", new Point2D.Double(7, 9), ((Line2D) p).getP2());
-
-        path.reset();
-        path.moveTo(4, 5);
-        path.quadTo(6, 7, 8, 5);
-        p = ShapeUtilities.toPrimitive(path);
-        assertInstanceOf("toPrimitive", QuadCurve2D.class, p);
-        assertEquals("P1",     new Point2D.Double(4, 5), ((QuadCurve2D) p).getP1());
-        assertEquals("CtrlPt", new Point2D.Double(6, 7), ((QuadCurve2D) p).getCtrlPt());
-        assertEquals("P2",     new Point2D.Double(8, 5), ((QuadCurve2D) p).getP2());
-
-        path.reset();
-        path.moveTo(4, 5);
-        path.curveTo(6, 7, 8, 6, 9, 4);
-        p = ShapeUtilities.toPrimitive(path);
-        assertInstanceOf("toPrimitive", CubicCurve2D.class, p);
-        assertEquals("P1",     new Point2D.Double(4, 5), ((CubicCurve2D) p).getP1());
-        assertEquals("CtrlP1", new Point2D.Double(6, 7), ((CubicCurve2D) p).getCtrlP1());
-        assertEquals("CtrlP2", new Point2D.Double(8, 6), ((CubicCurve2D) p).getCtrlP2());
-        assertEquals("P2",     new Point2D.Double(9, 4), ((CubicCurve2D) p).getP2());
     }
 }
