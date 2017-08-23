@@ -172,7 +172,7 @@
     <dependency>
       <groupId>com.google.android</groupId>
       <artifactId>android-test</artifactId>
-      <scope>provided</scope>
+      <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>com.google.android</groupId>
@@ -228,7 +228,6 @@
     <module>sis-referencing</module>
     <module>sis-referencing-by-identifiers</module>
     <module>sis-feature</module>
-    <module>sis-raster</module>
   </modules>
 
 </project>
