@@ -703,6 +703,7 @@ Apache SIS is a free software, Java language library for developing geospatial a
         <version>4.5.0</version>
         <extensions>true</extensions>
         <configuration>
+          <androidManifestFile>${session.executionRootDirectory}/src/main/android/AndroidManifest.xml</androidManifestFile>
           <sdk>
             <platform>26</platform>
           </sdk>
