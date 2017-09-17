@@ -20,6 +20,7 @@ import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import org.apache.sis.internal.system.DefaultFactories;
+import org.apache.sis.internal.util.sql.Connection;
 
 import java.io.IOException;
 import java.sql.SQLException;
@@ -34,9 +35,9 @@ import java.util.ServiceLoader;
  * @version 0.8
  * @since   0.8
  */
-public class DatabaseOpenHelper extends SQLiteOpenHelper {
+public class DataSource extends SQLiteOpenHelper {
 
-    public DatabaseOpenHelper(Context context, String name, SQLiteDatabase.CursorFactory factory, int version) {
+    public DataSource(Context context, String name, SQLiteDatabase.CursorFactory factory, int version) {
         super(context, name, factory, version);
     }
 
@@ -102,5 +103,9 @@ public class DatabaseOpenHelper extends SQLiteOpenHelper {
     private Installer getInstaller() throws NoSuchElementException {
         ServiceLoader<Installer> installers = DefaultFactories.createServiceLoader(Installer.class);
         return installers.iterator().next();
+    }
+
+    public Connection getConnection() {
+        return new Connection(super.getWritableDatabase());
     }
 }
