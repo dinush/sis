@@ -5,7 +5,7 @@ import android.database.sqlite.SQLiteDatabase;
 /**
  * Replacement implementation for JDBC {@code Connection} class.
  */
-public class Connection {
+public class Connection implements AutoCloseable {
 
     private final SQLiteDatabase db;
 
@@ -14,6 +14,19 @@ public class Connection {
     }
 
     public Statement createStatement() {
-        return new Statement(db);
+        return new Statement(this);
+    }
+
+    public DatabaseMetaData getMetaData() {
+        return new DatabaseMetaData();
+    }
+
+    public SQLiteDatabase getDb() {
+        return db;
+    }
+
+    @Override
+    public void close() throws Exception {
+        db.close();
     }
 }
