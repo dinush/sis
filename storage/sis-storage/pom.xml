@@ -109,6 +109,13 @@ Provides the interfaces and base classes to be implemented by various storage fo
       <scope>provided</scope>
       <type>aar</type>
     </dependency>
+    <dependency>
+      <groupId>org.apache.sis.core</groupId>
+      <artifactId>sis-utility</artifactId>
+      <version>${project.version}</version>
+      <scope>provided</scope>
+      <type>aar</type>
+    </dependency>
 
     <!-- Test dependencies -->
     <dependency>
