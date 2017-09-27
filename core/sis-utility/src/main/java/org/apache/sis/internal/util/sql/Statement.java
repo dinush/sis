@@ -1,35 +1,17 @@
 package org.apache.sis.internal.util.sql;
 
-import android.database.sqlite.SQLiteDatabase;
+import java.sql.SQLException;
 
 /**
- * Replacement implementation for JDBC {@code Statement} class.
+ * Replacement interface for JDBC {@code Statement} class.
  */
-public class Statement {
+public interface Statement {
 
-    private final Connection connection;
-    private final SQLiteDatabase db;
+    ResultSet executeQuery(final String query);
 
-    public Statement(final Connection connection) {
-        this.connection = connection;
-        db = connection.getDb();
-    }
+    int executeUpdate(final String query);
 
-    public ResultSet executeQuery(final String query) {
-        return (ResultSet) db.rawQuery(query, null);
-    }
+    Connection getConnection();
 
-    public int executeUpdate(final String query) {
-        db.beginTransaction();
-        db.execSQL(query);
-        return 1;
-    }
-
-    public Connection getConnection() {
-        return connection;
-    }
-
-    public void close() {
-
-    }
+    void close() throws SQLException;
 }
